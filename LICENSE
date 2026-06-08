@@ -1,0 +1,19 @@
+"THE BEER-WARE LICENSE" (Revision 42):
+
+Álvaro Navaqui <alvaronavaqui@proton.me> wrote the PictoKeyboard application
+source code. As long as you retain this notice you can do whatever you want
+with this stuff. If we meet some day, and you think this stuff is worth it,
+you can buy me a beer in return.
+
+------------------------------------------------------------------------------
+
+NOTE — this Beer-Ware license covers ONLY the PictoKeyboard application source
+code in this repository.
+
+It does NOT cover the ARASAAC pictograms. Those pictographic symbols are the
+property of the Government of Aragón, created by Sergio Palao for ARASAAC
+(https://arasaac.org), and are distributed under the Creative Commons license
+CC BY-NC-SA 4.0 (Attribution-NonCommercial-ShareAlike). They are fetched from
+ARASAAC at runtime and are NOT redistributed with this source. See the NOTICE
+file and https://arasaac.org/terms-of-use for the pictogram terms, which you
+must follow regardless of this Beer-Ware license.

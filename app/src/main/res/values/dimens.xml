@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kb_body_height">280dp</dimen>
+    <dimen name="kb_category_width">96dp</dimen>
+    <dimen name="kb_blind_height">300dp</dimen>
+</resources>

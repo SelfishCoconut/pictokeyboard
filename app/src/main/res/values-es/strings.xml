@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PictoKeyboard</string>
+    <string name="ime_label">PictoKeyboard</string>
+    <string name="subtype_es">Español</string>
+    <string name="subtype_en">English</string>
+
+    <string name="kb_settings">Ajustes</string>
+    <string name="kb_switch">Cambiar teclado</string>
+    <string name="kb_space">espacio</string>
+    <string name="kb_backspace">Borrar</string>
+    <string name="kb_enter">Intro</string>
+    <string name="kb_empty_hint">Aún no hay categorías. Abre los ajustes para configurar el tablero.</string>
+    <string name="img_not_ready">La imagen aún se está descargando, inténtalo de nuevo.</string>
+    <string name="img_unsupported">Este campo no admite imágenes.</string>
+
+    <string name="blind_on">Modo ciego activado. Desliza arriba o abajo para cambiar de categoría, izquierda o derecha para cambiar de pictograma. Toca dos veces para escribir, mantén pulsado para borrar.</string>
+    <string name="blind_off">Modo ciego desactivado</string>
+    <string name="blind_deleted">Borrado</string>
+    <string name="blind_no_board">Aún no hay pictogramas. Abre los ajustes para configurar el tablero.</string>
+    <string name="blind_empty_category">Categoría vacía</string>
+
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="add">Añadir</string>
+    <string name="back">Atrás</string>
+
+    <string name="onboarding_title">Bienvenido a PictoKeyboard</string>
+    <string name="onboarding_intro">Un teclado de pictogramas para la comunicación aumentativa. Configúralo abajo.</string>
+    <string name="onboarding_step_enable">1. Activar PictoKeyboard</string>
+    <string name="onboarding_step_enable_desc">Activa el teclado en los ajustes del sistema Android.</string>
+    <string name="onboarding_enable_action">Abrir ajustes de entrada</string>
+    <string name="onboarding_step_select">2. Elegir PictoKeyboard</string>
+    <string name="onboarding_step_select_desc">Selecciona PictoKeyboard como teclado activo.</string>
+    <string name="onboarding_select_action">Cambiar de teclado</string>
+    <string name="onboarding_continue">Configurar el tablero</string>
+
+    <string name="pin_set_title">Establecer un PIN de administrador</string>
+    <string name="pin_set_desc">Protege las pantallas de configuración para que el usuario no cambie el tablero por accidente.</string>
+    <string name="pin_enter_title">Introduce el PIN de administrador</string>
+    <string name="pin_field">PIN</string>
+    <string name="pin_confirm_field">Confirmar PIN</string>
+    <string name="pin_mismatch">Los PIN no coinciden</string>
+    <string name="pin_too_short">Usa al menos 4 dígitos</string>
+    <string name="pin_wrong">PIN incorrecto</string>
+    <string name="pin_skip">Omitir por ahora</string>
+    <string name="pin_unlock">Desbloquear</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_board">Tablero</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="nav_about">Acerca de</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Bienvenido a</string>
+    <string name="dashboard_tagline">Toca pictogramas para hablar y escribir. Una forma sencilla de comunicarse.</string>
+    <string name="dashboard_setup_title">Configuración del teclado</string>
+    <string name="dashboard_setup_subtitle">Dos pasos rápidos para empezar a usar PictoKeyboard.</string>
+    <string name="dashboard_setup_ready_title">Todo listo</string>
+    <string name="dashboard_setup_ready_desc">PictoKeyboard está activado y en uso. Abre cualquier campo de texto para usarlo.</string>
+    <string name="dashboard_step_enabled_done">Activado en los ajustes de Android</string>
+    <string name="dashboard_step_selected_done">Seleccionado como teclado activo</string>
+    <string name="dashboard_stat_categories">Categorías</string>
+    <string name="dashboard_stat_pictos">Pictogramas</string>
+    <string name="dashboard_build">Crea tu tablero</string>
+    <string name="dashboard_build_desc">Añade las categorías y los pictos que verá el usuario.</string>
+    <string name="dashboard_tips_title">Bueno saberlo</string>
+    <string name="dashboard_tip_settings">La tecla ⚙ del teclado vuelve a abrir esta app de configuración.</string>
+    <string name="dashboard_tip_switch">La tecla 🌐 cambia entre teclados.</string>
+    <string name="dashboard_tip_blind">Un doble toque con dos dedos activa o desactiva el modo ciego.</string>
+
+    <!-- Controles del modo ciego (tarjeta de inicio) -->
+    <string name="blind_controls_title">Controles del modo ciego</string>
+    <string name="blind_controls_subtitle">Gestos sin necesidad de ver, para el usuario o para quien le ayude.</string>
+    <string name="blind_ctrl_category_action">Cambiar de categoría</string>
+    <string name="blind_ctrl_category_gesture">Desliza arriba o abajo</string>
+    <string name="blind_ctrl_picto_action">Cambiar de pictograma</string>
+    <string name="blind_ctrl_picto_gesture">Desliza a izquierda o derecha</string>
+    <string name="blind_ctrl_read_action">Leer en voz alta</string>
+    <string name="blind_ctrl_read_gesture">Un toque</string>
+    <string name="blind_ctrl_write_action">Escribir el pictograma</string>
+    <string name="blind_ctrl_write_gesture">Doble toque</string>
+    <string name="blind_ctrl_delete_action">Borrar la última palabra</string>
+    <string name="blind_ctrl_delete_gesture">Mantén pulsado</string>
+    <string name="blind_ctrl_toggle_action">Entrar o salir del modo ciego</string>
+    <string name="blind_ctrl_toggle_gesture">Doble toque con dos dedos</string>
+
+    <string name="home_categories">Categorías y pictos</string>
+    <string name="home_categories_desc">Configura el tablero que verá el usuario.</string>
+    <string name="home_settings">Ajustes del teclado</string>
+    <string name="home_settings_desc">Idioma, cuadrícula, voz y PIN.</string>
+    <string name="home_about">Acerca de y créditos</string>
+    <string name="home_about_desc">Licencia y atribución de los pictogramas.</string>
+    <string name="home_open_keyboard">Configuración del teclado</string>
+
+    <string name="categories_title">Categorías</string>
+    <string name="category_add">Nueva categoría</string>
+    <string name="category_edit">Editar categoría</string>
+    <string name="category_name">Nombre de la categoría</string>
+    <string name="category_frame_color">Color del marco</string>
+    <string name="category_frame_style">Estilo del marco</string>
+    <string name="category_frame_thickness">Grosor del marco</string>
+    <string name="category_builtin">Predeterminada</string>
+    <string name="category_delete_confirm">¿Eliminar esta categoría y todos sus pictos?</string>
+    <string name="category_pictos_count">%1$d pictos</string>
+    <string name="category_blank">Categoría vacía</string>
+    <string name="category_blank_desc">Empieza vacía y añade tus pictos</string>
+    <string name="category_from_template">Empezar con una plantilla</string>
+    <string name="category_template_pick">Elige una plantilla</string>
+    <string name="category_template_desc">Crea una categoría lista para usar que luego puedes ajustar.</string>
+    <string name="category_suggested">Sugeridos</string>
+    <string name="category_suggested_desc">Tus palabras más usadas, en orden</string>
+    <string name="category_new_subtitle">Elige un punto de partida; luego puedes editarlo todo.</string>
+    <string name="reorder">Reordenar</string>
+    <string name="reorder_done">Listo</string>
+    <string name="reorder_drag">Arrastra para reordenar</string>
+    <string name="move_up">Subir</string>
+    <string name="move_down">Bajar</string>
+
+    <string name="pictos_title">Pictos</string>
+    <string name="picto_add">Añadir picto</string>
+    <string name="picto_edit">Editar picto</string>
+    <string name="picto_search_hint">Buscar en ARASAAC (p. ej. \"comer\", \"feliz\")</string>
+    <string name="picto_search">Buscar</string>
+    <string name="picto_no_results">No se encontraron pictogramas</string>
+    <string name="picto_searching">Buscando…</string>
+    <string name="picto_search_error">Error en la búsqueda. Comprueba tu conexión.</string>
+    <string name="picto_spoken_text">Texto a escribir y hablar</string>
+    <string name="picto_label">Texto (debajo del picto)</string>
+    <string name="picto_language">Idioma / voz</string>
+    <string name="picto_delete_confirm">¿Eliminar este picto?</string>
+    <string name="picto_saving">Guardando…</string>
+    <string name="picto_multi_hint">Toca varios pictogramas para seleccionarlos y pulsa Añadir.</string>
+    <string name="picto_add_selected">Añadir %1$d</string>
+    <string name="picto_edit_details">Editar detalles</string>
+    <string name="add_pictos_title">Añadir pictogramas</string>
+    <string name="add_empty_prompt">Busca en ARASAAC arriba y toca los pictogramas para seleccionarlos. Mantén pulsado uno para editarlo o personalizarlo antes de añadirlo.</string>
+    <string name="add_selected_count">%1$d seleccionados</string>
+    <string name="picto_customize">Personalizar</string>
+    <string name="picto_skin">Tono de piel</string>
+    <string name="picto_hair">Color de pelo</string>
+    <string name="picto_color">Color</string>
+    <string name="picto_option_none">Por defecto</string>
+    <string name="import_image">Importar imagen</string>
+    <string name="import_image_title">Picto de imagen</string>
+    <string name="picto_frame_color">Color del marco</string>
+    <string name="add_from_categories">Añadir de otras categorías</string>
+    <string name="add_from_categories_title">Añadir pictos existentes</string>
+    <string name="add_from_categories_empty">Aún no hay pictos en otras categorías.</string>
+    <string name="crop_title">Recortar imagen</string>
+    <string name="crop_hint">Pellizca para ampliar, arrastra para colocar. El área cuadrada será el picto.</string>
+    <string name="crop_use">Usar</string>
+    <string name="crop_failed">No se pudo recortar la imagen.</string>
+
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_language">Idioma predeterminado</string>
+    <string name="settings_grid_columns">Columnas de la cuadrícula</string>
+    <string name="settings_grid_rows">Filas visibles (altura)</string>
+    <string name="settings_show_labels">Mostrar texto bajo los pictos</string>
+    <string name="settings_add_space">Añadir un espacio tras cada palabra</string>
+    <string name="settings_speak">Pronunciar cada picto en voz alta</string>
+    <string name="settings_tts_rate">Velocidad de voz</string>
+    <string name="settings_tts_pitch">Tono de voz</string>
+    <string name="settings_blind_mode">Modo ciego (teclado por gestos)</string>
+    <string name="settings_blind_mode_desc">Teclado sin necesidad de ver, manejado con deslizamientos. Consejo: un doble toque con dos dedos lo activa o desactiva en cualquier momento.</string>
+    <string name="settings_pin">PIN de administrador</string>
+    <string name="settings_pin_set">Establecer / cambiar PIN</string>
+    <string name="settings_pin_remove">Quitar PIN</string>
+    <string name="settings_backup">Copia de seguridad</string>
+    <string name="settings_export">Exportar tablero (JSON)</string>
+    <string name="settings_import">Importar tablero (JSON)</string>
+    <string name="settings_export_done">Tablero exportado</string>
+    <string name="settings_import_done">Tablero importado</string>
+    <string name="settings_import_failed">Error al importar: archivo no válido</string>
+
+    <string name="about_title">Acerca de y créditos</string>
+    <string name="about_app">PictoKeyboard es un teclado de pictogramas diseñado para personas con dificultades del habla o de escritura.</string>
+    <string name="about_pictos_heading">Créditos de los pictogramas</string>
+    <string name="about_arasaac_attribution">Los símbolos pictográficos utilizados son propiedad del Gobierno de Aragón y han sido creados por Sergio Palao para ARASAAC (https://arasaac.org), que los distribuye bajo una licencia Creative Commons (BY-NC-SA).</string>
+    <string name="about_license_heading">Licencia</string>
+    <string name="about_license_noncommercial">Los pictogramas se ofrecen bajo CC BY-NC-SA 4.0 y NO pueden usarse con fines comerciales. Se exige atribución y compartir bajo la misma licencia.</string>
+    <string name="about_license_link">Ver licencia CC BY-NC-SA 4.0</string>
+    <string name="about_terms_link">Términos de uso de ARASAAC</string>
+    <string name="about_website_link">Sitio web de ARASAAC</string>
+</resources>

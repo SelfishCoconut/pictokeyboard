@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PictoKeyboard</string>
+    <string name="ime_label">PictoKeyboard</string>
+    <string name="subtype_es">Español</string>
+    <string name="subtype_en">English</string>
+
+    <!-- Keyboard control keys -->
+    <string name="kb_settings">Settings</string>
+    <string name="kb_settings_icon">⚙</string>
+    <string name="kb_switch">Switch keyboard</string>
+    <string name="kb_switch_icon">🌐</string>
+    <string name="kb_space">space</string>
+    <string name="kb_backspace">Backspace</string>
+    <string name="kb_backspace_icon">⌫</string>
+    <string name="kb_enter">Enter</string>
+    <string name="kb_enter_icon">↵</string>
+    <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
+    <string name="img_not_ready">Picture still downloading — try again in a moment.</string>
+    <string name="img_unsupported">This field can\'t receive images.</string>
+    <!-- Baked onto ARASAAC pictos shared as image/sticker so attribution travels with them. -->
+    <string name="arasaac_share_attribution">ARASAAC · Sergio Palao · CC BY-NC-SA</string>
+
+    <!-- Blind (eyes-free) mode -->
+    <string name="blind_on">Blind mode on. Swipe up or down to change category, left or right to change pictogram. Double tap to write, long press to delete.</string>
+    <string name="blind_off">Blind mode off</string>
+    <string name="blind_deleted">Deleted</string>
+    <string name="blind_no_board">No pictograms yet. Open settings to set up the board.</string>
+    <string name="blind_empty_category">Empty category</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="add">Add</string>
+    <string name="back">Back</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Welcome to PictoKeyboard</string>
+    <string name="onboarding_intro">A pictogram keyboard for augmentative communication. Set it up below.</string>
+    <string name="onboarding_step_enable">1. Enable PictoKeyboard</string>
+    <string name="onboarding_step_enable_desc">Turn on the keyboard in Android system settings.</string>
+    <string name="onboarding_enable_action">Open input settings</string>
+    <string name="onboarding_step_select">2. Choose PictoKeyboard</string>
+    <string name="onboarding_step_select_desc">Pick PictoKeyboard as the active keyboard.</string>
+    <string name="onboarding_select_action">Switch keyboard</string>
+    <string name="onboarding_continue">Set up the board</string>
+
+    <!-- PIN -->
+    <string name="pin_set_title">Set an admin PIN</string>
+    <string name="pin_set_desc">Protect the setup screens so the user can\'t change the board by accident.</string>
+    <string name="pin_enter_title">Enter admin PIN</string>
+    <string name="pin_field">PIN</string>
+    <string name="pin_confirm_field">Confirm PIN</string>
+    <string name="pin_mismatch">PINs do not match</string>
+    <string name="pin_too_short">Use at least 4 digits</string>
+    <string name="pin_wrong">Wrong PIN</string>
+    <string name="pin_skip">Skip for now</string>
+    <string name="pin_unlock">Unlock</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_board">Board</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_about">About</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Welcome to</string>
+    <string name="dashboard_tagline">Tap pictograms to speak and type. A simple way to communicate.</string>
+    <string name="dashboard_setup_title">Keyboard setup</string>
+    <string name="dashboard_setup_subtitle">Two quick steps to start using PictoKeyboard.</string>
+    <string name="dashboard_setup_ready_title">You\'re all set</string>
+    <string name="dashboard_setup_ready_desc">PictoKeyboard is enabled and active. Open any text field to use it.</string>
+    <string name="dashboard_step_enabled_done">Enabled in Android settings</string>
+    <string name="dashboard_step_selected_done">Selected as the active keyboard</string>
+    <string name="dashboard_stat_categories">Categories</string>
+    <string name="dashboard_stat_pictos">Pictograms</string>
+    <string name="dashboard_build">Build your board</string>
+    <string name="dashboard_build_desc">Add the categories and pictograms the user will see.</string>
+    <string name="dashboard_tips_title">Good to know</string>
+    <string name="dashboard_tip_settings">The ⚙ key on the keyboard reopens this setup app.</string>
+    <string name="dashboard_tip_switch">The 🌐 key switches between keyboards.</string>
+    <string name="dashboard_tip_blind">A two-finger double-tap turns blind (eyes-free) mode on or off.</string>
+
+    <!-- Blind mode controls (Home card) -->
+    <string name="blind_controls_title">Blind mode controls</string>
+    <string name="blind_controls_subtitle">Eyes-free gestures — for the user or a helper to learn.</string>
+    <string name="blind_ctrl_category_action">Change category</string>
+    <string name="blind_ctrl_category_gesture">Swipe up or down</string>
+    <string name="blind_ctrl_picto_action">Change pictogram</string>
+    <string name="blind_ctrl_picto_gesture">Swipe left or right</string>
+    <string name="blind_ctrl_read_action">Read aloud</string>
+    <string name="blind_ctrl_read_gesture">Single tap</string>
+    <string name="blind_ctrl_write_action">Write the pictogram</string>
+    <string name="blind_ctrl_write_gesture">Double tap</string>
+    <string name="blind_ctrl_delete_action">Delete last word</string>
+    <string name="blind_ctrl_delete_gesture">Long press</string>
+    <string name="blind_ctrl_toggle_action">Enter or exit blind mode</string>
+    <string name="blind_ctrl_toggle_gesture">Two-finger double-tap</string>
+
+    <!-- Home -->
+    <string name="home_categories">Categories &amp; pictos</string>
+    <string name="home_categories_desc">Build the board the user will see.</string>
+    <string name="home_settings">Keyboard settings</string>
+    <string name="home_settings_desc">Language, grid, speech and PIN.</string>
+    <string name="home_about">About &amp; credits</string>
+    <string name="home_about_desc">Licensing and pictogram attribution.</string>
+    <string name="home_open_keyboard">Keyboard setup</string>
+
+    <!-- Categories -->
+    <string name="categories_title">Categories</string>
+    <string name="category_add">New category</string>
+    <string name="category_edit">Edit category</string>
+    <string name="category_name">Category name</string>
+    <string name="category_frame_color">Frame colour</string>
+    <string name="category_frame_style">Frame style</string>
+    <string name="category_frame_thickness">Frame thickness</string>
+    <string name="category_builtin">Default</string>
+    <string name="category_delete_confirm">Delete this category and all its pictos?</string>
+    <string name="category_pictos_count">%1$d pictos</string>
+    <string name="category_blank">Blank category</string>
+    <string name="category_blank_desc">Start empty and add your own pictos</string>
+    <string name="category_from_template">Start from a template</string>
+    <string name="category_template_pick">Choose a template</string>
+    <string name="category_template_desc">Creates a ready-made category you can then tweak.</string>
+    <string name="category_suggested">Suggested</string>
+    <string name="category_suggested_desc">Your most-used words, in order</string>
+    <string name="category_new_subtitle">Pick a starting point — you can edit everything afterwards.</string>
+    <string name="reorder">Reorder</string>
+    <string name="reorder_done">Done</string>
+    <string name="reorder_drag">Drag to reorder</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+
+    <!-- Pictos -->
+    <string name="pictos_title">Pictos</string>
+    <string name="picto_add">Add picto</string>
+    <string name="picto_edit">Edit picto</string>
+    <string name="picto_search_hint">Search ARASAAC (e.g. \"comer\", \"happy\")</string>
+    <string name="picto_search">Search</string>
+    <string name="picto_no_results">No pictograms found</string>
+    <string name="picto_searching">Searching…</string>
+    <string name="picto_search_error">Search failed. Check your connection.</string>
+    <string name="picto_spoken_text">Text to type &amp; speak</string>
+    <string name="picto_label">Caption (shown under picto)</string>
+    <string name="picto_language">Language / voice</string>
+    <string name="picto_delete_confirm">Delete this picto?</string>
+    <string name="picto_saving">Saving…</string>
+    <string name="picto_multi_hint">Tap pictograms to select several, then Add.</string>
+    <string name="picto_add_selected">Add %1$d</string>
+    <string name="picto_edit_details">Edit details</string>
+    <string name="add_pictos_title">Add pictograms</string>
+    <string name="add_empty_prompt">Search ARASAAC above, then tap pictograms to select them. Long-press one to edit or customize it before adding.</string>
+    <string name="add_selected_count">%1$d selected</string>
+    <string name="picto_customize">Customize</string>
+    <string name="picto_skin">Skin tone</string>
+    <string name="picto_hair">Hair colour</string>
+    <string name="picto_color">Colour</string>
+    <string name="picto_option_none">Default</string>
+    <string name="import_image">Import image</string>
+    <string name="import_image_title">New image picto</string>
+    <string name="picto_frame_color">Frame colour</string>
+    <string name="add_from_categories">Add from other categories</string>
+    <string name="add_from_categories_title">Add existing pictos</string>
+    <string name="add_from_categories_empty">No pictos in other categories yet.</string>
+    <string name="crop_title">Crop image</string>
+    <string name="crop_hint">Pinch to zoom, drag to position. The square area becomes the picto.</string>
+    <string name="crop_use">Use</string>
+    <string name="crop_failed">Couldn\'t crop that image.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Default language</string>
+    <string name="settings_grid_columns">Grid columns</string>
+    <string name="settings_grid_rows">Visible rows (height)</string>
+    <string name="settings_show_labels">Show captions under pictos</string>
+    <string name="settings_add_space">Add a space after each word</string>
+    <string name="settings_speak">Speak each picto aloud</string>
+    <string name="settings_tts_rate">Speech rate</string>
+    <string name="settings_tts_pitch">Speech pitch</string>
+    <string name="settings_blind_mode">Blind mode (gesture keyboard)</string>
+    <string name="settings_blind_mode_desc">Eyes-free keyboard driven by swipes. Tip: a two-finger double-tap turns it on or off any time.</string>
+    <string name="settings_pin">Admin PIN</string>
+    <string name="settings_pin_set">Set / change PIN</string>
+    <string name="settings_pin_remove">Remove PIN</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_export">Export board (JSON)</string>
+    <string name="settings_import">Import board (JSON)</string>
+    <string name="settings_export_done">Board exported</string>
+    <string name="settings_import_done">Board imported</string>
+    <string name="settings_import_failed">Import failed: invalid file</string>
+
+    <!-- About -->
+    <string name="about_title">About &amp; credits</string>
+    <string name="about_app">PictoKeyboard is a pictogram keyboard designed for people with speech or typing difficulties.</string>
+    <string name="about_pictos_heading">Pictogram credits</string>
+    <string name="about_arasaac_attribution">The pictographic symbols used are the property of the Government of Aragón and have been created by Sergio Palao for ARASAAC (https://arasaac.org), which distributes them under a Creative Commons license (BY-NC-SA).</string>
+    <string name="about_license_heading">License</string>
+    <string name="about_license_noncommercial">Pictograms are provided under CC BY-NC-SA 4.0 and may NOT be used for commercial purposes. Attribution and ShareAlike are required.</string>
+    <string name="about_license_link">View CC BY-NC-SA 4.0 license</string>
+    <string name="about_terms_link">ARASAAC terms of use</string>
+    <string name="about_website_link">ARASAAC website</string>
+</resources>

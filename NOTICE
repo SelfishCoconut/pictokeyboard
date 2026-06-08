@@ -1,0 +1,25 @@
+PictoKeyboard
+=============
+
+Pictogram credits
+-----------------
+The pictographic symbols used in this application are the property of the
+Government of Aragón and have been created by Sergio Palao for ARASAAC
+(https://arasaac.org), which distributes them under a Creative Commons license
+(BY-NC-SA 4.0).
+
+License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+         https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
+Terms of use: https://arasaac.org/terms-of-use
+
+This means, among other conditions:
+  * Attribution      — the attribution line above must be shown.
+  * NonCommercial    — the pictograms may NOT be used for commercial purposes.
+  * ShareAlike       — derivatives must be shared under the same license.
+
+PictoKeyboard downloads pictograms on demand from the ARASAAC API
+(https://api.arasaac.org) and the static CDN (https://static.arasaac.org).
+The pictogram images are not redistributed with the application binary.
+
+This attribution is also shown to end users in the app's "About & credits"
+screen, as required by the ARASAAC terms of use.

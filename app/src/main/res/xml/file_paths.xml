@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Cached ARASAAC / custom picto images shared with other apps when a key
+         is long-pressed to send the pictogram as an image. -->
+    <files-path name="pictos" path="pictos/" />
+    <files-path name="shared" path="shared/" />
+</paths>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- PictoKeyboard logo: four AAC-colour picto frames on the app's purple tile -->
+  <rect x="0" y="0" width="512" height="512" rx="120" fill="#6750A4"/>
+  <g fill="#FFFFFF" stroke-width="18">
+    <rect x="84"  y="84"  width="150" height="150" rx="30" stroke="#FFC107"/>
+    <rect x="278" y="84"  width="150" height="150" rx="30" stroke="#4CAF50"/>
+    <rect x="84"  y="278" width="150" height="150" rx="30" stroke="#2196F3"/>
+    <rect x="278" y="278" width="150" height="150" rx="30" stroke="#F44336"/>
+  </g>
+</svg>
