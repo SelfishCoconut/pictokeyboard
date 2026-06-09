@@ -12,7 +12,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Android%208.0%2B-3DDC84?logo=android&logoColor=white)](#build--install)
 [![Built with](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![License](https://img.shields.io/badge/license-Beer--Ware-blueviolet)](./LICENSE)
+[![License](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-blue)](./LICENSE)
 [![Pictograms](https://img.shields.io/badge/pictograms-ARASAAC%20CC%20BY--NC--SA-orange)](https://arasaac.org/terms-of-use)
 [![Release](https://img.shields.io/github/v/release/SelfishCoconut/pictokeyboard?label=release&color=blue)](https://github.com/SelfishCoconut/pictokeyboard/releases/latest)
 [![Stars](https://img.shields.io/github/stars/SelfishCoconut/pictokeyboard?style=flat&color=yellow)](https://github.com/SelfishCoconut/pictokeyboard/stargazers)
@@ -153,10 +153,13 @@ The ⚙ key on the keyboard reopens this setup app; the 🌐 key switches keyboa
 
 ## Licensing & attribution
 
-The PictoKeyboard **application source code** is released under the
-[Beer-Ware License](./LICENSE) (Revision 42) — do whatever you want with it.
+The PictoKeyboard **application source code** is released under
+[**CC BY‑NC‑SA 4.0**](./LICENSE) — the same license as the pictograms, so the
+whole project stays non‑commercial and share‑alike. There is no relicensing
+escape hatch: Creative Commons has designated **no** licenses as compatible
+with BY‑NC‑SA, so any derivative must remain under CC BY‑NC‑SA 4.0.
 
-The **pictograms are a separate matter**: PictoKeyboard does **not** bundle
+The **pictograms are credited separately**: PictoKeyboard does **not** bundle
 ARASAAC images; it fetches them at setup time.
 The pictographic symbols are property of the Government of Aragón, created by
 Sergio Palao for ARASAAC, distributed under **CC BY‑NC‑SA 4.0**
