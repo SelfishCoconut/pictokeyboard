@@ -1,0 +1,38 @@
+name: Feature
+description: A new user-visible capability
+labels: ["feature"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: The change, in user-visible terms.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The problem this solves. A feature with no stated problem cannot be judged done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete and checkable. This is the definition of done and what the PR is reviewed against.
+      value: |
+        - [ ]
+        - [ ]
+        - [ ] Accessible: labeled, 48dp targets, works at 2x font scale
+        - [ ] Strings added to every shipped locale
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this issue deliberately does not cover.

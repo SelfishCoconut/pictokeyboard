@@ -1,0 +1,30 @@
+version: 2
+
+# Dependabot has no event-driven mode -- it answers "did the outside world
+# change?", which has nothing to do with your commits, so an interval is the
+# only option it offers. Daily keeps the window between a published advisory
+# and a PR short. Dependabot PRs are auto-merged by automerge.yml once CI
+# passes, so daily costs no attention when nothing breaks.
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    groups:
+      # One PR per group instead of per dependency: fewer CI runs, and a
+      # coherent unit to revert if something breaks.
+      androidx:
+        patterns: ["androidx.*"]
+      kotlin:
+        patterns: ["org.jetbrains.kotlin*", "com.google.devtools.ksp*"]
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      actions:
+        patterns: ["*"]

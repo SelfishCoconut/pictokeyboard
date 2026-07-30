@@ -1,0 +1,28 @@
+name: Play Store compliance
+
+# The automatable half of the play-release checklist. Catches the config-level
+# rejections before an upload burns a versionCode or a review cycle. The
+# declaration-level checks (Data Safety accuracy, privacy policy content,
+# listing assets) are human work -- see the play-release skill.
+on:
+  pull_request:
+    paths:
+      - "app/build.gradle.kts"
+      - "app/src/main/AndroidManifest.xml"
+      - "gradle/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compliance:
+    name: compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run compliance checks
+        env:
+          PLAY_TARGET_SDK_FLOOR: "35"
+          MODULE: "app"
+        run: bash .github/scripts/play-compliance.sh

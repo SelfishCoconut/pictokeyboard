@@ -1,0 +1,68 @@
+name: Metrics
+
+# Runs after each feature lands on the default branch, so the trend has one
+# datapoint per merged change rather than one per week. No schedule.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  metrics:
+    name: metrics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          # gradle-wrapper.jar is gitignored in this repo (see README),
+          # so CI pins Gradle here and invokes `gradle` rather than
+          # `./gradlew`, which would not exist after checkout.
+          gradle-version: "8.9"
+
+      - name: Build and measure
+        run: |
+          gradle assembleRelease -x lint || gradle assembleDebug
+          {
+            echo "# Metrics for ${GITHUB_SHA::8}"
+            echo
+            echo "## Artifact size"
+            find app/build/outputs -name '*.apk' -o -name '*.aab' \
+              | while read -r f; do
+                  printf '%s  %s\n' "$(du -h "$f" | cut -f1)" "$(basename "$f")"
+                done
+            echo
+            echo "## Source size"
+            echo "Kotlin files: $(find app/src -name '*.kt' | wc -l)"
+            echo "Kotlin lines: $(find app/src -name '*.kt' -exec cat {} + | wc -l)"
+          } > metrics.md
+
+      - name: Static analysis counts
+        continue-on-error: true
+        run: |
+          gradle detekt lintDebug || true
+          {
+            echo
+            echo "## detekt findings"
+            grep -c '<error' app/build/reports/detekt/detekt.xml 2>/dev/null || echo "n/a"
+            echo
+            echo "## lint warnings"
+            grep -c '<issue' app/build/reports/lint-results-debug.xml 2>/dev/null || echo "n/a"
+          } >> metrics.md
+
+      - name: Summary
+        if: always()
+        run: cat metrics.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: metrics
+          path: metrics.md

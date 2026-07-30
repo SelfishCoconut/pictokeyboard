@@ -1,0 +1,28 @@
+name: Board
+
+# Adds new issues and PRs to the project board. Column transitions
+# (In Progress on linked-PR open, Done on close) are handled by Projects v2's
+# own built-in workflows -- enable them once in the project settings rather
+# than reimplementing them here, where they would drift.
+#
+# Requires a PROJECT_TOKEN secret: a fine-grained PAT with read/write on
+# Projects. The default GITHUB_TOKEN cannot write to a user- or org-level
+# project board.
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  add-to-board:
+    name: add to board
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1
+        with:
+          project-url: ${{ vars.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_TOKEN }}

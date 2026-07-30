@@ -1,0 +1,66 @@
+name: Accessibility issue
+description: A barrier that makes the app hard or impossible to use with an assistive technology
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accessibility defects are correctness defects. For some users there is
+        no workaround, so these are triaged as bugs, not as polish.
+
+  - type: dropdown
+    id: technology
+    attributes:
+      label: Assistive technology affected
+      multiple: true
+      options:
+        - TalkBack / screen reader
+        - Switch access
+        - Keyboard / D-pad navigation
+        - Magnification
+        - Large font scale
+        - High contrast / color vision
+        - Voice access
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What is blocked
+      description: What can the user not do, and where?
+      placeholder: "TalkBack announces the list items as 'Button' with no name, so a blind user cannot tell them apart."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      placeholder: |
+        1. Enable TalkBack
+        2. Open the affected screen
+        3. Swipe right through the items
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen, stated concretely enough to be the acceptance criterion.
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: "Pixel 6a, Android 14"
+
+  - type: input
+    id: guideline
+    attributes:
+      label: Related guideline (optional)
+      placeholder: "WCAG 2.2 SC 1.1.1 / Material touch target 48dp"

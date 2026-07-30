@@ -1,0 +1,64 @@
+name: Security
+
+# Event-driven only: every check runs against the diff that could introduce the
+# problem. No schedule -- nothing here runs unattended.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # gitleaks scans history, not just the tip
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          # gradle-wrapper.jar is gitignored in this repo (see README),
+          # so CI pins Gradle here and invokes `gradle` rather than
+          # `./gradlew`, which would not exist after checkout.
+          gradle-version: "8.9"
+      - run: gradle assembleDebug
+      - uses: github/codeql-action/analyze@v3
+
+  dependencies:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: google/osv-scanner-action/osv-scanner-action@v2
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            ./
