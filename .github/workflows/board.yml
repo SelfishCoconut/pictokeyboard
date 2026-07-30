@@ -22,7 +22,7 @@ jobs:
     name: add to board
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v1
+      - uses: actions/add-to-project@v2
         with:
           project-url: ${{ vars.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_TOKEN }}
