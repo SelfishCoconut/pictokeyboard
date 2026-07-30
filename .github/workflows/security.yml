@@ -43,12 +43,7 @@ jobs:
         with:
           languages: java-kotlin
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
-      - run: gradle assembleDebug
+      - run: ./gradlew assembleDebug
       - uses: github/codeql-action/analyze@v4
 
   dependencies:

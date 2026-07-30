@@ -124,8 +124,7 @@ Requirements: **Android Studio** (Ladybug or newer) or the Android SDK with
 JDK 17. The project targets `compileSdk 34`, `minSdk 26` (Android 8.0).
 
 ### Android Studio (recommended)
-1. `File ▸ Open` this folder. Studio downloads Gradle 8.9 and the SDK, and
-   regenerates the Gradle wrapper jar automatically.
+1. `File ▸ Open` this folder. Studio downloads Gradle 8.9 and the SDK.
 2. Plug in a device (USB debugging on) or start an emulator.
 3. Press **Run ▸ app**.
 
@@ -137,9 +136,10 @@ echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 ./gradlew assembleDebug          # build app/build/outputs/apk/debug/app-debug.apk
 ./gradlew installDebug           # build + install on the connected device
 ```
-> The committed repo does not include the binary `gradle/wrapper/gradle-wrapper.jar`.
-> Android Studio regenerates it on sync. To create it from a CLI with Gradle
-> installed: `gradle wrapper --gradle-version 8.9`.
+> The Gradle wrapper (including `gradle/wrapper/gradle-wrapper.jar`) is
+> committed, as Gradle recommends. It is the single source of truth for the
+> Gradle version used by both local builds and CI, so a wrapper upgrade is
+> tested like any other change. CI verifies the jar's checksum on every run.
 
 ## Turning it on (on the device)
 

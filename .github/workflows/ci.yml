@@ -23,17 +23,12 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
       - name: Format
-        run: gradle spotlessCheck
+        run: ./gradlew spotlessCheck
       - name: Static analysis
-        run: gradle detekt
+        run: ./gradlew detekt
       - name: Android Lint
-        run: gradle lintDebug
+        run: ./gradlew lintDebug
       - name: Upload lint report
         if: always()
         uses: actions/upload-artifact@v7
@@ -52,12 +47,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
-      - run: gradle assembleDebug
+      - run: ./gradlew assembleDebug
       - uses: actions/upload-artifact@v7
         with:
           name: debug-apk
@@ -73,12 +63,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
-      - run: gradle testDebugUnitTest
+      - run: ./gradlew testDebugUnitTest
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v7

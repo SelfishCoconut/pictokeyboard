@@ -22,11 +22,6 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
 
       - name: Decode keystore
         id: keystore
@@ -50,7 +45,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           # Monotonic across runs; never reused.
           VERSION_CODE: ${{ github.run_number }}
-        run: gradle bundleRelease assembleRelease
+        run: ./gradlew bundleRelease assembleRelease
 
       - name: Verify signature
         if: steps.keystore.outputs.signed == 'true'

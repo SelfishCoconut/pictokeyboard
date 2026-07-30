@@ -45,11 +45,6 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
 
       - name: Enable KVM
         run: |
@@ -65,7 +60,7 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: gradle connectedDebugAndroidTest
+          script: ./gradlew connectedDebugAndroidTest
 
       - name: Upload report
         if: always()

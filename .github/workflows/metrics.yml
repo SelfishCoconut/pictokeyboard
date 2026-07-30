@@ -21,15 +21,10 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          # gradle-wrapper.jar is gitignored in this repo (see README),
-          # so CI pins Gradle here and invokes `gradle` rather than
-          # `./gradlew`, which would not exist after checkout.
-          gradle-version: "8.9"
 
       - name: Build and measure
         run: |
-          gradle assembleRelease -x lint || gradle assembleDebug
+          ./gradlew assembleRelease -x lint || ./gradlew assembleDebug
           {
             echo "# Metrics for ${GITHUB_SHA::8}"
             echo
@@ -47,7 +42,7 @@ jobs:
       - name: Static analysis counts
         continue-on-error: true
         run: |
-          gradle detekt lintDebug || true
+          ./gradlew detekt lintDebug || true
           {
             echo
             echo "## detekt findings"
