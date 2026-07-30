@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -230,7 +229,10 @@ fun AddPictosScreen(
             imageUri = uri,
             viewModel = viewModel,
             onDismiss = { importUri = null },
-            onCropped = { bmp -> cropped = bmp; importUri = null },
+            onCropped = { bmp ->
+                cropped = bmp
+                importUri = null
+            },
         )
     }
     cropped?.let { bmp ->
@@ -392,7 +394,9 @@ private fun PictoDetailDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (spoken.isNotBlank()) onConfirm(spoken.trim(), label.trim(), language, options, frameColor) },
+                onClick = {
+                    if (spoken.isNotBlank()) onConfirm(spoken.trim(), label.trim(), language, options, frameColor)
+                },
                 enabled = spoken.isNotBlank(),
             ) { Text(stringResource(R.string.add)) }
         },
@@ -558,7 +562,12 @@ private fun ImportFromCategoriesDialog(
                                     modifier = Modifier
                                         .size(72.dp)
                                         .background(Color.White, RoundedCornerShape(12.dp))
-                                        .categoryFrame(pictoColor, if (isSelected) 4.dp else 2.dp, category.borderStyle, 12.dp)
+                                        .categoryFrame(
+                                            pictoColor,
+                                            if (isSelected) 4.dp else 2.dp,
+                                            category.borderStyle,
+                                            12.dp,
+                                        )
                                         .clickable {
                                             if (!selectedIds.remove(picto.id)) selectedIds.add(picto.id)
                                         }
@@ -566,7 +575,9 @@ private fun ImportFromCategoriesDialog(
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     val model: Any = picto.imagePath?.let { File(it) }
-                                        ?: picto.arasaacId?.let { "https://static.arasaac.org/pictograms/$it/${it}_500.png" }
+                                        ?: picto.arasaacId?.let {
+                                            "https://static.arasaac.org/pictograms/$it/${it}_500.png"
+                                        }
                                         ?: R.drawable.ic_picto_placeholder
                                     AsyncImage(
                                         model = model,

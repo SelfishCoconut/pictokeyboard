@@ -11,21 +11,10 @@ import org.pictokeyboard.data.db.PictoEntity
  */
 object DefaultData {
 
-    private data class CatSeed(
-        val id: String,
-        val es: String,
-        val en: String,
-        val color: Long,
-        val iconArasaacId: Int,
-    )
+    private data class CatSeed(val id: String, val es: String, val en: String, val color: Long, val iconArasaacId: Int)
 
     /** A starter pictogram: ARASAAC id + localised words. */
-    private data class P(
-        val categoryId: String,
-        val arasaacId: Int,
-        val es: String,
-        val en: String,
-    )
+    private data class P(val categoryId: String, val arasaacId: Int, val es: String, val en: String)
 
     private val catSeeds = listOf(
         CatSeed("cat-people", "Personas", "People", 0xFFFFC107, 34560),

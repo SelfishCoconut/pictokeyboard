@@ -11,13 +11,10 @@ import coil.load
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
-import org.pictokeyboard.ime.SquareFrameLayout
 import java.io.File
 
-class PictoAdapter(
-    private val onClick: (PictoEntity) -> Unit,
-    private val onLongClick: (PictoEntity) -> Unit = {},
-) : RecyclerView.Adapter<PictoAdapter.VH>() {
+class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLongClick: (PictoEntity) -> Unit = {}) :
+    RecyclerView.Adapter<PictoAdapter.VH>() {
 
     private var items: List<PictoEntity> = emptyList()
     private var categoryColor: Int = Color.LTGRAY
@@ -85,7 +82,10 @@ class PictoAdapter(
             label.visibility = if (showLabels && picto.label.isNotBlank()) View.VISIBLE else View.GONE
 
             itemView.setOnClickListener { onClick(picto) }
-            itemView.setOnLongClickListener { onLongClick(picto); true }
+            itemView.setOnLongClickListener {
+                onLongClick(picto)
+                true
+            }
         }
 
         private fun dp(value: Int): Int =

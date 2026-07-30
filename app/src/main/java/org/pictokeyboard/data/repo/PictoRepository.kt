@@ -2,6 +2,10 @@ package org.pictokeyboard.data.repo
 
 import android.graphics.Bitmap
 import android.net.Uri
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
 import org.pictokeyboard.data.arasaac.ImageCache
@@ -14,10 +18,6 @@ import org.pictokeyboard.data.db.UsageDao
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.DefaultData
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 /**

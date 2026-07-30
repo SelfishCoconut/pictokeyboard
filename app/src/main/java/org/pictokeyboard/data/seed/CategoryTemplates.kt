@@ -19,19 +19,18 @@ data class CategoryTemplate(
 }
 
 /** One picto inside a [CategoryTemplate]: ARASAAC id + localised words. */
-data class TemplatePicto(
-    val arasaacId: Int,
-    val es: String,
-    val en: String,
-)
+data class TemplatePicto(val arasaacId: Int, val es: String, val en: String)
 
 /** The catalogue of category templates offered in the "New category" flow. */
 object CategoryTemplates {
 
     val all: List<CategoryTemplate> = listOf(
         CategoryTemplate(
-            id = "tpl-drinks", es = "Bebidas", en = "Drinks",
-            color = 0xFF00BCD4, iconArasaacId = 32464,
+            id = "tpl-drinks",
+            es = "Bebidas",
+            en = "Drinks",
+            color = 0xFF00BCD4,
+            iconArasaacId = 32464,
             pictos = listOf(
                 TemplatePicto(32464, "agua", "water"),
                 TemplatePicto(2445, "leche", "milk"),
@@ -43,8 +42,11 @@ object CategoryTemplates {
             ),
         ),
         CategoryTemplate(
-            id = "tpl-animals", es = "Animales", en = "Animals",
-            color = 0xFF795548, iconArasaacId = 7202,
+            id = "tpl-animals",
+            es = "Animales",
+            en = "Animals",
+            color = 0xFF795548,
+            iconArasaacId = 7202,
             pictos = listOf(
                 TemplatePicto(7202, "perro", "dog"),
                 TemplatePicto(7114, "gato", "cat"),
@@ -57,8 +59,11 @@ object CategoryTemplates {
             ),
         ),
         CategoryTemplate(
-            id = "tpl-clothes", es = "Ropa", en = "Clothing",
-            color = 0xFFE91E63, iconArasaacId = 2309,
+            id = "tpl-clothes",
+            es = "Ropa",
+            en = "Clothing",
+            color = 0xFFE91E63,
+            iconArasaacId = 2309,
             pictos = listOf(
                 TemplatePicto(2309, "camiseta", "shirt"),
                 TemplatePicto(2565, "pantalón", "trousers"),
@@ -70,8 +75,11 @@ object CategoryTemplates {
             ),
         ),
         CategoryTemplate(
-            id = "tpl-body", es = "Cuerpo", en = "Body",
-            color = 0xFFFF5722, iconArasaacId = 2673,
+            id = "tpl-body",
+            es = "Cuerpo",
+            en = "Body",
+            color = 0xFFFF5722,
+            iconArasaacId = 2673,
             pictos = listOf(
                 TemplatePicto(2673, "cabeza", "head"),
                 TemplatePicto(2928, "mano", "hand"),
@@ -84,8 +92,11 @@ object CategoryTemplates {
             ),
         ),
         CategoryTemplate(
-            id = "tpl-colors", es = "Colores", en = "Colours",
-            color = 0xFF3F51B5, iconArasaacId = 2808,
+            id = "tpl-colors",
+            es = "Colores",
+            en = "Colours",
+            color = 0xFF3F51B5,
+            iconArasaacId = 2808,
             pictos = listOf(
                 TemplatePicto(2808, "rojo", "red"),
                 TemplatePicto(4869, "azul", "blue"),

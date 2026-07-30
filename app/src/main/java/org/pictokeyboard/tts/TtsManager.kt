@@ -28,6 +28,7 @@ class TtsManager(context: Context) : TextToSpeech.OnInitListener {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val queue = ArrayDeque<Part>()
+
     /** Bumped on every new request so stale completion callbacks are ignored. */
     private var sequenceId = 0
 
@@ -38,6 +39,7 @@ class TtsManager(context: Context) : TextToSpeech.OnInitListener {
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {}
                 override fun onDone(utteranceId: String?) = continueSequence(utteranceId)
+
                 @Deprecated("deprecated in API 21")
                 override fun onError(utteranceId: String?) = continueSequence(utteranceId)
                 override fun onError(utteranceId: String?, errorCode: Int) = continueSequence(utteranceId)

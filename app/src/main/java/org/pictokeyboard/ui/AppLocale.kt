@@ -19,10 +19,7 @@ import java.util.Locale
  * the context to find the Activity, so we must not replace it with a detached
  * `createConfigurationContext`, only re-skin its [Resources].
  */
-private class LocaleContextWrapper(
-    base: Context,
-    private val localizedResources: Resources,
-) : ContextWrapper(base) {
+private class LocaleContextWrapper(base: Context, private val localizedResources: Resources) : ContextWrapper(base) {
     override fun getResources(): Resources = localizedResources
     override fun getAssets(): AssetManager = localizedResources.assets
 }

@@ -1,13 +1,13 @@
 package org.pictokeyboard.data.backup
 
+import com.squareup.moshi.Moshi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.pictokeyboard.data.arasaac.ImageCache
 import org.pictokeyboard.data.db.CategoryDao
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoDao
 import org.pictokeyboard.data.db.PictoEntity
-import com.squareup.moshi.Moshi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Exports/imports the whole board as JSON. On import, ARASAAC images are
@@ -25,14 +25,26 @@ class BackupManager(
     suspend fun export(language: String): String = withContext(Dispatchers.IO) {
         val categories = categoryDao.getAll().map {
             BackupCategory(
-                it.id, it.name, it.colorArgb, it.position, it.builtin, it.iconArasaacId,
-                it.borderStyle, it.borderWidthDp,
+                it.id,
+                it.name,
+                it.colorArgb,
+                it.position,
+                it.builtin,
+                it.iconArasaacId,
+                it.borderStyle,
+                it.borderWidthDp,
             )
         }
         val pictos = pictoDao.getAll().map {
             BackupPicto(
-                it.id, it.categoryId, it.label, it.spokenText, it.language, it.arasaacId,
-                it.position, it.colorArgbOverride,
+                it.id,
+                it.categoryId,
+                it.label,
+                it.spokenText,
+                it.language,
+                it.arasaacId,
+                it.position,
+                it.colorArgbOverride,
             )
         }
         adapter.toJson(BackupDto(1, language, categories, pictos))

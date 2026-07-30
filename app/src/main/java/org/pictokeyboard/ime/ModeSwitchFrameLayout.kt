@@ -14,10 +14,8 @@ import android.widget.FrameLayout
  * blind surface's swipes). This is what lets a blind user flip the mode without
  * needing to find a button.
  */
-class ModeSwitchFrameLayout @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-) : FrameLayout(context, attrs) {
+class ModeSwitchFrameLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
+    FrameLayout(context, attrs) {
 
     var onTwoFingerDoubleTap: () -> Unit = {}
 

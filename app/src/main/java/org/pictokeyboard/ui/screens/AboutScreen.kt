@@ -42,7 +42,10 @@ fun AboutScreen(onBack: (() -> Unit)? = null) {
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
                         }
                     }
                 },
@@ -69,7 +72,10 @@ fun AboutScreen(onBack: (() -> Unit)? = null) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.about_license_heading), style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(R.string.about_license_noncommercial), style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        stringResource(R.string.about_license_noncommercial),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                     OutlinedButton(onClick = { open("https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en") }) {
                         Text(stringResource(R.string.about_license_link))
                     }

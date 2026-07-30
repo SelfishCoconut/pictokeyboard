@@ -16,8 +16,4 @@ data class ArasaacKeywordDto(
 )
 
 /** Flattened search result used by the UI. */
-data class ArasaacResult(
-    val id: Int,
-    val keyword: String,
-    val imageUrl: String,
-)
+data class ArasaacResult(val id: Int, val keyword: String, val imageUrl: String)

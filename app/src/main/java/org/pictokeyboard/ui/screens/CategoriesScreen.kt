@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -57,8 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
@@ -85,7 +85,10 @@ fun CategoriesScreen(
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
                         }
                     }
                 },
@@ -133,13 +136,19 @@ fun CategoriesScreen(
                 val dragModifier = if (reordering) {
                     Modifier.pointerInput(items.size, category.id) {
                         detectDragGesturesAfterLongPress(
-                            onDragStart = { draggedId = category.id; dragOffsetY = 0f },
+                            onDragStart = {
+                                draggedId = category.id
+                                dragOffsetY = 0f
+                            },
                             onDragEnd = {
                                 draggedId = null
                                 dragOffsetY = 0f
                                 viewModel.reorderCategories(items.toList())
                             },
-                            onDragCancel = { draggedId = null; dragOffsetY = 0f },
+                            onDragCancel = {
+                                draggedId = null
+                                dragOffsetY = 0f
+                            },
                             onDrag = { change, amount ->
                                 change.consume()
                                 dragOffsetY += amount.y
@@ -157,7 +166,8 @@ fun CategoriesScreen(
                                         if (from != -1 && to != -1 && from != to) {
                                             items.add(to, items.removeAt(from))
                                             // Keep the dragged card under the finger after the swap.
-                                            dragOffsetY += if (to > from) -target.size.toFloat() else target.size.toFloat()
+                                            dragOffsetY +=
+                                                if (to > from) -target.size.toFloat() else target.size.toFloat()
                                         }
                                     }
                                 }
@@ -205,7 +215,10 @@ fun CategoriesScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(category.name, style = MaterialTheme.typography.titleMedium)
                             if (category.builtin) {
-                                Text(stringResource(R.string.category_builtin), style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    stringResource(R.string.category_builtin),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
                             }
                         }
                         if (reordering) {
@@ -238,7 +251,10 @@ fun CategoriesScreen(
             suggestedName = suggestedName,
             loadSuggested = { viewModel.topUsed() },
             onDismiss = { creating = false },
-            onBlank = { creating = false; creatingBlank = true },
+            onBlank = {
+                creating = false
+                creatingBlank = true
+            },
             onTemplate = { template ->
                 viewModel.addCategoryFromTemplate(template, settings.defaultLanguage)
                 creating = false
@@ -277,7 +293,10 @@ fun CategoriesScreen(
             title = { Text(cat.name) },
             text = { Text(stringResource(R.string.category_delete_confirm)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.deleteCategory(cat); deleting = null }) {
+                TextButton(onClick = {
+                    viewModel.deleteCategory(cat)
+                    deleting = null
+                }) {
                     Text(stringResource(R.string.delete))
                 }
             },

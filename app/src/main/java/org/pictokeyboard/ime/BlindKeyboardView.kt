@@ -26,10 +26,8 @@ import kotlin.math.abs
  * (The two-finger double-tap that toggles the mode is handled one level up, by
  * [ModeSwitchFrameLayout], so it works in both normal and blind keyboards.)
  */
-class BlindKeyboardView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-) : View(context, attrs) {
+class BlindKeyboardView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
+    View(context, attrs) {
 
     var onSwipeVertical: (down: Boolean) -> Unit = {}
     var onSwipeHorizontal: (right: Boolean) -> Unit = {}
@@ -61,11 +59,13 @@ class BlindKeyboardView @JvmOverloads constructor(
             override fun onDown(e: MotionEvent): Boolean = true
 
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                onSingleTap(); return true
+                onSingleTap()
+                return true
             }
 
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                onDoubleTap(); return true
+                onDoubleTap()
+                return true
             }
 
             override fun onLongPress(e: MotionEvent) {

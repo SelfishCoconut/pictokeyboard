@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -309,7 +308,12 @@ private fun SetupStep(
             contentAlignment = Alignment.Center,
         ) {
             if (done) {
-                Icon(Icons.Filled.Check, contentDescription = null, tint = badgeContent, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = badgeContent,
+                    modifier = Modifier.size(20.dp),
+                )
             } else {
                 Text("$index", style = MaterialTheme.typography.titleMedium, color = badgeContent)
             }

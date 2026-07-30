@@ -43,7 +43,10 @@ fun UnlockScreen(
         Text(stringResource(R.string.pin_enter_title), style = MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
             value = pin,
-            onValueChange = { pin = it.filter(Char::isDigit); error = false },
+            onValueChange = {
+                pin = it.filter(Char::isDigit)
+                error = false
+            },
             label = { Text(stringResource(R.string.pin_field)) },
             isError = error,
             singleLine = true,
@@ -56,7 +59,12 @@ fun UnlockScreen(
         Button(
             onClick = {
                 scope.launch {
-                    if (verify(pin)) onUnlocked() else { error = true; pin = "" }
+                    if (verify(pin)) {
+                        onUnlocked()
+                    } else {
+                        error = true
+                        pin = ""
+                    }
                 }
             },
             enabled = pin.length >= 4,

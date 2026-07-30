@@ -12,9 +12,7 @@ import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
 import java.io.File
 
-class CategoryAdapter(
-    private val onClick: (CategoryEntity) -> Unit,
-) : RecyclerView.Adapter<CategoryAdapter.VH>() {
+class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) : RecyclerView.Adapter<CategoryAdapter.VH>() {
 
     private var items: List<CategoryEntity> = emptyList()
     private var selectedId: String? = null

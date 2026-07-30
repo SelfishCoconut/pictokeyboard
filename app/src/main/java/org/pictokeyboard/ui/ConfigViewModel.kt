@@ -127,7 +127,9 @@ class ConfigViewModel : ViewModel() {
         }
     }
 
-    fun clearSearch() { _search.value = SearchState.Idle }
+    fun clearSearch() {
+        _search.value = SearchState.Idle
+    }
 
     fun addPicto(
         categoryId: String,

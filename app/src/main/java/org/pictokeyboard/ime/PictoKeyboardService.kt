@@ -94,7 +94,10 @@ class PictoKeyboardService : InputMethodService() {
             onSwipeHorizontal = { right -> changeBlindPicto(if (right) 1 else -1) }
             onSingleTap = { speakBlindCurrent() }
             onDoubleTap = { writeBlindCurrent() }
-            onLongPress = { deleteLastWord(); tts.speak(getString(R.string.blind_deleted), settings.defaultLanguage) }
+            onLongPress = {
+                deleteLastWord()
+                tts.speak(getString(R.string.blind_deleted), settings.defaultLanguage)
+            }
         }
 
         val container = ModeSwitchFrameLayout(this).apply {
@@ -294,8 +297,10 @@ class PictoKeyboardService : InputMethodService() {
 
         // Rounded white card with a coloured frame (corners left transparent).
         val rect = android.graphics.RectF(
-            strokeWidth / 2f, strokeWidth / 2f,
-            size - strokeWidth / 2f, size - strokeWidth / 2f,
+            strokeWidth / 2f,
+            strokeWidth / 2f,
+            size - strokeWidth / 2f,
+            size - strokeWidth / 2f,
         )
         val fill = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.WHITE
@@ -306,7 +311,8 @@ class PictoKeyboardService : InputMethodService() {
         val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.BLACK
             textAlign = android.graphics.Paint.Align.CENTER
-            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+            typeface =
+                android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
         }
         // Small blue ARASAAC attribution line drawn beneath the caption.
         val attrPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {

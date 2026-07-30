@@ -16,10 +16,7 @@ import java.util.UUID
  * user-imported images into local files, so the keyboard keeps working fully
  * offline once a board has been set up.
  */
-class ImageCache(
-    context: Context,
-    private val client: OkHttpClient,
-) {
+class ImageCache(context: Context, private val client: OkHttpClient) {
     private val appContext = context.applicationContext
     private val dir: File = File(appContext.filesDir, "pictos").apply { mkdirs() }
 

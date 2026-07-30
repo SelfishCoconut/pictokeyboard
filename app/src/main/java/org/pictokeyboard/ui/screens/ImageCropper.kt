@@ -49,10 +49,7 @@ import org.pictokeyboard.ui.ConfigViewModel
  * viewport is always filled) and the user can pinch to zoom and drag to position
  * it. [getCroppedBitmap] renders the visible square to a bitmap.
  */
-class CropImageView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-) : View(context, attrs) {
+class CropImageView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
     private var bitmap: Bitmap? = null
     private var baseScale = 1f

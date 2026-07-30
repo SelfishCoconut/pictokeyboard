@@ -1,10 +1,7 @@
 package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -129,8 +128,14 @@ fun PictosScreen(
         EditPictoDialog(
             picto = picto,
             onDismiss = { editing = null },
-            onSave = { viewModel.updatePicto(it); editing = null },
-            onDelete = { viewModel.deletePicto(picto); editing = null },
+            onSave = {
+                viewModel.updatePicto(it)
+                editing = null
+            },
+            onDelete = {
+                viewModel.deletePicto(picto)
+                editing = null
+            },
         )
     }
 }
