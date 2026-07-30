@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>CyclomaticComplexMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
