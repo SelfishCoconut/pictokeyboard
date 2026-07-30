@@ -3,6 +3,7 @@ package org.pictokeyboard.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -70,6 +71,12 @@ class MainActivity : ComponentActivity() {
     private val viewModel: ConfigViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Android 15 (targetSdk 35) draws every activity edge-to-edge and ignores
+        // android:statusBarColor. Opting in explicitly means API 26-34 devices lay
+        // out the same way as API 35+ ones, so there is only one set of insets
+        // behaviour to reason about, and it hands the system the light/dark icon
+        // appearance the bars need to stay legible against our surface colour.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             PictoKeyboardTheme {

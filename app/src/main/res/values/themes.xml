@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.PictoKeyboard" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor">@color/brand</item>
-    </style>
+    <!--
+        No android:statusBarColor here on purpose. Android 15 ignores it for apps
+        targeting SDK 35, and on older releases enableEdgeToEdge() overrides it.
+        The bar is transparent and the colour behind it comes from whatever the
+        screen draws there: the TopAppBar container on every screen that has one.
+    -->
+    <style name="Theme.PictoKeyboard" parent="Theme.Material3.DayNight.NoActionBar" />
 
     <style name="KbControlKey">
         <item name="android:layout_marginStart">3dp</item>

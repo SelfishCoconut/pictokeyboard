@@ -2,8 +2,11 @@ package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -33,9 +36,13 @@ fun UnlockScreen(
     var error by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // This screen replaces the whole navigation graph, so no Scaffold insets it.
+    // Under edge-to-edge it has to hold itself off the system bars, and safeDrawing
+    // keeps the unlock button above the soft keyboard raised by the PIN field.
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
