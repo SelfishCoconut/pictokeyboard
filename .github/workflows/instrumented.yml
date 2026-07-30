@@ -36,8 +36,10 @@ jobs:
       fail-fast: false
       matrix:
         # Lowest supported API and the current target -- the two that actually
-        # break. Anything in between rarely surfaces a unique failure.
-        api-level: [26, 34]
+        # break. Anything in between rarely surfaces a unique failure. Keep the
+        # second entry in step with targetSdk: API 35 is where the edge-to-edge
+        # enforcement we now opt into actually applies.
+        api-level: [26, 35]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
