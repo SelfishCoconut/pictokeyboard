@@ -11,6 +11,13 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 10
+    ignore:
+      # CI pins its own Gradle version and invokes `gradle` directly, because
+      # gradle-wrapper.jar is gitignored here (see README). A wrapper bump
+      # therefore passes CI while breaking every local build -- CI literally
+      # cannot validate it. Dependabot merged exactly such a bump (#4) and
+      # broke main. Remove this ignore only if the wrapper jar becomes tracked.
+      - dependency-name: gradle-wrapper
     groups:
       # One PR per group instead of per dependency: fewer CI runs, and a
       # coherent unit to revert if something breaks.
