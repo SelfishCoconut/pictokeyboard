@@ -59,9 +59,6 @@ jobs:
       # Pinned to an exact tag: this action publishes only precise
       # versions (v2.3.8, ...) and has no moving `v2` tag, so `@v2`
       # fails to resolve at job setup.
+      # No `with:` -- the action already defaults to `--recursive ./`.
+      # `--skip-git` was a v1 flag and is rejected by v2.
       - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
-        with:
-          scan-args: |-
-            --recursive
-            --skip-git
-            ./
