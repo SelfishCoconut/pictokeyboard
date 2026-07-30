@@ -121,10 +121,11 @@ di/          ServiceLocator (lightweight manual DI shared by Activity + IME)
 ## Build & install
 
 Requirements: **Android Studio** (Ladybug or newer) or the Android SDK with
-JDK 17. The project targets `compileSdk 34`, `minSdk 26` (Android 8.0).
+JDK 21. The project compiles against `compileSdk 37` and targets
+`targetSdk 34`, `minSdk 26` (Android 8.0). Bytecode targets Java 17.
 
 ### Android Studio (recommended)
-1. `File ▸ Open` this folder. Studio downloads Gradle 8.9 and the SDK.
+1. `File ▸ Open` this folder. Studio downloads Gradle 9.6.1 and the SDK.
 2. Plug in a device (USB debugging on) or start an emulator.
 3. Press **Run ▸ app**.
 

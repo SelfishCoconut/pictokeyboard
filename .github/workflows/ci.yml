@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
       - name: Format
         run: ./gradlew spotlessCheck
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew assembleDebug
       - uses: actions/upload-artifact@v7
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew testDebugUnitTest
       - name: Upload test report

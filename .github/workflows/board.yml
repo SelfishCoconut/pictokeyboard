@@ -21,6 +21,10 @@ jobs:
   add-to-board:
     name: add to board
     runs-on: ubuntu-latest
+    # The board is optional. Without PROJECT_URL configured the action can only
+    # fail, so skip instead -- an unconfigured optional integration should not
+    # show up as a red check on every PR.
+    if: vars.PROJECT_URL != ''
     steps:
       - uses: actions/add-to-project@v2
         with:

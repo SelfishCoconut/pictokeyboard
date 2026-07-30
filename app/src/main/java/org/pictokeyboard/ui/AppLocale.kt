@@ -33,9 +33,14 @@ private class LocaleContextWrapper(base: Context, private val localizedResources
 @Composable
 fun ProvideAppLocale(language: String, content: @Composable () -> Unit) {
     val context = LocalContext.current
-    val localizedContext = remember(language, context) {
+    // Read the configuration through LocalConfiguration, not
+    // context.resources.configuration: only the composition local is observable,
+    // so the latter would not re-derive the localized context when the
+    // configuration changes (font scale, orientation, dark mode).
+    val configuration = LocalConfiguration.current
+    val localizedContext = remember(language, context, configuration) {
         val locale = Locale.forLanguageTag(language)
-        val config = Configuration(context.resources.configuration).apply { setLocale(locale) }
+        val config = Configuration(configuration).apply { setLocale(locale) }
         val configContext = context.createConfigurationContext(config)
         LocaleContextWrapper(context, configContext.resources)
     }
