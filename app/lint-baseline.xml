@@ -1,0 +1,1033 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.6.1" type="baseline" client="gradle" dependencies="true" name="AGP (8.6.1)" variant="all" version="8.6.1">
+
+    <issue
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks reference invalid APIs; these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.common.lint.NavigationCommonIssueRegistry`)&#xA;which contains some references to invalid API:&#xA;com.android.tools.lint.checks.infrastructure.TestFiles: com.android.tools.lint.checks.infrastructure.TestFile bytecode(java.lang.String,com.android.tools.lint.checks.infrastructure.TestFile,long,java.lang.String[])&#xA;(Referenced from androidx/navigation/lint/common/LintUtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`EmptyNavDeepLink`,`WrongStartDestinationType`&#xA;&#xA;To use this lint check, upgrade to a more recent version&#xA;of the library.">
+        <location
+            file="../../../.gradle/caches/8.9/transforms/c41931116058f3d850409478240b4b6f/transformed/navigation-common-2.8.2/jars/lint.jar"/>
+    </issue>
+
+    <issue
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks reference invalid APIs; these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.compose.lint.NavigationComposeIssueRegistry`)&#xA;which contains some references to invalid API:&#xA;com.android.tools.lint.checks.infrastructure.TestFiles: com.android.tools.lint.checks.infrastructure.TestFile bytecode(java.lang.String,com.android.tools.lint.checks.infrastructure.TestFile,long,java.lang.String[])&#xA;(Referenced from androidx/navigation/lint/common/LintUtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`ComposableDestinationInComposeScope`,`ComposableNavGraphInComposeScope`,`UnrememberedGetBackStackEntry`,`WrongStartDestinationType`&#xA;&#xA;To use this lint check, upgrade to a more recent version&#xA;of the library.">
+        <location
+            file="../../../.gradle/caches/8.9/transforms/d335996468fd25a4ad341b5fef5d8665/transformed/navigation-compose-2.8.2/jars/lint.jar"/>
+    </issue>
+
+    <issue
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks reference invalid APIs; these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.runtime.lint.NavigationRuntimeIssueRegistry`)&#xA;which contains some references to invalid API:&#xA;com.android.tools.lint.checks.infrastructure.TestFiles: com.android.tools.lint.checks.infrastructure.TestFile bytecode(java.lang.String,com.android.tools.lint.checks.infrastructure.TestFile,long,java.lang.String[])&#xA;(Referenced from androidx/navigation/lint/common/LintUtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`DeepLinkInActivityDestination`,`WrongStartDestinationType`,`WrongNavigateRouteType`&#xA;&#xA;To use this lint check, upgrade to a more recent version&#xA;of the library.">
+        <location
+            file="../../../.gradle/caches/8.9/transforms/f99e48a34e1f6c7bfd651a2cb249b72d/transformed/navigation-runtime-2.8.2/jars/lint.jar"/>
+    </issue>
+
+    <issue
+        id="AppBundleLocaleChanges"
+        message="Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the `bundle` configuration"
+        errorLine1="        val config = Configuration(context.resources.configuration).apply { setLocale(locale) }"
+        errorLine2="                                                                            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ui/AppLocale.kt"
+            line="38"
+            column="77"/>
+    </issue>
+
+    <issue
+        id="InflateParams"
+        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
+        errorLine1="        normalView = layoutInflater.inflate(R.layout.keyboard_view, null)"
+        errorLine2="                                                                    ~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ime/PictoKeyboardService.kt"
+            line="71"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="RedundantLabel"
+        message="Redundant label can be removed"
+        errorLine1="            android:label=&quot;@string/app_name&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="19"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.6.1 is available: 9.3.1"
+        errorLine1="agp = &quot;8.6.1&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.6.1 is available: 9.3.1"
+        errorLine1="agp = &quot;8.6.1&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.6.1 is available: 9.3.1"
+        errorLine1="agp = &quot;8.6.1&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.19.0"
+        errorLine1="coreKtx = &quot;1.13.1&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="5"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.19.0"
+        errorLine1="coreKtx = &quot;1.13.1&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="5"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.19.0"
+        errorLine1="coreKtx = &quot;1.13.1&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="5"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-service than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-service than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-service than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.6 is available: 2.11.0"
+        errorLine1="lifecycle = &quot;2.8.6&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.2 is available: 1.13.0"
+        errorLine1="activityCompose = &quot;1.9.2&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.2 is available: 1.13.0"
+        errorLine1="activityCompose = &quot;1.9.2&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.2 is available: 1.13.0"
+        errorLine1="activityCompose = &quot;1.9.2&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.09.03 is available: 2026.06.01"
+        errorLine1="composeBom = &quot;2024.09.03&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="8"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.09.03 is available: 2026.06.01"
+        errorLine1="composeBom = &quot;2024.09.03&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="8"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.09.03 is available: 2026.06.01"
+        errorLine1="composeBom = &quot;2024.09.03&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="8"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.2 is available: 2.9.8"
+        errorLine1="navigationCompose = &quot;2.8.2&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.2 is available: 2.9.8"
+        errorLine1="navigationCompose = &quot;2.8.2&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.2 is available: 2.9.8"
+        errorLine1="navigationCompose = &quot;2.8.2&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4"
+        errorLine1="room = &quot;2.6.1&quot;"
+        errorLine2="       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.datastore:datastore-preferences than 1.1.1 is available: 1.2.1"
+        errorLine1="datastore = &quot;1.1.1&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.datastore:datastore-preferences than 1.1.1 is available: 1.2.1"
+        errorLine1="datastore = &quot;1.1.1&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.datastore:datastore-preferences than 1.1.1 is available: 1.2.1"
+        errorLine1="datastore = &quot;1.1.1&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.appcompat:appcompat than 1.7.0 is available: 1.7.1"
+        errorLine1="appcompat = &quot;1.7.0&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.appcompat:appcompat than 1.7.0 is available: 1.7.1"
+        errorLine1="appcompat = &quot;1.7.0&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.appcompat:appcompat than 1.7.0 is available: 1.7.1"
+        errorLine1="appcompat = &quot;1.7.0&quot;"
+        errorLine2="            ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0"
+        errorLine1="recyclerview = &quot;1.3.2&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="18"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0"
+        errorLine1="recyclerview = &quot;1.3.2&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="18"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.recyclerview:recyclerview than 1.3.2 is available: 1.4.0"
+        errorLine1="recyclerview = &quot;1.3.2&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="18"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.android.material:material than 1.12.0 is available: 1.14.0"
+        errorLine1="material = &quot;1.12.0&quot;"
+        errorLine2="           ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="19"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.android.material:material than 1.12.0 is available: 1.14.0"
+        errorLine1="material = &quot;1.12.0&quot;"
+        errorLine2="           ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="19"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.android.material:material than 1.12.0 is available: 1.14.0"
+        errorLine1="material = &quot;1.12.0&quot;"
+        errorLine2="           ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="19"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="ProduceStateDoesNotAssignValue"
+        message="produceState calls should assign `value` inside the producer lambda"
+        errorLine1="    val groups by produceState(initialValue = emptyList&lt;Pair&lt;CategoryEntity, List&lt;PictoEntity>>>(), others) {"
+        errorLine2="                  ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ui/screens/AddPictosScreen.kt"
+            line="527"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;pictos&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;category_pictos_count&quot;>%1$d pictos&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="122"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;selected&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;add_selected_count&quot;>%1$d selected&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="156"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ime/CategoryAdapter.kt"
+            line="23"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ime/PictoAdapter.kt"
+            line="37"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="UseCompoundDrawables"
+        message="This tag and its children can be replaced by one `&lt;TextView/>` and a compound drawable"
+        errorLine1="&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/item_category.xml"
+            line="2"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var color by remember { mutableStateOf(initial?.colorArgb ?: CategoryPalette.first().toInt()) }"
+        errorLine2="                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ui/screens/CategoriesScreen.kt"
+            line="446"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var borderWidth by remember { mutableStateOf(initial?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ui/screens/CategoriesScreen.kt"
+            line="448"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `@color/kb_background` with a theme that also paints a background (inferred theme is `@style/Theme.PictoKeyboard`)"
+        errorLine1="    android:background=&quot;@color/kb_background&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/keyboard_view.xml"
+            line="5"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_500` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_500&quot;>#FF6750A4&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="9"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.white` appears to be unused"
+        errorLine1="    &lt;color name=&quot;white&quot;>#FFFFFFFF&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="11"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.black` appears to be unused"
+        errorLine1="    &lt;color name=&quot;black&quot;>#FF000000&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="12"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.ok` appears to be unused"
+        errorLine1="    &lt;string name=&quot;ok&quot;>OK&lt;/string>"
+        errorLine2="            ~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="32"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.onboarding_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;onboarding_title&quot;>Welcome to PictoKeyboard&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="41"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.onboarding_intro` appears to be unused"
+        errorLine1="    &lt;string name=&quot;onboarding_intro&quot;>A pictogram keyboard for augmentative communication. Set it up below.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="42"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.onboarding_step_enable_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;onboarding_step_enable_desc&quot;>Turn on the keyboard in Android system settings.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.onboarding_step_select_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;onboarding_step_select_desc&quot;>Pick PictoKeyboard as the active keyboard.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="47"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.onboarding_continue` appears to be unused"
+        errorLine1="    &lt;string name=&quot;onboarding_continue&quot;>Set up the board&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="49"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.pin_skip` appears to be unused"
+        errorLine1="    &lt;string name=&quot;pin_skip&quot;>Skip for now&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.dashboard_tip_blind` appears to be unused"
+        errorLine1="    &lt;string name=&quot;dashboard_tip_blind&quot;>A two-finger double-tap turns blind (eyes-free) mode on or off.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_categories` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_categories&quot;>Categories &amp;amp; pictos&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="104"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_categories_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_categories_desc&quot;>Build the board the user will see.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_settings` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_settings&quot;>Keyboard settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="106"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_settings_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_settings_desc&quot;>Language, grid, speech and PIN.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="107"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_about` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_about&quot;>About &amp;amp; credits&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="108"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_about_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_about_desc&quot;>Licensing and pictogram attribution.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_open_keyboard` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_open_keyboard&quot;>Keyboard setup&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="110"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.category_template_pick` appears to be unused"
+        errorLine1="    &lt;string name=&quot;category_template_pick&quot;>Choose a template&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="126"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.category_template_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;category_template_desc&quot;>Creates a ready-made category you can then tweak.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="127"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_searching` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_searching&quot;>Searching…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="144"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_language` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_language&quot;>Language / voice&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="148"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_delete_confirm` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_delete_confirm&quot;>Delete this picto?&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="149"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_saving` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_saving&quot;>Saving…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="150"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_multi_hint` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_multi_hint&quot;>Tap pictograms to select several, then Add.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="151"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.picto_option_none` appears to be unused"
+        errorLine1="    &lt;string name=&quot;picto_option_none&quot;>Default&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="161"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.crop_failed` appears to be unused"
+        errorLine1="    &lt;string name=&quot;crop_failed&quot;>Couldn\&apos;t crop that image.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="171"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive icon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive roundIcon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view `BlindKeyboardView` overrides `onTouchEvent` but not `performClick`"
+        errorLine1="    override fun onTouchEvent(event: MotionEvent): Boolean {"
+        errorLine2="                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ime/BlindKeyboardView.kt"
+            line="111"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view `ModeSwitchFrameLayout` overrides `onTouchEvent` but not `performClick`"
+        errorLine1="    override fun onTouchEvent(ev: MotionEvent): Boolean {"
+        errorLine2="                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/pictokeyboard/ime/ModeSwitchFrameLayout.kt"
+            line="37"
+            column="18"/>
+    </issue>
+
+</issues>

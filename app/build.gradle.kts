@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -44,6 +46,81 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    lint {
+        // Errors fail CI; warnings are reported but do not block.
+        abortOnError = true
+        warningsAsErrors = false
+        checkDependencies = true
+        // A string present in one locale and missing in another is a shipping
+        // defect, not a warning. Never disable the Accessibility category.
+        error += listOf("MissingTranslation", "ExtraTranslation")
+        htmlReport = true
+        xmlReport = true
+        // Same contract as the detekt baseline: existing prototype findings are
+        // recorded so they do not block, and anything NEW fails the build.
+        // Regenerate only when the debt is actually paid down (delete the file
+        // and re-run lint) -- never to silence a fresh finding.
+        baseline = file("lint-baseline.xml")
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
+}
+
+// Passed explicitly rather than relying on .editorconfig discovery, which
+// Spotless does not apply to its embedded ktlint step. .editorconfig still
+// exists for the IDE; these are the values CI actually enforces.
+val ktlintRules = mapOf(
+    // Composables are PascalCase by Compose API convention, not a violation.
+    "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
+    // ktlint cannot auto-correct line length, so leaving it on makes
+    // spotlessApply fail instead of format. detekt owns this rule; its
+    // baseline records existing long lines so new ones still fail CI.
+    "ktlint_standard_max-line-length" to "disabled",
+    // Misreads Compose slot APIs (trailing content lambda after modifier).
+    "ktlint_standard_function-signature" to "disabled",
+)
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        ktlint(libs.versions.ktlint.get()).editorConfigOverride(ktlintRules)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint(libs.versions.ktlint.get()).editorConfigOverride(ktlintRules)
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    // The baseline records the debt that exists today so it does not block,
+    // while any NEW finding fails the build. Regenerate it only when the debt
+    // is genuinely paid down -- never to silence a fresh finding.
+    baseline = file("detekt-baseline.xml")
+    parallel = true
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        sarif.required.set(false)
+        md.required.set(false)
+    }
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
+    jvmTarget = "17"
 }
 
 dependencies {

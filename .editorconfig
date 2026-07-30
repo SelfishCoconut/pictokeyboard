@@ -1,0 +1,35 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+max_line_length = 120
+
+# ktlint cannot auto-correct line length, so leaving it enabled would mean
+# spotlessApply fails instead of formatting. detekt owns this rule instead:
+# its baseline records the existing long lines, so new ones still fail CI.
+ktlint_standard_max-line-length = disabled
+
+# Composables are PascalCase by convention -- that is the Compose API guideline,
+# not a naming violation. Without this, every @Composable fails ktlint.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+# Compose slot APIs routinely take a trailing content lambda after a modifier,
+# which this rule misreads as an ordering violation.
+ktlint_standard_function-signature = disabled
+
+# NOTE: Spotless does not read this file for its embedded ktlint step -- the
+# values CI enforces live in `ktlintRules` in app/build.gradle.kts. Keep the
+# two in sync; this copy exists so the IDE formats the same way.
+
+[*.{xml,yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
