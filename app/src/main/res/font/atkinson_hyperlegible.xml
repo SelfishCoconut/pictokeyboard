@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Atkinson Hyperlegible (Braille Institute of America, OFL). Engineered for low
+    vision: unmistakable I/l/1 and b/d/p/q. It sets everything the AAC user reads.
+
+    Bundled rather than fetched through the Play Services font provider, because
+    the keyboard is offline-first and must not wait on a download to draw a label.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font
+        android:font="@font/atkinson_hyperlegible_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400" />
+    <font
+        android:font="@font/atkinson_hyperlegible_bold"
+        android:fontStyle="normal"
+        android:fontWeight="700" />
+</font-family>

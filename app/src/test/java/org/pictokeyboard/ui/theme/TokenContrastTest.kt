@@ -1,0 +1,154 @@
+package org.pictokeyboard.ui.theme
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.pictokeyboard.ui.screens.CategoryPalette
+
+/**
+ * The colour tokens' contrast table, computed from the values that actually ship
+ * rather than asserted in a document.
+ *
+ * The design says "these values are the contract; any change to a token re-runs
+ * this table". This is that re-run. A token that cannot clear its threshold does
+ * not ship, and the failure names the pair so the fix is obvious.
+ *
+ * Contrast is the one design property that is invisible to a sighted developer on
+ * a good screen and completely disabling on a phone in sunlight -- which is where
+ * this app gets used.
+ */
+class TokenContrastTest {
+
+    private fun ratio(foreground: Color, background: Color): Double =
+        Wcag.contrastRatio(foreground.toArgb(), background.toArgb())
+
+    private fun assertReadable(name: String, foreground: Color, background: Color, minimum: Double) {
+        val actual = ratio(foreground, background)
+        assertTrue(
+            "$name is %.2f:1, below the required %.1f:1".format(actual, minimum),
+            actual >= minimum,
+        )
+    }
+
+    /** Every pair a screen can actually produce, in one scheme. */
+    private fun assertSchemeIsReadable(scheme: String, c: PictoColors) {
+        assertReadable("$scheme ink on paper", c.ink, c.paper, Wcag.BODY_TEXT)
+        assertReadable("$scheme inkSoft on paper", c.inkSoft, c.paper, Wcag.BODY_TEXT)
+        assertReadable("$scheme ink on card", c.ink, c.card, Wcag.BODY_TEXT)
+        assertReadable("$scheme inkSoft on card", c.inkSoft, c.card, Wcag.BODY_TEXT)
+        assertReadable("$scheme danger on paper", c.danger, c.paper, Wcag.BODY_TEXT)
+        assertReadable("$scheme danger on card", c.danger, c.card, Wcag.BODY_TEXT)
+        assertReadable("$scheme onAccent on accent", c.onAccent, c.accent, Wcag.BODY_TEXT)
+        assertReadable("$scheme onDanger on danger", c.onDanger, c.danger, Wcag.BODY_TEXT)
+
+        assertReadable("$scheme accent on paper", c.accent, c.paper, Wcag.LARGE_TEXT_AND_UI)
+        assertReadable("$scheme accent on card", c.accent, c.card, Wcag.LARGE_TEXT_AND_UI)
+        assertReadable("$scheme lineStrong on paper", c.lineStrong, c.paper, Wcag.LARGE_TEXT_AND_UI)
+        assertReadable("$scheme lineStrong on card", c.lineStrong, c.card, Wcag.LARGE_TEXT_AND_UI)
+    }
+
+    @Test
+    fun `the light scheme is readable`() {
+        assertSchemeIsReadable("light", LightTokens)
+    }
+
+    @Test
+    fun `the dark scheme is readable`() {
+        assertSchemeIsReadable("dark", DarkTokens)
+    }
+
+    /**
+     * Picto tiles stay white in dark mode because ARASAAC artwork is black line
+     * work. That makes the *content* colour on a tile scheme-invariant too: the
+     * dark scheme's `ink` on a white tile lands at 1.17:1 and disappears. This is
+     * the pair the design's own table omitted.
+     */
+    @Test
+    fun `tile content is readable in both schemes`() {
+        listOf("light" to LightTokens, "dark" to DarkTokens).forEach { (scheme, c) ->
+            assertReadable("$scheme onTile on tile", c.onTile, c.tile, Wcag.BODY_TEXT)
+            assertReadable("$scheme onTileSoft on tile", c.onTileSoft, c.tile, Wcag.BODY_TEXT)
+        }
+    }
+
+    @Test
+    fun `the tile stays white in both schemes`() {
+        assertEquals(Color.White, LightTokens.tile)
+        assertEquals(Color.White, DarkTokens.tile)
+    }
+
+    /**
+     * `line` is allowed to be near-invisible; that is what makes it decorative.
+     * The invariant worth protecting is that `lineStrong` is genuinely stronger,
+     * so the two tokens cannot drift into being interchangeable.
+     */
+    @Test
+    fun `lineStrong outranks the decorative line in both schemes`() {
+        listOf("light" to LightTokens, "dark" to DarkTokens).forEach { (scheme, c) ->
+            val strong = ratio(c.lineStrong, c.paper)
+            val decorative = ratio(c.line, c.paper)
+            assertTrue(
+                "$scheme lineStrong (%.2f:1) must outrank line (%.2f:1)".format(strong, decorative),
+                strong > decorative,
+            )
+        }
+    }
+
+    /**
+     * The selected category chip paints its label over an arbitrary user-chosen
+     * hue, so the auto-contrast choice has to hold for every one of the 26 palette
+     * values -- including the mid-tones, which is exactly where a 0.5 luminance
+     * threshold picks white when only black is readable.
+     */
+    @Test
+    fun `auto-contrast text is readable on every palette colour`() {
+        CategoryPalette.forEach { argb ->
+            val background = argb.toInt()
+            val actual = Wcag.contrastRatio(CategoryColors.contrastText(background), background)
+            assertTrue(
+                "auto-contrast on #%08X is %.2f:1, below %.1f:1".format(argb, actual, Wcag.BODY_TEXT),
+                actual >= Wcag.BODY_TEXT,
+            )
+        }
+    }
+
+    /**
+     * The stronger claim: auto-contrast is readable on *any* colour, not just the
+     * 26 currently in the palette. Sweeping the grey ramp crosses the black/white
+     * changeover, which is the only place the choice can go wrong.
+     */
+    @Test
+    fun `auto-contrast text is readable across the whole grey ramp`() {
+        (0..255).forEach { value ->
+            val background = (0xFF shl 24) or (value shl 16) or (value shl 8) or value
+            val actual = Wcag.contrastRatio(CategoryColors.contrastText(background), background)
+            assertTrue(
+                "auto-contrast on grey $value is %.2f:1, below %.1f:1".format(actual, Wcag.BODY_TEXT),
+                actual >= Wcag.BODY_TEXT,
+            )
+        }
+    }
+
+    @Test
+    fun `contrast ratio spans the WCAG range`() {
+        val black = 0xFF000000.toInt()
+        val white = 0xFFFFFFFF.toInt()
+        assertEquals(21.0, Wcag.contrastRatio(black, white), 0.01)
+        assertEquals(1.0, Wcag.contrastRatio(white, white), 0.001)
+    }
+
+    @Test
+    fun `the derived category alphas match the design percentages`() {
+        val hue = 0xFFFF9800.toInt()
+        assertEquals(0xFF, CategoryColors.fill(hue) ushr 24)
+        assertEquals(0x0F, CategoryColors.wash(hue) ushr 24)
+        assertEquals(0x1F, CategoryColors.tintSoft(hue) ushr 24)
+        assertEquals(0x3D, CategoryColors.tint(hue, dark = false) ushr 24)
+        assertEquals(0x52, CategoryColors.tint(hue, dark = true) ushr 24)
+        // The hue itself must survive the alpha change untouched -- users' saved
+        // data references these exact RGB values.
+        assertEquals(hue and 0x00FFFFFF, CategoryColors.wash(hue) and 0x00FFFFFF)
+    }
+}

@@ -54,23 +54,40 @@ This gives a non-reading user an instant, full-field, pre-linguistic signal of c
 | Token | Light | Dark | Job |
 |---|---|---|---|
 | `paper` | `#F3F1ED` | `#15130F` | app + keyboard chrome background |
-| `tile` | `#FFFFFF` | `#FFFFFF` | picto tiles, cards |
+| `card` | `#FFFFFF` | `#221E19` | the config app's raised surface |
+| `tile` | `#FFFFFF` | `#FFFFFF` | picto tiles — surfaces carrying ARASAAC artwork |
+| `onTile` | `#191713` | `#191713` | content on a tile; scheme-invariant |
+| `onTileSoft` | `#6A645C` | `#6A645C` | secondary content on a tile; scheme-invariant |
 | `ink` | `#191713` | `#F0EDE6` | primary text |
 | `inkSoft` | `#6A645C` | `#A39C92` | secondary text |
 | `line` | `#E2DED6` | `#2C2822` | **decorative only** — dividers, unpressed key fill |
-| `lineStrong` | `#8A8378` | `#6E675C` | boundaries of interactive controls |
+| `lineStrong` | `#8A8378` | `#767065` | boundaries of interactive controls |
 | `accent` | `#24303F` | `#C9D6E6` | buttons, focus ring, switches |
+| `danger` | `#A02B22` | `#FFB4AB` | destructive actions, error text |
+
+**Two corrections found while implementing**, both by computing the table rather than reading it:
+
+1. **`tile` and `card` had been conflated.** The original table gave one token the job "picto tiles, cards" while also holding it white in dark mode. Those cannot both be true: a white card in dark mode is a glaring slab, and — worse — the dark scheme's `ink` on a white tile computes to **1.17:1**, so a picto label would have been invisible in dark mode. The tile keeps its white (ARASAAC art demands it) and gains scheme-invariant content colours; cards get their own surface that follows the scheme.
+2. **Dark `lineStrong` was `#6E675C`**, which cleared 3:1 against `paper` but reached only **2.96:1** against the lighter `card`. An outline has to hold on whichever surface it lands on, so it lifts to `#767065` (3.37:1 on card, 3.78:1 on paper).
 
 **Verified contrast.** Computed from WCAG relative luminance rather than asserted:
 
 | Pair | Light | Dark | Requirement |
 |---|---|---|---|
 | `ink` on `paper` | 15.9:1 | 15.9:1 | 4.5:1 body ✓ |
-| `inkSoft` on `paper` | 5.18:1 | 6.83:1 | 4.5:1 body ✓ |
+| `inkSoft` on `paper` | 5.19:1 | 6.83:1 | 4.5:1 body ✓ |
+| `ink` on `card` | 17.9:1 | 14.2:1 | 4.5:1 body ✓ |
+| `inkSoft` on `card` | 5.85:1 | 6.10:1 | 4.5:1 body ✓ |
+| `onTile` on `tile` | 17.9:1 | 17.9:1 | 4.5:1 body ✓ |
+| `onTileSoft` on `tile` | 5.85:1 | 5.85:1 | 4.5:1 body ✓ |
 | `accent` on `paper` | 11.9:1 | 12.6:1 | 3:1 UI ✓ |
-| `tile` text on `accent` | 13.4:1 | 12.6:1 | 4.5:1 body ✓ |
-| `lineStrong` on `paper` | 3.32:1 | 3.32:1 | 3:1 UI ✓ |
+| `onAccent` on `accent` | 13.4:1 | 12.6:1 | 4.5:1 body ✓ |
+| `danger` on `paper` | 6.50:1 | 10.9:1 | 4.5:1 body ✓ |
+| `lineStrong` on `paper` | 3.33:1 | 3.78:1 | 3:1 UI ✓ |
+| `lineStrong` on `card` | 3.75:1 | 3.37:1 | 3:1 UI ✓ |
 | `line` on `paper` | 1.19:1 | 1.27:1 | decorative only |
+
+This table is no longer prose. `TokenContrastTest` computes every row from the shipping token values and fails the build on a pair that drops below its threshold, so a token cannot be changed without the table being re-run. It also sweeps the auto-contrast choice across all 26 palette hues and the full grey ramp.
 
 `line` fails 3:1 in both schemes, which is why it is split in two. A hairline separating two rows of text carries no information and may sit at 1.19:1; the same colour drawn around a control the user must find is an accessibility defect. **Anything outlining an interactive element uses `lineStrong`.** Getting this wrong is invisible to a sighted developer on a good screen and completely disabling on a phone in sunlight — which is where this app gets used.
 
