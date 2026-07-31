@@ -44,16 +44,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacUrls
+import org.pictokeyboard.data.db.BorderStyles
+import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Stateful wrapper: resolves the category and its pictos from the view model. */
 @Composable
 fun PictosScreen(
     viewModel: ConfigViewModel,
@@ -63,31 +67,48 @@ fun PictosScreen(
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val category = categories.firstOrNull { it.id == categoryId }
     val pictos by remember(categoryId) { viewModel.pictos(categoryId) }.collectAsState(initial = emptyList())
-    val categoryColor = category?.colorArgb ?: 0xFF9E9E9E.toInt()
-    val borderStyle = category?.borderStyle ?: org.pictokeyboard.data.db.BorderStyles.SOLID
-    val borderWidthDp = category?.borderWidthDp ?: org.pictokeyboard.data.db.BorderStyles.DEFAULT_WIDTH_DP
+
+    PictosScreenContent(
+        category = categories.firstOrNull { it.id == categoryId },
+        pictos = pictos,
+        showLabels = settings.showLabels,
+        onBack = onBack,
+        onAddPictos = onAddPictos,
+        onMove = { picto, up -> viewModel.movePicto(pictos, picto, up) },
+        onSave = viewModel::updatePicto,
+        onDelete = viewModel::deletePicto,
+    )
+}
+
+/** Stateless picto grid for one category. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PictosScreenContent(
+    category: CategoryEntity?,
+    pictos: List<PictoEntity>,
+    showLabels: Boolean,
+    onBack: () -> Unit,
+    onAddPictos: () -> Unit,
+    onMove: (PictoEntity, Boolean) -> Unit,
+    onSave: (PictoEntity) -> Unit,
+    onDelete: (PictoEntity) -> Unit,
+) {
+    val categoryColor = category?.colorArgb ?: DEFAULT_TILE_ARGB
+    val borderStyle = category?.borderStyle ?: BorderStyles.SOLID
+    val borderWidthDp = category?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP
 
     var editing by remember { mutableStateOf<PictoEntity?>(null) }
     var reordering by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(category?.name ?: stringResource(R.string.pictos_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                actions = {
-                    if (pictos.size > 1) {
-                        TextButton(onClick = { reordering = !reordering }) {
-                            Text(stringResource(if (reordering) R.string.reorder_done else R.string.reorder))
-                        }
-                    }
-                },
+            PictosTopBar(
+                title = category?.name ?: stringResource(R.string.pictos_title),
+                canReorder = pictos.size > 1,
+                reordering = reordering,
+                onBack = onBack,
+                onToggleReorder = { reordering = !reordering },
             )
         },
         floatingActionButton = {
@@ -98,31 +119,17 @@ fun PictosScreen(
             }
         },
     ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 110.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            itemsIndexed(pictos, key = { _, p -> p.id }) { index, picto ->
-                PictoTile(
-                    picto = picto,
-                    frameColor = Color(picto.colorArgbOverride ?: categoryColor),
-                    borderStyle = borderStyle,
-                    borderWidthDp = borderWidthDp,
-                    showLabel = settings.showLabels,
-                    reordering = reordering,
-                    canMoveUp = index > 0,
-                    canMoveDown = index < pictos.lastIndex,
-                    onMoveUp = { viewModel.movePicto(pictos, picto, up = true) },
-                    onMoveDown = { viewModel.movePicto(pictos, picto, up = false) },
-                    onClick = { editing = picto },
-                )
-            }
-        }
+        PictoGrid(
+            pictos = pictos,
+            categoryColor = categoryColor,
+            borderStyle = borderStyle,
+            borderWidthDp = borderWidthDp,
+            showLabels = showLabels,
+            reordering = reordering,
+            modifier = Modifier.padding(padding),
+            onMove = onMove,
+            onEdit = { editing = it },
+        )
     }
 
     editing?.let { picto ->
@@ -130,14 +137,79 @@ fun PictosScreen(
             picto = picto,
             onDismiss = { editing = null },
             onSave = {
-                viewModel.updatePicto(it)
+                onSave(it)
                 editing = null
             },
             onDelete = {
-                viewModel.deletePicto(picto)
+                onDelete(picto)
                 editing = null
             },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PictosTopBar(
+    title: String,
+    canReorder: Boolean,
+    reordering: Boolean,
+    onBack: () -> Unit,
+    onToggleReorder: () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(title) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+            }
+        },
+        actions = {
+            if (canReorder) {
+                TextButton(onClick = onToggleReorder) {
+                    Text(stringResource(if (reordering) R.string.reorder_done else R.string.reorder))
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun PictoGrid(
+    pictos: List<PictoEntity>,
+    categoryColor: Int,
+    borderStyle: String,
+    borderWidthDp: Int,
+    showLabels: Boolean,
+    reordering: Boolean,
+    modifier: Modifier = Modifier,
+    onMove: (PictoEntity, Boolean) -> Unit,
+    onEdit: (PictoEntity) -> Unit,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 110.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        itemsIndexed(pictos, key = { _, p -> p.id }) { index, picto ->
+            PictoTile(
+                // A borrowed picto keeps its original category's colour.
+                picto = picto,
+                frameColor = Color(picto.colorArgbOverride ?: categoryColor),
+                borderStyle = borderStyle,
+                borderWidthDp = borderWidthDp,
+                showLabel = showLabels,
+                reordering = reordering,
+                canMoveUp = index > 0,
+                canMoveDown = index < pictos.lastIndex,
+                onMoveUp = { onMove(picto, true) },
+                onMoveDown = { onMove(picto, false) },
+                onClick = { onEdit(picto) },
+            )
+        }
     }
 }
 
@@ -266,4 +338,40 @@ private fun EditPictoDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
+}
+
+/** Neutral grey for pictos shown before their category resolves. */
+private const val DEFAULT_TILE_ARGB = 0xFF9E9E9E.toInt()
+
+@Preview(name = "Pictos", showBackground = true)
+@Composable
+private fun PictosScreenPreview() {
+    val category = CategoryEntity(
+        id = "food",
+        name = "Comida",
+        colorArgb = 0xFFE9A23B.toInt(),
+        position = 0,
+    )
+    val pictos = listOf("pan", "leche", "agua", "manzana").mapIndexed { i, word ->
+        PictoEntity(
+            id = "p$i",
+            categoryId = "food",
+            label = word,
+            spokenText = word,
+            language = "es",
+            position = i,
+        )
+    }
+    PictoKeyboardTheme {
+        PictosScreenContent(
+            category = category,
+            pictos = pictos,
+            showLabels = true,
+            onBack = {},
+            onAddPictos = {},
+            onMove = { _, _ -> },
+            onSave = {},
+            onDelete = {},
+        )
+    }
 }
