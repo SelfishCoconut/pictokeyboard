@@ -105,6 +105,8 @@
     <string name="category_frame_style">Estilo del marco</string>
     <string name="category_frame_thickness">Grosor del marco</string>
     <string name="category_builtin">Predeterminada</string>
+    <string name="category_more">Más opciones</string>
+    <string name="picto_color_inherit">Usar el color de la categoría</string>
     <string name="category_delete_confirm">¿Eliminar esta categoría y todos sus pictos?</string>
     <string name="category_pictos_count">%1$d pictos</string>
     <string name="category_blank">Categoría vacía</string>
@@ -157,6 +159,15 @@
     <string name="crop_failed">No se pudo recortar la imagen.</string>
 
     <string name="settings_title">Ajustes</string>
+
+    <!-- Los seis grupos en los que se organiza la pantalla de ajustes. -->
+    <string name="settings_group_language">Idioma</string>
+    <string name="settings_group_keyboard">Teclado</string>
+    <string name="settings_group_voice">Voz</string>
+    <string name="settings_group_accessibility">Accesibilidad</string>
+    <string name="settings_group_security">Seguridad</string>
+    <string name="settings_group_backup">Copia de seguridad</string>
+
     <string name="settings_language">Idioma predeterminado</string>
     <string name="settings_grid_columns">Columnas de la cuadrícula</string>
     <string name="settings_grid_rows">Filas visibles (altura)</string>

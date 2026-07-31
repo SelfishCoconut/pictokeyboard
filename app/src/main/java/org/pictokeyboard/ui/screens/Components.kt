@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,10 +35,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
+import org.pictokeyboard.ui.theme.CategoryColors
+import org.pictokeyboard.ui.theme.PictoTheme
+import org.pictokeyboard.ui.theme.Spacing
 
 /** ARASAAC-style frame colour palette offered when creating categories. */
 val CategoryPalette: List<Long> = listOf(
@@ -82,29 +90,48 @@ fun ColorPalettePicker(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CategoryPalette.forEach { argb ->
-            val color = Color(argb)
-            val isSelected = argb.toInt() == selected
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color, CircleShape)
-                    .border(
-                        width = if (isSelected) 3.dp else 1.dp,
-                        color = if (isSelected) Color.Black else Color(0x33000000),
-                        shape = CircleShape,
-                    )
-                    .clickable { onSelect(argb.toInt()) },
-            ) {
-                if (isSelected) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
-                        modifier = Modifier.padding(2.dp),
-                    )
-                }
-            }
+            ColorSwatch(
+                argb = argb.toInt(),
+                selected = argb.toInt() == selected,
+                onClick = { onSelect(argb.toInt()) },
+            )
+        }
+    }
+}
+
+/**
+ * One colour in a palette picker.
+ *
+ * The swatch is the one place a raw hue legitimately fills a control, so its
+ * outline and its check mark both have to work against any of the 26 values: the
+ * outline comes from the token layer, and the check is chosen by
+ * [CategoryColors.contrastText] rather than by comparing luminance against 0.5 —
+ * which picked white on mid-tone hues where only black was readable.
+ */
+@Composable
+private fun ColorSwatch(argb: Int, selected: Boolean, onClick: () -> Unit) {
+    val colors = PictoTheme.colors
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(Spacing.touchTarget)
+            .semantics { this.selected = selected }
+            .padding(Spacing.xs)
+            .background(Color(argb), CircleShape)
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) colors.accent else colors.lineStrong,
+                shape = CircleShape,
+            )
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+    ) {
+        if (selected) {
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = null,
+                tint = Color(CategoryColors.contrastText(argb)),
+                modifier = Modifier.padding(2.dp),
+            )
         }
     }
 }
@@ -181,49 +208,42 @@ fun PictoColorPicker(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val inherits = selected == null
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(40.dp)
+                .size(Spacing.touchTarget)
+                .semantics { this.selected = inherits }
+                .padding(Spacing.xs)
                 .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                 .border(
-                    width = if (selected == null) 3.dp else 1.dp,
-                    color = if (selected == null) Color.Black else Color(0x33000000),
+                    width = if (inherits) 3.dp else 1.dp,
+                    color = if (inherits) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    },
                     shape = CircleShape,
                 )
-                .clickable { onSelect(null) },
+                .selectable(
+                    selected = inherits,
+                    role = Role.RadioButton,
+                    onClick = { onSelect(null) },
+                ),
         ) {
             Icon(
                 Icons.Filled.Block,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.picto_color_inherit),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp),
             )
         }
         CategoryPalette.forEach { argb ->
-            val color = Color(argb)
-            val isSelected = argb.toInt() == selected
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color, CircleShape)
-                    .border(
-                        width = if (isSelected) 3.dp else 1.dp,
-                        color = if (isSelected) Color.Black else Color(0x33000000),
-                        shape = CircleShape,
-                    )
-                    .clickable { onSelect(argb.toInt()) },
-            ) {
-                if (isSelected) {
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
-                        modifier = Modifier.padding(2.dp),
-                    )
-                }
-            }
+            ColorSwatch(
+                argb = argb.toInt(),
+                selected = argb.toInt() == selected,
+                onClick = { onSelect(argb.toInt()) },
+            )
         }
     }
 }
@@ -243,7 +263,7 @@ fun BorderStylePicker(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(52.dp)
-                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                     .categoryFrame(color, 3.dp, style, 12.dp)
                     .border(
                         width = if (isSelected) 3.dp else 0.dp,
@@ -271,7 +291,7 @@ fun ThicknessPicker(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(52.dp)
-                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                     .categoryFrame(color, width.dp, BorderStyles.SOLID, 12.dp)
                     .border(
                         width = if (isSelected) 3.dp else 0.dp,

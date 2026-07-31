@@ -17,7 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,13 +42,26 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
+import org.pictokeyboard.ui.theme.PictoTheme
+import org.pictokeyboard.ui.theme.Spacing
 
 // Creating and editing a category: the chooser that offers a template, the
 // usage-derived suggestion or a blank one, and the name/colour editor shared by
 // the blank and edit flows.
 
+/**
+ * How to create a category: from usage, blank, or from one of the templates.
+ *
+ * A bottom sheet rather than an `AlertDialog`. As a dialog this was a small box
+ * scrolling a list of ten template cards inside itself, with the scroll boundary
+ * invisible — so the templates below the fold were easy to miss entirely, and the
+ * dialog was simultaneously too big for its content and too small for its list. A
+ * sheet is the component for "pick one of many": it opens tall, scrolls as one
+ * surface, and drags away.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun NewCategoryChooserDialog(
+internal fun NewCategoryChooserSheet(
     language: String,
     suggestedName: String,
     loadSuggested: suspend () -> List<UsageEntity>,
@@ -59,62 +74,64 @@ internal fun NewCategoryChooserDialog(
         value = loadSuggested()
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.category_add)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(
-                    stringResource(R.string.category_new_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.lg)
+                .padding(bottom = Spacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            Text(
+                stringResource(R.string.category_add),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                stringResource(R.string.category_new_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
-                if (suggested.isNotEmpty()) {
-                    ChooserCard(
-                        accent = SUGGESTED_ACCENT,
-                        title = suggestedName,
-                        subtitle = stringResource(R.string.category_suggested_desc),
-                        thumbs = suggested.mapNotNull { it.arasaacId }.take(CHOOSER_THUMBS)
-                            .map { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
-                        highlighted = true,
-                        onClick = { onSuggested(suggested) },
-                    )
-                }
-
+            if (suggested.isNotEmpty()) {
                 ChooserCard(
-                    accent = MaterialTheme.colorScheme.outline,
-                    title = stringResource(R.string.category_blank),
-                    subtitle = stringResource(R.string.category_blank_desc),
-                    thumbs = emptyList(),
-                    onClick = onBlank,
+                    // The one option that is not a category colour, so it takes
+                    // the product accent. It used to be a hardcoded teal -- the
+                    // last of the old brand palette hiding in a Composable.
+                    accent = MaterialTheme.colorScheme.primary,
+                    title = suggestedName,
+                    subtitle = stringResource(R.string.category_suggested_desc),
+                    thumbs = suggested.mapNotNull { it.arasaacId }.take(CHOOSER_THUMBS)
+                        .map { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
+                    highlighted = true,
+                    onClick = { onSuggested(suggested) },
                 )
-
-                Text(
-                    stringResource(R.string.category_from_template),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                CategoryTemplates.all.forEach { template ->
-                    ChooserCard(
-                        accent = Color(template.color),
-                        title = template.name(language),
-                        subtitle = stringResource(R.string.category_pictos_count, template.pictos.size),
-                        thumbs = template.pictos.take(CHOOSER_THUMBS)
-                            .map { ArasaacUrls.image(it.arasaacId, ArasaacUrls.THUMB) },
-                        onClick = { onTemplate(template) },
-                    )
-                }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
+
+            ChooserCard(
+                accent = MaterialTheme.colorScheme.outline,
+                title = stringResource(R.string.category_blank),
+                subtitle = stringResource(R.string.category_blank_desc),
+                thumbs = emptyList(),
+                onClick = onBlank,
+            )
+
+            Text(
+                stringResource(R.string.category_from_template),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            CategoryTemplates.all.forEach { template ->
+                ChooserCard(
+                    accent = Color(template.color),
+                    title = template.name(language),
+                    subtitle = stringResource(R.string.category_pictos_count, template.pictos.size),
+                    thumbs = template.pictos.take(CHOOSER_THUMBS)
+                        .map { ArasaacUrls.image(it.arasaacId, ArasaacUrls.THUMB) },
+                    onClick = { onTemplate(template) },
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -162,7 +179,7 @@ private fun ChooserCard(
                             contentDescription = null,
                             modifier = Modifier
                                 .size(44.dp)
-                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .background(PictoTheme.colors.tile, RoundedCornerShape(8.dp))
                                 .border(2.dp, accent, RoundedCornerShape(8.dp))
                                 .padding(3.dp),
                         )
@@ -221,9 +238,6 @@ internal fun CategoryEditDialog(
         },
     )
 }
-
-/** Teal accent marking the usage-derived suggestion apart from the templates. */
-private val SUGGESTED_ACCENT = Color(0xFF00897B)
 
 /** Thumbnails previewed on a chooser card. */
 private const val CHOOSER_THUMBS = 4

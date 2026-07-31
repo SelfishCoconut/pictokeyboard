@@ -55,6 +55,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.PictoTheme
 import java.io.File
 
 /** Stateful wrapper: resolves the category and its pictos from the view model. */
@@ -235,7 +236,7 @@ private fun PictoTile(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(Color.White, RoundedCornerShape(12.dp))
+                .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                 .categoryFrame(frameColor, borderWidthDp.dp, borderStyle, 12.dp)
                 .padding(8.dp),
             contentAlignment = Alignment.Center,

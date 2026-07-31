@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +41,7 @@ import org.pictokeyboard.R
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.Spacing
 
 /**
  * Stateful wrapper: owns the view model, the file pickers and the toasts, so
@@ -147,20 +147,32 @@ fun SettingsScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
-            LanguageSection(settings.defaultLanguage, onLanguage)
-            HorizontalDivider()
-            GridSection(settings, onColumns, onRows, onShowLabels, onAddSpace)
-            SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
-            HorizontalDivider()
-            BlindModeSection(settings.blindMode, onBlindMode)
-            HorizontalDivider()
-            PinSection(settings.hasPin, onSetPinClick = { showPinDialog = true }, onRemovePin = onRemovePin)
-            HorizontalDivider()
-            BackupSection(onExport, onImport)
+            SettingsGroup(stringResource(R.string.settings_group_language)) {
+                LanguageSection(settings.defaultLanguage, onLanguage)
+            }
+            SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
+                GridSection(settings, onColumns, onRows, onShowLabels, onAddSpace)
+            }
+            SettingsGroup(stringResource(R.string.settings_group_voice)) {
+                SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
+            }
+            SettingsGroup(stringResource(R.string.settings_group_accessibility)) {
+                BlindModeSection(settings.blindMode, onBlindMode)
+            }
+            SettingsGroup(stringResource(R.string.settings_group_security)) {
+                PinSection(
+                    hasPin = settings.hasPin,
+                    onSetPinClick = { showPinDialog = true },
+                    onRemovePin = onRemovePin,
+                )
+            }
+            SettingsGroup(stringResource(R.string.settings_group_backup)) {
+                BackupSection(onExport, onImport)
+            }
         }
     }
 

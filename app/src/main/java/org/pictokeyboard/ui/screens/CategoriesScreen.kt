@@ -10,6 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -98,7 +99,15 @@ fun CategoriesScreenContent(
         },
         floatingActionButton = {
             if (!reordering) {
-                FloatingActionButton(onClick = { dialog = CategoryDialog.Chooser }) {
+                FloatingActionButton(
+                    onClick = { dialog = CategoryDialog.Chooser },
+                    // Explicitly the accent. The default is `primaryContainer`,
+                    // which in this palette is the near-invisible `line` -- and the
+                    // one button that creates things should not be the quietest
+                    // thing on the screen.
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
                     Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add))
                 }
             }
@@ -178,7 +187,7 @@ private fun CategoryDialogs(
 
         CategoryDialog.Chooser -> {
             val suggestedName = stringResource(R.string.category_suggested)
-            NewCategoryChooserDialog(
+            NewCategoryChooserSheet(
                 language = language,
                 suggestedName = suggestedName,
                 loadSuggested = loadSuggested,

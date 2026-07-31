@@ -119,6 +119,8 @@
     <string name="category_frame_style">Frame style</string>
     <string name="category_frame_thickness">Frame thickness</string>
     <string name="category_builtin">Default</string>
+    <string name="category_more">More options</string>
+    <string name="picto_color_inherit">Use the category colour</string>
     <string name="category_delete_confirm">Delete this category and all its pictos?</string>
     <string name="category_pictos_count">%1$d pictos</string>
     <string name="category_blank">Blank category</string>
@@ -173,6 +175,15 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+
+    <!-- The six groups the settings screen is organised into. -->
+    <string name="settings_group_language">Language</string>
+    <string name="settings_group_keyboard">Keyboard</string>
+    <string name="settings_group_voice">Voice</string>
+    <string name="settings_group_accessibility">Accessibility</string>
+    <string name="settings_group_security">Security</string>
+    <string name="settings_group_backup">Backup</string>
+
     <string name="settings_language">Default language</string>
     <string name="settings_grid_columns">Grid columns</string>
     <string name="settings_grid_rows">Visible rows (height)</string>

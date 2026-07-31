@@ -2,15 +2,20 @@ package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -20,12 +25,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,12 +47,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
+import org.pictokeyboard.ui.theme.PictoTheme
+import org.pictokeyboard.ui.theme.Spacing
 import java.io.File
 
 /**
@@ -178,6 +188,18 @@ private fun rowUnderFinger(visible: List<RowBounds>, draggedId: String?, dragOff
     }
 }
 
+/**
+ * One category.
+ *
+ * Opening the category is the common action by a wide margin, so the whole row
+ * does it and the "Pictos" text button is gone. Edit and delete were two icon
+ * buttons competing for the same width as the name — which is why "Sentimientos"
+ * broke mid-word as "Sentiment / os" — and they move into an overflow, giving the
+ * name the room it needs.
+ *
+ * The colour becomes a full-height bar down the leading edge rather than a ring
+ * around the icon, so scanning the list reads as the AAC colour code itself.
+ */
 @Composable
 private fun CategoryRow(
     category: CategoryEntity,
@@ -198,46 +220,104 @@ private fun CategoryRow(
             .graphicsLayer { translationY = if (dragging) dragOffsetY else 0f },
     ) {
         Row(
+            // Min-intrinsic height is what lets the colour bar below fill the row:
+            // it has no height of its own to contribute.
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .height(IntrinsicSize.Min)
+                .then(
+                    if (reordering) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(role = Role.Button, onClick = onOpen)
+                    },
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            CategoryIcon(category)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(category.name, style = MaterialTheme.typography.titleMedium)
-                if (category.builtin) {
-                    Text(
-                        stringResource(R.string.category_builtin),
-                        style = MaterialTheme.typography.labelSmall,
+            Box(
+                modifier = Modifier
+                    .width(COLOR_BAR_WIDTH)
+                    .fillMaxHeight()
+                    .background(Color(category.colorArgb)),
+            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = Spacing.md, vertical = Spacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            ) {
+                CategoryIcon(category)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(category.name, style = MaterialTheme.typography.titleMedium)
+                    if (category.builtin) {
+                        Text(
+                            stringResource(R.string.category_builtin),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (reordering) {
+                    Icon(
+                        Icons.Filled.DragHandle,
+                        contentDescription = stringResource(R.string.reorder_drag),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                }
-            }
-            if (reordering) {
-                Icon(
-                    Icons.Filled.DragHandle,
-                    contentDescription = stringResource(R.string.reorder_drag),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit))
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
-                }
-                TextButton(onClick = onOpen) {
-                    Text(stringResource(R.string.pictos_title))
+                } else {
+                    CategoryOverflow(onEdit = onEdit, onDelete = onDelete)
                 }
             }
         }
     }
 }
 
+/** Edit and delete, out of the row's way until they are wanted. */
+@Composable
+private fun CategoryOverflow(onEdit: () -> Unit, onDelete: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.category_more),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.edit)) },
+                leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                onClick = {
+                    open = false
+                    onEdit()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.delete)) },
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                },
+                onClick = {
+                    open = false
+                    onDelete()
+                },
+            )
+        }
+    }
+}
+
 /**
- * The category's pictogram in a ring of its own colour. The fill stays white
- * because ARASAAC artwork is black line work that a dark disc would swallow.
+ * The category's pictogram on a white disc. The fill is `tile` rather than the
+ * scheme's surface because ARASAAC artwork is black line work that a dark disc
+ * would swallow — the same reason picto tiles stay white in dark mode.
+ *
+ * The coloured ring is gone: the row's leading bar now carries the colour, and
+ * two statements of the same hue on one row is one too many.
  */
 @Composable
 private fun CategoryIcon(category: CategoryEntity) {
@@ -245,18 +325,20 @@ private fun CategoryIcon(category: CategoryEntity) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(44.dp)
-            .background(Color.White, CircleShape)
-            .border(category.borderWidthDp.dp, Color(category.colorArgb), CircleShape)
-            .padding(4.dp),
+            .background(PictoTheme.colors.tile, CircleShape)
+            .border(1.dp, PictoTheme.colors.line, CircleShape)
+            .padding(Spacing.xs),
     ) {
         val iconModel: Any? = category.iconImagePath?.let { File(it) }
             ?: category.iconArasaacId?.let { ArasaacUrls.image(it) }
         if (iconModel != null) {
             AsyncImage(
                 model = iconModel,
-                contentDescription = category.name,
+                contentDescription = null,
                 modifier = Modifier.size(34.dp),
             )
         }
     }
 }
+
+private val COLOR_BAR_WIDTH = 8.dp

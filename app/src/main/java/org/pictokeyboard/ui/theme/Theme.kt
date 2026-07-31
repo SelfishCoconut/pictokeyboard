@@ -72,12 +72,14 @@ private fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
 
         // Cards and sheets. Material picks between these five by elevation; they
         // all resolve to the one card surface, because a design with a single
-        // raised plane should not grow four of them by accident.
+        // raised plane should not grow five of them by accident. `Card` itself
+        // reaches for `surfaceContainerHighest`, so leaving that one as `line` was
+        // enough to turn every plain card beige.
         surfaceContainerLowest = card,
         surfaceContainerLow = card,
         surfaceContainer = card,
         surfaceContainerHigh = card,
-        surfaceContainerHighest = line,
+        surfaceContainerHighest = card,
 
         // Material tints elevated surfaces with `primary`. With a slate accent
         // that turns every card faintly blue, so elevation is carried by the

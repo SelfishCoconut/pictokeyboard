@@ -192,7 +192,7 @@ fun AddPictosScreenContent(
     }
 
     detail?.let { result ->
-        PictoDetailDialog(
+        PictoDetailSheet(
             arasaacId = result.id,
             initialText = result.keyword,
             initialLanguage = language,
