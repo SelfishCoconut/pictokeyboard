@@ -35,14 +35,24 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      # build-mode: none extracts the source directly instead of tracing a
-      # build. A traced build is fragile here: when a push touches no Kotlin,
-      # Gradle's cache makes assembleDebug a no-op, nothing compiles, and
-      # CodeQL fails with "could not process any of it". This is also faster.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      # Kotlin cannot be analysed with build-mode `none` -- CodeQL reports
+      # "could not be processed without a build". It has to trace a real
+      # compilation, which must happen between init and analyze.
       - uses: github/codeql-action/init@v4.37.3
         with:
           languages: java-kotlin
-          build-mode: none
+          build-mode: manual
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+      # `clean` and `--no-build-cache` are load-bearing: a cached, up-to-date
+      # build compiles nothing, the tracer observes nothing, and CodeQL fails
+      # with "could not process any of it" on any push that touched no Kotlin.
+      - run: ./gradlew clean assembleDebug --no-build-cache
       - uses: github/codeql-action/analyze@v4.37.3
 
   dependencies:
