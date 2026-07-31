@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -65,6 +66,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.ConfigViewModel
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 
 /** Whether the PictoKeyboard IME is currently enabled / selected as active. */
 data class KeyboardStatus(val enabled: Boolean, val selected: Boolean) {
@@ -101,7 +103,10 @@ private fun rememberKeyboardStatus(): KeyboardStatus {
     return status
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Stateful wrapper: counts come from the view model, and the keyboard status
+ * from the system, which is the part a `@Preview` cannot answer.
+ */
 @Composable
 fun DashboardScreen(
     viewModel: ConfigViewModel,
@@ -111,8 +116,28 @@ fun DashboardScreen(
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val pictoCount by viewModel.pictoCount.collectAsStateWithLifecycle()
-    val status = rememberKeyboardStatus()
 
+    DashboardScreenContent(
+        categoryCount = categories.size,
+        pictoCount = pictoCount,
+        status = rememberKeyboardStatus(),
+        onEnableKeyboard = onEnableKeyboard,
+        onSelectKeyboard = onSelectKeyboard,
+        onOpenBoard = onOpenBoard,
+    )
+}
+
+/** Stateless dashboard: the caregiver's landing screen. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardScreenContent(
+    categoryCount: Int,
+    pictoCount: Int,
+    status: KeyboardStatus,
+    onEnableKeyboard: () -> Unit,
+    onSelectKeyboard: () -> Unit,
+    onOpenBoard: () -> Unit,
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -141,7 +166,7 @@ fun DashboardScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard(
-                    value = categories.size.toString(),
+                    value = categoryCount.toString(),
                     label = stringResource(R.string.dashboard_stat_categories),
                     modifier = Modifier.weight(1f),
                 )
@@ -511,6 +536,36 @@ private fun TipRow(icon: ImageVector, text: String) {
             text,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Preview(name = "Dashboard · ready", showBackground = true)
+@Composable
+private fun DashboardReadyPreview() {
+    PictoKeyboardTheme {
+        DashboardScreenContent(
+            categoryCount = 8,
+            pictoCount = 108,
+            status = KeyboardStatus(enabled = true, selected = true),
+            onEnableKeyboard = {},
+            onSelectKeyboard = {},
+            onOpenBoard = {},
+        )
+    }
+}
+
+@Preview(name = "Dashboard · setup needed", showBackground = true)
+@Composable
+private fun DashboardSetupPreview() {
+    PictoKeyboardTheme {
+        DashboardScreenContent(
+            categoryCount = 0,
+            pictoCount = 0,
+            status = KeyboardStatus(enabled = false, selected = false),
+            onEnableKeyboard = {},
+            onSelectKeyboard = {},
+            onOpenBoard = {},
         )
     }
 }

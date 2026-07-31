@@ -3,18 +3,13 @@ package org.pictokeyboard.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,9 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,10 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -50,267 +39,239 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
+import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
+import org.pictokeyboard.ui.ConfigViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Stateful wrapper: the board's category list, owned by the view model. */
 @Composable
 fun CategoriesScreen(
-    viewModel: org.pictokeyboard.ui.ConfigViewModel,
+    viewModel: ConfigViewModel,
     onBack: (() -> Unit)? = null,
     onOpenCategory: (String) -> Unit,
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    var editing by remember { mutableStateOf<CategoryEntity?>(null) }
-    var creating by remember { mutableStateOf(false) }
-    var creatingBlank by remember { mutableStateOf(false) }
-    var deleting by remember { mutableStateOf<CategoryEntity?>(null) }
+
+    CategoriesScreenContent(
+        categories = categories,
+        language = settings.defaultLanguage,
+        onBack = onBack,
+        onOpenCategory = onOpenCategory,
+        onReorder = viewModel::reorderCategories,
+        loadSuggested = { viewModel.topUsed() },
+        onAddFromTemplate = { template -> viewModel.addCategoryFromTemplate(template, settings.defaultLanguage) },
+        onAddSuggested = { name, records -> viewModel.addSuggestedCategory(name, records) },
+        onAddBlank = { name, color, style, width -> viewModel.addCategory(name, color, style, width) },
+        onUpdate = viewModel::updateCategory,
+        onDelete = viewModel::deleteCategory,
+    )
+}
+
+/**
+ * Which dialog the screen is showing. One value rather than four independent
+ * flags, so "editing and deleting at once" cannot be expressed.
+ */
+private sealed interface CategoryDialog {
+    /** Choose how to create: from a template, from usage, or blank. */
+    data object Chooser : CategoryDialog
+    data object Blank : CategoryDialog
+    data class Edit(val category: CategoryEntity) : CategoryDialog
+    data class Delete(val category: CategoryEntity) : CategoryDialog
+}
+
+/** Stateless category list. Dialog visibility is local; the data is not. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoriesScreenContent(
+    categories: List<CategoryEntity>,
+    language: String,
+    onBack: (() -> Unit)?,
+    onOpenCategory: (String) -> Unit,
+    onReorder: (List<CategoryEntity>) -> Unit,
+    loadSuggested: suspend () -> List<UsageEntity>,
+    onAddFromTemplate: (CategoryTemplate) -> Unit,
+    onAddSuggested: (String, List<UsageEntity>) -> Unit,
+    onAddBlank: (String, Int, String, Int) -> Unit,
+    onUpdate: (CategoryEntity) -> Unit,
+    onDelete: (CategoryEntity) -> Unit,
+) {
+    var dialog by remember { mutableStateOf<CategoryDialog?>(null) }
     var reordering by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.categories_title)) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back),
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    if (categories.size > 1) {
-                        TextButton(onClick = { reordering = !reordering }) {
-                            Text(stringResource(if (reordering) R.string.reorder_done else R.string.reorder))
-                        }
-                    }
-                },
+            CategoriesTopBar(
+                canReorder = categories.size > 1,
+                reordering = reordering,
+                onBack = onBack,
+                onToggleReorder = { reordering = !reordering },
             )
         },
         floatingActionButton = {
             if (!reordering) {
-                FloatingActionButton(onClick = { creating = true }) {
+                FloatingActionButton(onClick = { dialog = CategoryDialog.Chooser }) {
                     Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add))
                 }
             }
         },
     ) { padding ->
-        // Working copy so a drag can reorder locally; the DB is updated on drop.
-        val items = remember { mutableStateListOf<CategoryEntity>() }
-        var draggedId by remember { mutableStateOf<String?>(null) }
-        var dragOffsetY by remember { mutableFloatStateOf(0f) }
-        val listState = rememberLazyListState()
-
-        // Keep the working list in sync with the DB whenever no drag is active.
-        LaunchedEffect(categories, reordering) {
-            if (draggedId == null) {
-                items.clear()
-                items.addAll(categories)
-            }
-        }
-
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            itemsIndexed(items, key = { _, c -> c.id }) { index, category ->
-                val dragging = category.id == draggedId
-                val dragModifier = if (reordering) {
-                    Modifier.pointerInput(items.size, category.id) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                draggedId = category.id
-                                dragOffsetY = 0f
-                            },
-                            onDragEnd = {
-                                draggedId = null
-                                dragOffsetY = 0f
-                                viewModel.reorderCategories(items.toList())
-                            },
-                            onDragCancel = {
-                                draggedId = null
-                                dragOffsetY = 0f
-                            },
-                            onDrag = { change, amount ->
-                                change.consume()
-                                dragOffsetY += amount.y
-                                val info = listState.layoutInfo.visibleItemsInfo
-                                    .firstOrNull { it.key == draggedId }
-                                if (info != null) {
-                                    val middle = info.offset + dragOffsetY + info.size / 2f
-                                    val target = listState.layoutInfo.visibleItemsInfo.firstOrNull { other ->
-                                        other.key != draggedId &&
-                                            middle.toInt() in other.offset..(other.offset + other.size)
-                                    }
-                                    if (target != null) {
-                                        val from = items.indexOfFirst { it.id == draggedId }
-                                        val to = items.indexOfFirst { it.id == target.key }
-                                        if (from != -1 && to != -1 && from != to) {
-                                            items.add(to, items.removeAt(from))
-                                            // Keep the dragged card under the finger after the swap.
-                                            dragOffsetY +=
-                                                if (to > from) -target.size.toFloat() else target.size.toFloat()
-                                        }
-                                    }
-                                }
-                            },
-                        )
-                    }
-                } else {
-                    Modifier
-                }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(dragModifier)
-                        .zIndex(if (dragging) 1f else 0f)
-                        .graphicsLayer { translationY = if (dragging) dragOffsetY else 0f },
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(Color(0xFFFFFFFF), CircleShape)
-                                .border(category.borderWidthDp.dp, Color(category.colorArgb), CircleShape)
-                                .padding(4.dp),
-                        ) {
-                            val iconModel: Any? = category.iconImagePath?.let { java.io.File(it) }
-                                ?: category.iconArasaacId?.let { ArasaacUrls.image(it) }
-                            if (iconModel != null) {
-                                coil.compose.AsyncImage(
-                                    model = iconModel,
-                                    contentDescription = category.name,
-                                    modifier = Modifier.size(34.dp),
-                                )
-                            }
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(category.name, style = MaterialTheme.typography.titleMedium)
-                            if (category.builtin) {
-                                Text(
-                                    stringResource(R.string.category_builtin),
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
-                        }
-                        if (reordering) {
-                            Icon(
-                                Icons.Filled.DragHandle,
-                                contentDescription = stringResource(R.string.reorder_drag),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        } else {
-                            IconButton(onClick = { editing = category }) {
-                                Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit))
-                            }
-                            IconButton(onClick = { deleting = category }) {
-                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete))
-                            }
-                            TextButton(onClick = { onOpenCategory(category.id) }) {
-                                Text(stringResource(R.string.pictos_title))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (creating) {
-        val suggestedName = stringResource(R.string.category_suggested)
-        NewCategoryChooserDialog(
-            language = settings.defaultLanguage,
-            suggestedName = suggestedName,
-            loadSuggested = { viewModel.topUsed() },
-            onDismiss = { creating = false },
-            onBlank = {
-                creating = false
-                creatingBlank = true
-            },
-            onTemplate = { template ->
-                viewModel.addCategoryFromTemplate(template, settings.defaultLanguage)
-                creating = false
-            },
-            onSuggested = { records ->
-                viewModel.addSuggestedCategory(suggestedName, records)
-                creating = false
-            },
+        ReorderableCategoryList(
+            categories = categories,
+            reordering = reordering,
+            modifier = Modifier.padding(padding),
+            onReorder = onReorder,
+            onEdit = { dialog = CategoryDialog.Edit(it) },
+            onDelete = { dialog = CategoryDialog.Delete(it) },
+            onOpen = onOpenCategory,
         )
     }
-    if (creatingBlank) {
-        CategoryEditDialog(
+
+    CategoryDialogs(
+        dialog = dialog,
+        language = language,
+        onDismiss = { dialog = null },
+        onWantBlank = { dialog = CategoryDialog.Blank },
+        loadSuggested = loadSuggested,
+        onAddFromTemplate = onAddFromTemplate,
+        onAddSuggested = onAddSuggested,
+        onAddBlank = onAddBlank,
+        onUpdate = onUpdate,
+        onDelete = onDelete,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoriesTopBar(
+    canReorder: Boolean,
+    reordering: Boolean,
+    onBack: (() -> Unit)?,
+    onToggleReorder: () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(stringResource(R.string.categories_title)) },
+        navigationIcon = {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                    )
+                }
+            }
+        },
+        actions = {
+            if (canReorder) {
+                TextButton(onClick = onToggleReorder) {
+                    Text(stringResource(if (reordering) R.string.reorder_done else R.string.reorder))
+                }
+            }
+        },
+    )
+}
+
+/** Renders whichever dialog [dialog] names, or nothing when it is null. */
+@Composable
+private fun CategoryDialogs(
+    dialog: CategoryDialog?,
+    language: String,
+    onDismiss: () -> Unit,
+    onWantBlank: () -> Unit,
+    loadSuggested: suspend () -> List<UsageEntity>,
+    onAddFromTemplate: (CategoryTemplate) -> Unit,
+    onAddSuggested: (String, List<UsageEntity>) -> Unit,
+    onAddBlank: (String, Int, String, Int) -> Unit,
+    onUpdate: (CategoryEntity) -> Unit,
+    onDelete: (CategoryEntity) -> Unit,
+) {
+    when (dialog) {
+        null -> Unit
+
+        CategoryDialog.Chooser -> {
+            val suggestedName = stringResource(R.string.category_suggested)
+            NewCategoryChooserDialog(
+                language = language,
+                suggestedName = suggestedName,
+                loadSuggested = loadSuggested,
+                onDismiss = onDismiss,
+                onBlank = onWantBlank,
+                onTemplate = { template ->
+                    onAddFromTemplate(template)
+                    onDismiss()
+                },
+                onSuggested = { records ->
+                    onAddSuggested(suggestedName, records)
+                    onDismiss()
+                },
+            )
+        }
+
+        CategoryDialog.Blank -> CategoryEditDialog(
             initial = null,
-            onDismiss = { creatingBlank = false },
+            onDismiss = onDismiss,
             onSave = { name, color, style, width ->
-                viewModel.addCategory(name, color, style, width)
-                creatingBlank = false
+                onAddBlank(name, color, style, width)
+                onDismiss()
             },
         )
-    }
-    editing?.let { cat ->
-        CategoryEditDialog(
-            initial = cat,
-            onDismiss = { editing = null },
+
+        is CategoryDialog.Edit -> CategoryEditDialog(
+            initial = dialog.category,
+            onDismiss = onDismiss,
             onSave = { name, color, style, width ->
-                viewModel.updateCategory(
-                    cat.copy(name = name, colorArgb = color, borderStyle = style, borderWidthDp = width),
+                onUpdate(
+                    dialog.category.copy(
+                        name = name,
+                        colorArgb = color,
+                        borderStyle = style,
+                        borderWidthDp = width,
+                    ),
                 )
-                editing = null
+                onDismiss()
             },
         )
-    }
-    deleting?.let { cat ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text(cat.name) },
-            text = { Text(stringResource(R.string.category_delete_confirm)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteCategory(cat)
-                    deleting = null
-                }) {
-                    Text(stringResource(R.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) }
+
+        is CategoryDialog.Delete -> DeleteCategoryDialog(
+            category = dialog.category,
+            onDismiss = onDismiss,
+            onConfirm = {
+                onDelete(dialog.category)
+                onDismiss()
             },
         )
     }
 }
 
 @Composable
+private fun DeleteCategoryDialog(category: CategoryEntity, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(category.name) },
+        text = { Text(stringResource(R.string.category_delete_confirm)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.delete)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+@Composable
 private fun NewCategoryChooserDialog(
     language: String,
     suggestedName: String,
-    loadSuggested: suspend () -> List<org.pictokeyboard.data.db.UsageEntity>,
+    loadSuggested: suspend () -> List<UsageEntity>,
     onDismiss: () -> Unit,
     onBlank: () -> Unit,
     onTemplate: (CategoryTemplate) -> Unit,
