@@ -103,6 +103,10 @@ spotless {
 
 detekt {
     buildUponDefaultConfig = true
+    // Overlay for the handful of default rules that misread Compose. See the
+    // file's own header for why each entry is a misconfiguration and not a
+    // suppression.
+    config.setFrom(files("config/detekt.yml"))
     allRules = false
     // The baseline records the debt that exists today so it does not block,
     // while any NEW finding fails the build. Regenerate it only when the debt

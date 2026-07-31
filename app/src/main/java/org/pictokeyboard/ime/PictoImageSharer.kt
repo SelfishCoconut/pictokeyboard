@@ -54,27 +54,16 @@ class PictoImageSharer(private val context: Context) {
             onError(R.string.img_not_ready)
             return
         }
-        val supported = EditorInfoCompat.getContentMimeTypes(editorInfo)
-        if (supported.isEmpty()) {
-            onError(R.string.img_unsupported)
-            return
-        }
-        fun accepts(mime: String) = supported.any { ClipDescription.compareMimeTypes(mime, it) }
-        val isWhatsApp = editorInfo.packageName?.startsWith("com.whatsapp") == true
-        val mime = when {
-            isWhatsApp && accepts("image/webp") -> "image/webp"
-            accepts("image/png") -> "image/png"
-            accepts("image/webp") -> "image/webp"
-            accepts("image/*") -> "image/png"
-            else -> null
-        }
+        val mime = negotiateMime(editorInfo)
         if (mime == null) {
             onError(R.string.img_unsupported)
             return
         }
 
         val caption = picto.label.ifBlank { picto.spokenText }.trim()
-        val file = labeledImage(source, picto.id, caption, frameColor, attribution, mime)
+        val file = labeledImage(
+            Card(source, picto.id, caption, frameColor, attribution, mime),
+        )
         if (file == null) {
             onError(R.string.img_unsupported)
             return
@@ -102,6 +91,35 @@ class PictoImageSharer(private val context: Context) {
     }
 
     /**
+     * Picks the image format for [editorInfo]'s field, or null if it accepts no
+     * image type at all. WhatsApp is asked for WEBP first because that is what
+     * it turns into a sticker rather than an attachment.
+     */
+    private fun negotiateMime(editorInfo: EditorInfo): String? {
+        val supported = EditorInfoCompat.getContentMimeTypes(editorInfo)
+        if (supported.isEmpty()) return null
+        fun accepts(mime: String) = supported.any { ClipDescription.compareMimeTypes(mime, it) }
+        val isWhatsApp = editorInfo.packageName?.startsWith("com.whatsapp") == true
+        return when {
+            isWhatsApp && accepts("image/webp") -> "image/webp"
+            accepts("image/png") -> "image/png"
+            accepts("image/webp") -> "image/webp"
+            accepts("image/*") -> "image/png"
+            else -> null
+        }
+    }
+
+    /** Everything [labeledImage] needs to draw one shared card. */
+    private data class Card(
+        val source: File,
+        val id: String,
+        val caption: String,
+        val frameColor: Int,
+        val attribution: String?,
+        val mime: String,
+    )
+
+    /**
      * Builds a 512x512 card holding the pictogram with its [caption] written
      * across the bottom -- so the word is part of the image that's sent --
      * framed in [frameColor] like the on-screen key (white fill, rounded,
@@ -113,21 +131,19 @@ class PictoImageSharer(private val context: Context) {
      * The size ratios are load-bearing for the WhatsApp sticker format; do not
      * adjust them.
      */
-    private suspend fun labeledImage(
-        source: File,
-        id: String,
-        caption: String,
-        frameColor: Int,
-        attribution: String?,
-        mime: String,
-    ): File? = withContext(Dispatchers.IO) {
+    private suspend fun labeledImage(card: Card): File? = withContext(Dispatchers.IO) {
+        val source = card.source
+        val caption = card.caption
+        val attribution = card.attribution
+        val mime = card.mime
+        val frameColor = card.frameColor
         runCatching {
             val src = android.graphics.BitmapFactory.decodeFile(source.absolutePath)
                 ?: return@runCatching null
-            val size = 512
-            val pad = size * 0.06f
-            val corner = size * 0.10f
-            val strokeWidth = size * 0.045f
+            val size = CARD_SIZE
+            val pad = size * PAD_RATIO
+            val corner = size * CORNER_RATIO
+            val strokeWidth = size * STROKE_RATIO
             val out = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
             val canvas = android.graphics.Canvas(out)
 
@@ -152,22 +168,26 @@ class PictoImageSharer(private val context: Context) {
             }
             // Small blue ARASAAC attribution line drawn beneath the caption.
             val attrPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFF1565C0.toInt()
+                color = ATTRIBUTION_BLUE
                 textAlign = android.graphics.Paint.Align.CENTER
             }
             var captionHeight = 0f
             if (caption.isNotBlank()) {
-                textPaint.textSize = size * 0.16f
-                while (textPaint.textSize > size * 0.07f && textPaint.measureText(caption) > size - 2 * pad) {
-                    textPaint.textSize -= 2f
+                textPaint.textSize = size * CAPTION_MAX_RATIO
+                while (textPaint.textSize > size * CAPTION_MIN_RATIO &&
+                    textPaint.measureText(caption) > size - 2 * pad
+                ) {
+                    textPaint.textSize -= CAPTION_STEP
                 }
                 captionHeight = textPaint.fontSpacing
             }
             var attrHeight = 0f
             if (attribution != null) {
-                attrPaint.textSize = size * 0.052f
-                while (attrPaint.textSize > size * 0.032f && attrPaint.measureText(attribution) > size - 2 * pad) {
-                    attrPaint.textSize -= 1f
+                attrPaint.textSize = size * ATTRIBUTION_MAX_RATIO
+                while (attrPaint.textSize > size * ATTRIBUTION_MIN_RATIO &&
+                    attrPaint.measureText(attribution) > size - 2 * pad
+                ) {
+                    attrPaint.textSize -= ATTRIBUTION_STEP
                 }
                 attrHeight = attrPaint.fontSpacing
             }
@@ -207,19 +227,44 @@ class PictoImageSharer(private val context: Context) {
 
             val dir = File(context.filesDir, "shared").apply { mkdirs() }
             val ext = if (mime == "image/webp") "webp" else "png"
-            val file = File(dir, "send_$id.$ext")
+            val file = File(dir, "send_${card.id}.$ext")
             file.outputStream().use { os ->
                 val format = when {
                     mime != "image/webp" -> android.graphics.Bitmap.CompressFormat.PNG
-                    android.os.Build.VERSION.SDK_INT >= 30 -> android.graphics.Bitmap.CompressFormat.WEBP_LOSSLESS
+                    android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R ->
+                        android.graphics.Bitmap.CompressFormat.WEBP_LOSSLESS
                     else -> {
                         @Suppress("DEPRECATION")
                         android.graphics.Bitmap.CompressFormat.WEBP
                     }
                 }
-                out.compress(format, 100, os)
+                out.compress(format, COMPRESS_QUALITY, os)
             }
             file
         }.getOrNull()
+    }
+
+    /**
+     * Geometry of the shared card. These ratios are load-bearing for the
+     * WhatsApp sticker format and are reproduced from the original in-service
+     * renderer unchanged: do not adjust them to taste.
+     */
+    private companion object {
+        const val CARD_SIZE = 512
+        const val PAD_RATIO = 0.06f
+        const val CORNER_RATIO = 0.10f
+        const val STROKE_RATIO = 0.045f
+
+        const val CAPTION_MAX_RATIO = 0.16f
+        const val CAPTION_MIN_RATIO = 0.07f
+        const val CAPTION_STEP = 2f
+
+        /** The ARASAAC credit line. Its presence is a CC BY-NC-SA obligation. */
+        val ATTRIBUTION_BLUE = 0xFF1565C0.toInt()
+        const val ATTRIBUTION_MAX_RATIO = 0.052f
+        const val ATTRIBUTION_MIN_RATIO = 0.032f
+        const val ATTRIBUTION_STEP = 1f
+
+        const val COMPRESS_QUALITY = 100
     }
 }

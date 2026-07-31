@@ -4,8 +4,7 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>CyclomaticComplexMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
-    <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun labeledImage( source: java.io.File, id: String, caption: String, frameColor: Int, attribution: String?, mime: String, ): java.io.File?</ID>
-    <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun sendPictoAsImage(picto: PictoEntity)</ID>
+    <ID>CyclomaticComplexMethod:PictoImageSharer.kt$PictoImageSharer$private suspend fun labeledImage(card: Card): File?</ID>
     <ID>EmptyFunctionBlock:TtsManager.kt$TtsManager.&lt;no name provided&gt;${}</ID>
     <ID>FunctionNaming:AboutScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AboutScreen(onBack: (() -&gt; Unit)? = null)</ID>
     <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun CustomImageDialog( bitmap: Bitmap, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, Int?) -&gt; Unit, )</ID>
@@ -53,7 +52,7 @@
     <ID>LongMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
     <ID>LongMethod:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
     <ID>LongMethod:MainActivity.kt$@Composable private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings)</ID>
-    <ID>LongMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun labeledImage( source: java.io.File, id: String, caption: String, frameColor: Int, attribution: String?, mime: String, ): java.io.File?</ID>
+    <ID>LongMethod:PictoImageSharer.kt$PictoImageSharer$private suspend fun labeledImage(card: Card): File?</ID>
     <ID>LongMethod:PictosScreen.kt$@Composable private fun EditPictoDialog( picto: PictoEntity, onDismiss: () -&gt; Unit, onSave: (PictoEntity) -&gt; Unit, onDelete: () -&gt; Unit, )</ID>
     <ID>LongMethod:PictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PictosScreen( viewModel: ConfigViewModel, categoryId: String, onBack: () -&gt; Unit, onAddPictos: () -&gt; Unit, )</ID>
     <ID>LongMethod:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -&gt; Unit)? = null)</ID>
@@ -336,7 +335,7 @@
     <ID>ReturnCount:ConfigViewModel.kt$ConfigViewModel$private fun &lt;T&gt; movedBy(list: List&lt;T&gt;, match: (T) -&gt; Boolean, up: Boolean): List&lt;T&gt;?</ID>
     <ID>ReturnCount:ImageCropper.kt$CropImageView$fun getCroppedBitmap(out: Int = 512): Bitmap?</ID>
     <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun deleteLastWord()</ID>
-    <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun sendPictoAsImage(picto: PictoEntity)</ID>
+    <ID>ReturnCount:PictoImageSharer.kt$PictoImageSharer$suspend fun send( picto: PictoEntity, frameColor: Int, attribution: String?, currentTarget: () -&gt; Target?, onError: (Int) -&gt; Unit, )</ID>
     <ID>ReturnCount:SettingsStore.kt$SettingsStore$suspend fun verifyPin(pin: String): Boolean</ID>
     <ID>TooManyFunctions:CategoryDao.kt$CategoryDao</ID>
     <ID>TooManyFunctions:ConfigViewModel.kt$ConfigViewModel : ViewModel</ID>

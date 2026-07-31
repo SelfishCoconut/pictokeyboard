@@ -212,9 +212,13 @@ class PictoKeyboardService : InputMethodService() {
      * user is actually in, not the one they started in.
      */
     private fun currentTarget(): PictoImageSharer.Target? {
-        val connection = currentInputConnection ?: return null
-        val editorInfo = currentInputEditorInfo ?: return null
-        return PictoImageSharer.Target(connection, editorInfo)
+        val connection = currentInputConnection
+        val editorInfo = currentInputEditorInfo
+        return if (connection != null && editorInfo != null) {
+            PictoImageSharer.Target(connection, editorInfo)
+        } else {
+            null
+        }
     }
 
     /**
