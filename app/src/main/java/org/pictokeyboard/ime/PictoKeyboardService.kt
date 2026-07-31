@@ -179,7 +179,9 @@ class PictoKeyboardService : InputMethodService() {
         }
         val category = categories.firstOrNull { it.id == categoryId }
         val color = category?.colorArgb ?: 0
-        applyCategoryWash(color)
+        // Pass the nullable through: applyCategoryWash maps null to transparent,
+        // whereas 0 is opaque black and washes the grid 6% grey.
+        applyCategoryWash(category?.colorArgb)
         val borderStyle = category?.borderStyle ?: org.pictokeyboard.data.db.BorderStyles.SOLID
         val borderWidthDp = category?.borderWidthDp ?: org.pictokeyboard.data.db.BorderStyles.DEFAULT_WIDTH_DP
         pictoJob = locator.pictoRepository.observePictos(categoryId)

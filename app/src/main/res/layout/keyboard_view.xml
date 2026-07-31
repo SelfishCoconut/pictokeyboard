@@ -10,24 +10,32 @@
         Body: the category spine on the left, the picto grid on the right.
 
         The grid's background is set in code to a 6% wash of the selected
-        category's colour, so the whole surface takes on that hue - tap Comida and
+        category's colour, so the whole surface takes on that hue. Tap Comida and
         the keyboard reads orange, tap Acciones and it reads green. That gives a
         user who cannot read a full-field signal of which context they are in,
         which is the job AAC colour coding exists to do and was previously spent
         on a 3dp frame.
+
+        layout_weight="1" so the body absorbs any height shortfall rather than the
+        action row below it. Without it, moving the action row to the bottom of a
+        wrap_content column made it the child that falls off the screen when the
+        framework constrains the input area (landscape, or fullscreen extract
+        mode). Losing space, backspace and enter is far worse than losing a grid
+        row, which scrolls anyway.
     -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/kb_body_height"
+        android:layout_weight="1"
         android:orientation="horizontal">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list_categories"
             android:layout_width="@dimen/kb_category_width"
             android:layout_height="match_parent"
-            android:background="@color/paper"
             android:clipToPadding="false"
-            android:paddingHorizontal="6dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="0dp"
             android:paddingVertical="4dp" />
 
         <androidx.recyclerview.widget.RecyclerView

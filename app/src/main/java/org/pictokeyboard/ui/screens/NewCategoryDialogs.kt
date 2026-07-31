@@ -1,5 +1,6 @@
 package org.pictokeyboard.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -147,11 +148,18 @@ private fun ChooserCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (highlighted) {
-                MaterialTheme.colorScheme.secondaryContainer
+        // `card`, not surfaceVariant: that role resolves to the decorative `line`,
+        // which put this card's inkSoft subtitle at 4.36:1 -- and made `highlighted`
+        // a no-op, since secondaryContainer resolves to the same colour. The
+        // suggestion is now distinguished by an accent outline instead of a fill
+        // that was never visible.
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        border = BorderStroke(
+            width = if (highlighted) 2.dp else 1.dp,
+            color = if (highlighted) {
+                MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.outline
             },
         ),
     ) {

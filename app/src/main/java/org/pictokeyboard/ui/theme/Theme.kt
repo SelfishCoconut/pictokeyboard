@@ -47,7 +47,7 @@ fun PictoKeyboardTheme(
  * it is a slate. `secondary` and `tertiary` therefore resolve to that same accent
  * or to neutral fills, rather than to colours nobody chose.
  */
-private fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
+internal fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
     val base = if (darkTheme) darkColorScheme() else lightColorScheme()
     return base.copy(
         primary = accent,
@@ -67,7 +67,10 @@ private fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
         onBackground = ink,
         surface = paper,
         onSurface = ink,
-        surfaceVariant = line,
+        // `card`, not `line`. Material guarantees `onSurfaceVariant` is readable on
+        // `surfaceVariant`, and inkSoft on line is 4.36:1 -- just under the 4.5:1
+        // that guarantee is worth. `line` keeps its job as `outlineVariant`.
+        surfaceVariant = card,
         onSurfaceVariant = inkSoft,
 
         // Cards and sheets. Material picks between these five by elevation; they

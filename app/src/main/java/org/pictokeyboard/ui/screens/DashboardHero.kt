@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -121,6 +123,7 @@ private fun MiniBoard(categories: List<CategoryEntity>, pictos: List<PictoEntity
 @Composable
 private fun MiniChip(category: CategoryEntity, selected: Boolean) {
     val hue = Color(category.colorArgb)
+    val paper = PictoTheme.colors.paper.toArgb()
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -138,12 +141,18 @@ private fun MiniChip(category: CategoryEntity, selected: Boolean) {
                     // Rounded rect, not a circle: the miniature is meant to be a
                     // faithful small copy of the spine, and the keyboard's chips
                     // are rectangles.
+                    // outlineOn, not the raw hue: half the palette cannot reach
+                    // 3:1 against paper on its own, same as the real spine.
                     Modifier
                         .background(
                             Color(CategoryColors.tintSoft(category.colorArgb)),
                             RoundedCornerShape(CHIP_CORNER),
                         )
-                        .border(1.dp, hue, RoundedCornerShape(CHIP_CORNER))
+                        .border(
+                            1.dp,
+                            Color(CategoryColors.outlineOn(category.colorArgb, paper)),
+                            RoundedCornerShape(CHIP_CORNER),
+                        )
                 },
             ),
     ) {
@@ -251,7 +260,7 @@ private fun EmptyBoardHint() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .height(BOARD_HEIGHT)
+            .heightIn(min = BOARD_HEIGHT)
             .padding(Spacing.lg),
     ) {
         Text(

@@ -12,10 +12,10 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
 import org.pictokeyboard.data.prefs.Settings
@@ -65,10 +67,7 @@ internal fun LanguageSection(language: String, onLanguage: (String) -> Unit) {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        FilterChip(language == "es", { onLanguage("es") }, { Text("Español") })
-        FilterChip(language == "en", { onLanguage("en") }, { Text("English") })
-    }
+    LanguageChips(selected = language, onSelect = onLanguage)
 }
 
 @Composable
@@ -206,6 +205,25 @@ internal fun SliderRow(
             Text(label, modifier = Modifier.weight(1f))
             Text(valueText, style = MaterialTheme.typography.labelLarge)
         }
-        Slider(value = value, onValueChange = onChange, valueRange = range, steps = steps)
+        Slider(
+            // The label is a sibling Text, so without this the screen reader
+            // announces "slider, 50 percent" and never says of what.
+            modifier = Modifier.semantics {
+                contentDescription = label
+                stateDescription = valueText
+            },
+            value = value,
+            onValueChange = onChange,
+            valueRange = range,
+            steps = steps,
+            // Material takes the inactive track from `secondaryContainer`, which in
+            // this palette is `line` -- 1.34:1 on a card, 1.13:1 in dark. The track
+            // shows how much range is left, so it is information, not decoration,
+            // and it needs the 3:1 that `outline` gives it.
+            colors = SliderDefaults.colors(
+                inactiveTrackColor = MaterialTheme.colorScheme.outline,
+                inactiveTickColor = MaterialTheme.colorScheme.surface,
+            ),
+        )
     }
 }

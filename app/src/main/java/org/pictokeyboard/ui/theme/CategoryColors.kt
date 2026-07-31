@@ -20,13 +20,6 @@ object CategoryColors {
     /** Selected category chip, and the blind-mode surface. */
     fun fill(argb: Int): Int = opaque(argb)
 
-    /**
-     * Pressed states. Heavier in dark mode: a 24% wash that reads clearly over
-     * paper white is nearly invisible over warm black.
-     */
-    fun tint(argb: Int, dark: Boolean): Int =
-        withAlpha(argb, if (dark) TINT_ALPHA_DARK else TINT_ALPHA_LIGHT)
-
     /** Unselected category chip fill. */
     fun tintSoft(argb: Int): Int = withAlpha(argb, TINT_SOFT_ALPHA)
 
@@ -42,8 +35,45 @@ object CategoryColors {
      */
     fun wash(argb: Int): Int = withAlpha(argb, WASH_ALPHA)
 
-    /** Outline of an unselected category chip, drawn at 1.5dp. */
-    fun hairline(argb: Int): Int = opaque(argb)
+    /**
+     * [argb] adjusted until it is actually visible as an outline on [background].
+     *
+     * A category's raw hue cannot be trusted to bound a control. Against the light
+     * `paper`, 13 of the 26 palette values fall below 3:1 — yellow reaches 1.08:1
+     * and white 1.13:1 — so an unselected chip outlined in its own colour has, for
+     * half the board, no edge at all. Against the dark `paper` a different 9 fail.
+     * That is the primary navigation control of a keyboard used by someone who may
+     * not read.
+     *
+     * The hue is blended toward black or white — whichever direction gains
+     * contrast — by the smallest step that clears [Wcag.LARGE_TEXT_AND_UI]. Because
+     * it is the smallest step, the colour still reads as that category's colour;
+     * amber stays recognisably amber, it just stops being invisible.
+     */
+    fun outlineOn(argb: Int, background: Int): Int {
+        if (Wcag.contrastRatio(argb, background) >= Wcag.LARGE_TEXT_AND_UI) return opaque(argb)
+        val target = contrastText(background)
+        for (step in 1..BLEND_STEPS) {
+            val blended = blend(argb, target, step.toFloat() / BLEND_STEPS)
+            if (Wcag.contrastRatio(blended, background) >= Wcag.LARGE_TEXT_AND_UI) return blended
+        }
+        // Unreachable for any real background: `target` is by construction the
+        // higher-contrast of black and white, so the full blend always clears 3:1.
+        return target
+    }
+
+    /** Linear mix of two opaque colours, [amount] of the way from [from] to [to]. */
+    private fun blend(from: Int, to: Int, amount: Float): Int {
+        fun mix(shift: Int): Int {
+            val a = (from shr shift) and BYTE
+            val b = (to shr shift) and BYTE
+            return (a + (b - a) * amount).toInt().coerceIn(0, BYTE)
+        }
+        return ALPHA_OPAQUE or
+            (mix(RED_SHIFT) shl RED_SHIFT) or
+            (mix(GREEN_SHIFT) shl GREEN_SHIFT) or
+            mix(0)
+    }
 
     /**
      * Black or white over [background], whichever the user can actually read.
@@ -63,15 +93,16 @@ object CategoryColors {
     private const val RGB_MASK = 0x00FFFFFF
     private const val ALPHA_SHIFT = 24
     private const val ALPHA_OPAQUE = 0xFF shl ALPHA_SHIFT
+    private const val BYTE = 0xFF
+    private const val RED_SHIFT = 16
+    private const val GREEN_SHIFT = 8
+
+    /** Blend granularity: 5% steps, so the adjustment is as small as it can be. */
+    private const val BLEND_STEPS = 20
     private const val BLACK = 0xFF000000.toInt()
     private const val WHITE = 0xFFFFFFFF.toInt()
 
-    // Percentages from the design, as 8-bit alpha: 24%, 32%, 12%, 6%.
-    private const val TINT_ALPHA_LIGHT = 61
-    private const val TINT_ALPHA_DARK = 82
+    // Percentages from the design, as 8-bit alpha: 12% and 6%.
     private const val TINT_SOFT_ALPHA = 31
     private const val WASH_ALPHA = 15
-
-    /** The hairline weight, in dp. */
-    const val HAIRLINE_WIDTH_DP = 1.5f
 }

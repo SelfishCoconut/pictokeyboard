@@ -56,9 +56,20 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
             root.background = ViewStyles.categoryChip(
                 colorArgb = color,
                 selected = selected,
-                cornerRadiusPx = dp(CHIP_CORNER_DP).toFloat(),
-                hairlineWidthPx = dpF(CategoryColors.HAIRLINE_WIDTH_DP),
-                rtl = itemView.layoutDirection == View.LAYOUT_DIRECTION_RTL,
+                // The chip sits on the spine, which is `paper` -- so that is what
+                // its outline has to stay visible against.
+                backgroundArgb = ContextCompat.getColor(itemView.context, R.color.paper),
+                metrics = ViewStyles.ChipMetrics(
+                    cornerRadiusPx = dp(CHIP_CORNER_DP).toFloat(),
+                    strokeWidthPx = dp(category.borderWidthDp),
+                    borderStyle = category.borderStyle,
+                    // Read from the configuration, not the view: onBindViewHolder
+                    // runs before the item is attached, so View.getLayoutDirection()
+                    // cannot resolve yet and answers LTR -- then answers correctly
+                    // once the holder is recycled, giving one list two notch sides.
+                    rtl = itemView.resources.configuration.layoutDirection ==
+                        View.LAYOUT_DIRECTION_RTL,
+                ),
             )
             // A selected chip is flooded with its own hue, so its label has to be
             // chosen against that hue rather than against the keyboard background.
@@ -87,9 +98,6 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
         }
 
         private fun dp(value: Int): Int =
-            (value * itemView.resources.displayMetrics.density).toInt()
-
-        private fun dpF(value: Float): Int =
             (value * itemView.resources.displayMetrics.density).toInt()
     }
 

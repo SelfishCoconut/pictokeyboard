@@ -47,25 +47,43 @@ object ViewStyles {
      *
      * The shape cue is the one that survives greyscale, a colour-vision
      * deficiency, and a photograph of the screen.
+     *
+     * The unselected chip keeps [borderStyle] and [strokeWidthPx] -- the frame
+     * settings the caregiver chose -- because dashed-versus-solid and 1dp-versus-8dp
+     * are identity channels that owe nothing to colour, and dropping them from the
+     * spine would have thrown away the one cue that works in greyscale. Its stroke
+     * is [CategoryColors.outlineOn] rather than the raw hue, since half the palette
+     * cannot reach 3:1 against `paper` on its own.
      */
     fun categoryChip(
         colorArgb: Int,
         selected: Boolean,
-        cornerRadiusPx: Float,
-        hairlineWidthPx: Int,
-        rtl: Boolean = false,
+        backgroundArgb: Int,
+        metrics: ChipMetrics,
     ): GradientDrawable =
-        GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            if (selected) {
+        if (selected) {
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
                 setColor(CategoryColors.fill(colorArgb))
-                cornerRadii = notchedCorners(cornerRadiusPx, rtl)
-            } else {
-                setColor(CategoryColors.tintSoft(colorArgb))
-                cornerRadius = cornerRadiusPx
-                setStroke(hairlineWidthPx, CategoryColors.hairline(colorArgb))
+                cornerRadii = notchedCorners(metrics.cornerRadiusPx, metrics.rtl)
             }
+        } else {
+            framedTile(
+                colorArgb = CategoryColors.outlineOn(colorArgb, backgroundArgb),
+                strokeWidthPx = metrics.strokeWidthPx,
+                cornerRadiusPx = metrics.cornerRadiusPx,
+                fillArgb = CategoryColors.tintSoft(colorArgb),
+                borderStyle = metrics.borderStyle,
+            )
         }
+
+    /** How a chip is drawn, as opposed to what colour it is. */
+    data class ChipMetrics(
+        val cornerRadiusPx: Float,
+        val strokeWidthPx: Int,
+        val borderStyle: String = BorderStyles.SOLID,
+        val rtl: Boolean = false,
+    )
 
     /**
      * Corner radii with the grid-facing pair squared off. The grid sits after the

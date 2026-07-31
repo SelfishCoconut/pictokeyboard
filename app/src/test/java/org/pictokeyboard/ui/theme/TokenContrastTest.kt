@@ -145,10 +145,83 @@ class TokenContrastTest {
         assertEquals(0xFF, CategoryColors.fill(hue) ushr 24)
         assertEquals(0x0F, CategoryColors.wash(hue) ushr 24)
         assertEquals(0x1F, CategoryColors.tintSoft(hue) ushr 24)
-        assertEquals(0x3D, CategoryColors.tint(hue, dark = false) ushr 24)
-        assertEquals(0x52, CategoryColors.tint(hue, dark = true) ushr 24)
         // The hue itself must survive the alpha change untouched -- users' saved
         // data references these exact RGB values.
         assertEquals(hue and 0x00FFFFFF, CategoryColors.wash(hue) and 0x00FFFFFF)
+    }
+
+    /**
+     * A category's own hue, used to outline its chip on the spine.
+     *
+     * The easy direction — hue as *background*, black-or-white on top — was already
+     * covered. This is the direction that actually failed: the hue as a 1.5dp line
+     * against `paper`. Yellow manages 1.08:1 raw and white 1.13:1, so 13 of 26
+     * palette values had no visible chip edge in light mode and a different 9 had
+     * none in dark. [CategoryColors.outlineOn] is what fixes it, and this is the
+     * assertion that says so.
+     */
+    @Test
+    fun `every palette hue is visible as an outline in both schemes`() {
+        listOf("light" to LightTokens, "dark" to DarkTokens).forEach { (scheme, c) ->
+            val paper = c.paper.toArgb()
+            CategoryPalette.forEach { argb ->
+                val outline = CategoryColors.outlineOn(argb.toInt(), paper)
+                val actual = Wcag.contrastRatio(outline, paper)
+                assertTrue(
+                    "$scheme outline for #%08X is %.2f:1 on paper, below %.1f:1"
+                        .format(argb, actual, Wcag.LARGE_TEXT_AND_UI),
+                    actual >= Wcag.LARGE_TEXT_AND_UI,
+                )
+            }
+        }
+    }
+
+    /**
+     * The tokens are only half the story: the other half is the mapping onto
+     * Material's roles, which is where a token lands somewhere it was never sized
+     * for. Material's contract is that every `onX` is readable on its `X`, so this
+     * walks the scheme the app actually builds and checks that contract holds.
+     *
+     * This is the test that would have caught `surfaceVariant` being handed the
+     * decorative `line` (putting `onSurfaceVariant` at 4.36:1), rather than waiting
+     * for someone to notice a grey-on-grey caption.
+     */
+    @Test
+    fun `every Material content role is readable on its own container`() {
+        listOf("light" to LightTokens.toColorScheme(false), "dark" to DarkTokens.toColorScheme(true))
+            .forEach { (name, scheme) ->
+                val pairs = listOf(
+                    "onPrimary/primary" to (scheme.onPrimary to scheme.primary),
+                    "onSecondary/secondary" to (scheme.onSecondary to scheme.secondary),
+                    "onTertiary/tertiary" to (scheme.onTertiary to scheme.tertiary),
+                    "onBackground/background" to (scheme.onBackground to scheme.background),
+                    "onSurface/surface" to (scheme.onSurface to scheme.surface),
+                    "onSurfaceVariant/surfaceVariant" to (scheme.onSurfaceVariant to scheme.surfaceVariant),
+                    "onPrimaryContainer/primaryContainer" to
+                        (scheme.onPrimaryContainer to scheme.primaryContainer),
+                    "onSecondaryContainer/secondaryContainer" to
+                        (scheme.onSecondaryContainer to scheme.secondaryContainer),
+                    "onTertiaryContainer/tertiaryContainer" to
+                        (scheme.onTertiaryContainer to scheme.tertiaryContainer),
+                    "onError/error" to (scheme.onError to scheme.error),
+                    "onErrorContainer/errorContainer" to (scheme.onErrorContainer to scheme.errorContainer),
+                    "inverseOnSurface/inverseSurface" to (scheme.inverseOnSurface to scheme.inverseSurface),
+                    "onSurface/surfaceContainer" to (scheme.onSurface to scheme.surfaceContainer),
+                    "onSurfaceVariant/surfaceContainer" to (scheme.onSurfaceVariant to scheme.surfaceContainer),
+                )
+                pairs.forEach { (label, pair) ->
+                    assertReadable("$name $label", pair.first, pair.second, Wcag.BODY_TEXT)
+                }
+
+                // `outline` bounds controls, so it owes 3:1 on every surface a
+                // control can sit on.
+                assertReadable("$name outline/surface", scheme.outline, scheme.surface, Wcag.LARGE_TEXT_AND_UI)
+                assertReadable(
+                    "$name outline/surfaceContainer",
+                    scheme.outline,
+                    scheme.surfaceContainer,
+                    Wcag.LARGE_TEXT_AND_UI,
+                )
+            }
     }
 }
