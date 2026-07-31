@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
@@ -13,15 +15,24 @@ import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import java.io.File
 
-class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) : RecyclerView.Adapter<CategoryAdapter.VH>() {
+class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
+    ListAdapter<CategoryEntity, CategoryAdapter.VH>(DIFF) {
 
-    private var items: List<CategoryEntity> = emptyList()
     private var selectedId: String? = null
 
     fun submit(categories: List<CategoryEntity>, selectedId: String?) {
-        this.items = categories
+        // Selection is adapter state, not entity state, so DiffUtil cannot see
+        // it: repaint the old and new selected rows explicitly.
+        val previousId = this.selectedId
         this.selectedId = selectedId
-        notifyDataSetChanged()
+        submitList(categories) {
+            if (previousId != selectedId) {
+                listOfNotNull(previousId, selectedId).forEach { id ->
+                    val index = currentList.indexOfFirst { it.id == id }
+                    if (index >= 0) notifyItemChanged(index)
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -30,10 +41,9 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) : RecyclerV
         return VH(view)
     }
 
-    override fun getItemCount(): Int = items.size
-
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(items[position], items[position].id == selectedId)
+        val item = getItem(position)
+        holder.bind(item, item.id == selectedId)
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
@@ -74,5 +84,15 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) : RecyclerV
 
         private fun dp(value: Int): Int =
             (value * itemView.resources.displayMetrics.density).toInt()
+    }
+
+    companion object {
+        val DIFF = object : DiffUtil.ItemCallback<CategoryEntity>() {
+            override fun areItemsTheSame(oldItem: CategoryEntity, newItem: CategoryEntity) =
+                oldItem.id == newItem.id
+
+            override fun areContentsTheSame(oldItem: CategoryEntity, newItem: CategoryEntity) =
+                oldItem == newItem
+        }
     }
 }
