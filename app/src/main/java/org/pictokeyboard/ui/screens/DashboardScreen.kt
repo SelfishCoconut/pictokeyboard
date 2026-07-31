@@ -2,7 +2,6 @@ package org.pictokeyboard.ui.screens
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.res.Configuration
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -40,6 +38,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 import org.pictokeyboard.ui.theme.Spacing
 
 /** Whether the PictoKeyboard IME is currently enabled / selected as active. */
@@ -186,7 +185,7 @@ private fun sampleBoard(): Pair<List<CategoryEntity>, List<PictoEntity>> {
     return categories to pictos
 }
 
-@Preview(name = "Dashboard · ready", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun DashboardReadyPreview() {
     val (categories, pictos) = sampleBoard()
@@ -203,42 +202,8 @@ private fun DashboardReadyPreview() {
     }
 }
 
-@Preview(name = "Dashboard · dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun DashboardDarkPreview() {
-    val (categories, pictos) = sampleBoard()
-    PictoKeyboardTheme(darkTheme = true) {
-        DashboardScreenContent(
-            categories = categories,
-            heroPictos = pictos,
-            pictoCount = 108,
-            status = KeyboardStatus(enabled = true, selected = true),
-            onEnableKeyboard = {},
-            onSelectKeyboard = {},
-            onOpenBoard = {},
-        )
-    }
-}
-
-@Preview(name = "Dashboard · large text", showBackground = true, fontScale = 2f)
-@Composable
-private fun DashboardLargeTextPreview() {
-    val (categories, pictos) = sampleBoard()
-    PictoKeyboardTheme {
-        DashboardScreenContent(
-            categories = categories,
-            heroPictos = pictos,
-            pictoCount = 108,
-            status = KeyboardStatus(enabled = true, selected = true),
-            onEnableKeyboard = {},
-            onSelectKeyboard = {},
-            onOpenBoard = {},
-        )
-    }
-}
-
 /** Empty state: no board yet, and the keyboard not yet enabled. */
-@Preview(name = "Dashboard · setup needed", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun DashboardSetupPreview() {
     PictoKeyboardTheme {

@@ -18,10 +18,12 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -133,6 +135,24 @@ private fun ColorSwatch(argb: Int, selected: Boolean, onClick: () -> Unit) {
                 modifier = Modifier.padding(2.dp),
             )
         }
+    }
+}
+
+/**
+ * The "add" button, shared by the category and picto screens.
+ *
+ * It names its colours because a Material FAB defaults to `primaryContainer`,
+ * which in this palette resolves to the near-invisible `line` — and the one
+ * button on the screen that creates things must not be the quietest thing on it.
+ */
+@Composable
+fun AddFab(contentDescription: String, onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Icon(Icons.Filled.Add, contentDescription = contentDescription)
     }
 }
 

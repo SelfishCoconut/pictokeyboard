@@ -24,10 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 
 /** Stateful wrapper: turns a URL into a browser intent. */
 @Composable
@@ -104,7 +104,7 @@ fun AboutScreenContent(onBack: (() -> Unit)?, onOpenUrl: (String) -> Unit) {
     }
 }
 
-@Preview(name = "About", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun AboutScreenPreview() {
     PictoKeyboardTheme {

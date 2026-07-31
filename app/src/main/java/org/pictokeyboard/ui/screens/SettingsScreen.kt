@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -41,6 +40,7 @@ import org.pictokeyboard.R
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 import org.pictokeyboard.ui.theme.Spacing
 
 /**
@@ -184,7 +184,7 @@ fun SettingsScreenContent(
     }
 }
 
-@Preview(name = "Settings", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun SettingsScreenPreview() {
     PictoKeyboardTheme {
@@ -208,7 +208,7 @@ private fun SettingsScreenPreview() {
     }
 }
 
-@Preview(name = "Settings · PIN set", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun SettingsScreenWithPinPreview() {
     PictoKeyboardTheme {

@@ -4,13 +4,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
@@ -31,6 +27,7 @@ import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 
 /** Stateful wrapper: the board's category list, owned by the view model. */
 @Composable
@@ -99,17 +96,10 @@ fun CategoriesScreenContent(
         },
         floatingActionButton = {
             if (!reordering) {
-                FloatingActionButton(
+                AddFab(
+                    contentDescription = stringResource(R.string.category_add),
                     onClick = { dialog = CategoryDialog.Chooser },
-                    // Explicitly the accent. The default is `primaryContainer`,
-                    // which in this palette is the near-invisible `line` -- and the
-                    // one button that creates things should not be the quietest
-                    // thing on the screen.
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add))
-                }
+                )
             }
         },
     ) { padding ->
@@ -255,7 +245,7 @@ private fun DeleteCategoryDialog(category: CategoryEntity, onDismiss: () -> Unit
     )
 }
 
-@Preview(name = "Categories", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun CategoriesScreenPreview() {
     // Built from the real templates, so the preview shows the actual palette.
