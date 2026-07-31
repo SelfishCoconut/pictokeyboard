@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The dark scheme. Before this file existed the keyboard was hardcoded light, so
+    at night it was a slab of light grey under a dark host app.
+-->
+<resources>
+    <color name="paper">#FF15130F</color>
+    <color name="card">#FF221E19</color>
+
+    <!--
+        Deliberately unchanged from the light scheme. ARASAAC artwork is black line
+        work, so the tile stays white and its content colours stay dark; the dark
+        scheme's `ink` on a white tile computes to 1.17:1, which is a picto label
+        nobody can read. In dark mode the tiles read as white cards glowing against
+        warm black. This is a legibility constraint, not a style choice.
+    -->
+    <color name="tile">#FFFFFFFF</color>
+    <color name="on_tile">#FF191713</color>
+    <color name="on_tile_soft">#FF6A645C</color>
+
+    <color name="ink">#FFF0EDE6</color>
+    <color name="ink_soft">#FFA39C92</color>
+
+    <color name="line">#FF2C2822</color>
+
+    <!-- Lifted from the design's #6E675C, which reached only 2.96:1 on `card`. -->
+    <color name="line_strong">#FF767065</color>
+
+    <color name="accent">#FFC9D6E6</color>
+    <color name="on_accent">#FF15130F</color>
+</resources>

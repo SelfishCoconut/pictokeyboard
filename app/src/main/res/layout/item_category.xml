@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    One chip on the category spine. Its face is built in code (ViewStyles.categoryChip)
+    because it depends on the category's own hue and on whether it is selected.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/category_root"
     android:layout_width="match_parent"
@@ -7,24 +11,30 @@
     android:gravity="center"
     android:minHeight="64dp"
     android:orientation="vertical"
-    android:padding="6dp">
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="8dp">
 
     <ImageView
         android:id="@+id/category_icon"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginBottom="2dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_category_icon"
         android:contentDescription="@null"
+        android:padding="3dp"
         android:visibility="gone" />
 
+    <!--
+        No ellipsize: "Sentimientos" is a category the user has to be able to pick,
+        so it wraps rather than becoming "Sentimient...". The colour is set in code,
+        since a selected chip is filled with its own hue and needs auto-contrast.
+    -->
     <TextView
         android:id="@+id/category_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
+        android:fontFamily="@font/atkinson_hyperlegible"
         android:gravity="center"
-        android:maxLines="2"
-        android:textColor="@color/kb_text"
-        android:textSize="13sp"
+        android:textSize="14sp"
         android:textStyle="bold" />
 </LinearLayout>

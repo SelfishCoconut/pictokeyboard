@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +14,7 @@ import coil.load
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
+import org.pictokeyboard.ui.theme.CategoryColors
 import java.io.File
 
 class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
@@ -51,16 +53,21 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
             val selected = item.selected
             name.text = category.name
             val color = category.colorArgb
-            val fill = if (selected) color else ViewStyles.tint(color, 0x33)
-            root.background = ViewStyles.framedTile(
+            root.background = ViewStyles.categoryChip(
                 colorArgb = color,
-                strokeWidthPx = dp(category.borderWidthDp),
-                cornerRadiusPx = dp(10).toFloat(),
-                fillArgb = fill,
-                borderStyle = category.borderStyle,
+                selected = selected,
+                cornerRadiusPx = dp(CHIP_CORNER_DP).toFloat(),
+                hairlineWidthPx = dpF(CategoryColors.HAIRLINE_WIDTH_DP),
+                rtl = itemView.layoutDirection == View.LAYOUT_DIRECTION_RTL,
             )
+            // A selected chip is flooded with its own hue, so its label has to be
+            // chosen against that hue rather than against the keyboard background.
             name.setTextColor(
-                if (selected) ViewStyles.contrastText(color) else 0xFF222222.toInt(),
+                if (selected) {
+                    CategoryColors.contrastText(color)
+                } else {
+                    ContextCompat.getColor(itemView.context, R.color.ink)
+                },
             )
 
             val iconPath = category.iconImagePath
@@ -81,9 +88,14 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
 
         private fun dp(value: Int): Int =
             (value * itemView.resources.displayMetrics.density).toInt()
+
+        private fun dpF(value: Float): Int =
+            (value * itemView.resources.displayMetrics.density).toInt()
     }
 
     companion object {
+        private const val CHIP_CORNER_DP = 12
+
         val DIFF = object : DiffUtil.ItemCallback<Row>() {
             override fun areItemsTheSame(oldItem: Row, newItem: Row) =
                 oldItem.category.id == newItem.category.id

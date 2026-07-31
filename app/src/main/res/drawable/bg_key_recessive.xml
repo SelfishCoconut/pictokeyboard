@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A secondary keyboard key. Quiet by default, unmistakable when pressed.
+
+    The press flips to the accent rather than nudging the grey a shade, because
+    for a user with a tremor or poor motor control the question the key has to
+    answer is "did my tap land?", and a subtle answer is no answer. The label
+    colour flips with it (see color/key_text_recessive.xml) so the pressed face
+    stays above 4.5:1.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/accent" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/line" />
+            <stroke
+                android:width="1.5dp"
+                android:color="@color/line_strong" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</selector>

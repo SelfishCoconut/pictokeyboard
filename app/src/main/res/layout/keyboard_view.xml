@@ -1,59 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/kb_background"
+    android:background="@color/paper"
     android:orientation="vertical">
 
-    <!-- Control row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="4dp">
+    <!--
+        Body: the category spine on the left, the picto grid on the right.
 
-        <Button
-            android:id="@+id/key_settings"
-            style="@style/KbControlKey"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_settings"
-            android:text="@string/kb_settings_icon" />
-
-        <Button
-            android:id="@+id/key_switch"
-            style="@style/KbControlKey"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_switch"
-            android:text="@string/kb_switch_icon" />
-
-        <Button
-            android:id="@+id/key_space"
-            style="@style/KbControlKey"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="@string/kb_space" />
-
-        <Button
-            android:id="@+id/key_backspace"
-            style="@style/KbControlKey"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_backspace"
-            android:text="@string/kb_backspace_icon" />
-
-        <Button
-            android:id="@+id/key_enter"
-            style="@style/KbControlKey"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_enter"
-            android:text="@string/kb_enter_icon" />
-    </LinearLayout>
-
-    <!-- Body: categories (left) + pictos (right) -->
+        The grid's background is set in code to a 6% wash of the selected
+        category's colour, so the whole surface takes on that hue - tap Comida and
+        the keyboard reads orange, tap Acciones and it reads green. That gives a
+        user who cannot read a full-field signal of which context they are in,
+        which is the job AAC colour coding exists to do and was previously spent
+        on a 3dp frame.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/kb_body_height"
@@ -63,9 +25,10 @@
             android:id="@+id/list_categories"
             android:layout_width="@dimen/kb_category_width"
             android:layout_height="match_parent"
-            android:background="@color/kb_category_panel"
+            android:background="@color/paper"
             android:clipToPadding="false"
-            android:padding="4dp" />
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="4dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/grid_pictos"
@@ -80,10 +43,84 @@
         android:id="@+id/empty_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/atkinson_hyperlegible"
         android:gravity="center"
         android:padding="12dp"
         android:text="@string/kb_empty_hint"
-        android:textColor="@color/kb_hint"
+        android:textColor="@color/ink_soft"
+        android:textSize="14sp"
         android:visibility="gone" />
+
+    <!-- A hairline so the action row reads as chrome, not as part of the board. -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line" />
+
+    <!--
+        Action row, moved below the board to match the design: it holds field-level
+        operations, and it sits where a thumb naturally rests rather than above the
+        content it acts on. `space` is the primary key because it is what the user
+        reaches for between words.
+    -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="6dp">
+
+        <Button
+            android:id="@+id/key_settings"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="@string/kb_settings"
+            android:text="@string/kb_settings_icon" />
+
+        <!--
+            An image key rather than a Button with an emoji, so the glyph takes the
+            key's text colour and inverts with the pressed state like the others.
+            See drawable/ic_switch_keyboard.xml.
+
+            Named explicitly as the AppCompat widget because an IME inflates its
+            views from a Service, which has no AppCompat view inflater to swap the
+            plain ImageButton out - and app:tint is only honoured by the AppCompat
+            one.
+        -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_switch"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="@string/kb_switch"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_switch_keyboard"
+            app:tint="@color/key_text_recessive" />
+
+        <Button
+            android:id="@+id/key_space"
+            style="@style/KbKey.Primary"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="@string/kb_space" />
+
+        <Button
+            android:id="@+id/key_backspace"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="@string/kb_backspace"
+            android:text="@string/kb_backspace_icon" />
+
+        <Button
+            android:id="@+id/key_enter"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="@string/kb_enter"
+            android:text="@string/kb_enter_icon" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -8,8 +8,9 @@
     <!-- Keyboard control keys -->
     <string name="kb_settings">Settings</string>
     <string name="kb_settings_icon" translatable="false">⚙</string>
+    <!-- No kb_switch_icon: the globe is drawable/ic_switch_keyboard.xml, so it
+         takes the key's text colour instead of the emoji font's blue. -->
     <string name="kb_switch">Switch keyboard</string>
-    <string name="kb_switch_icon" translatable="false">🌐</string>
     <string name="kb_space">space</string>
     <string name="kb_backspace">Backspace</string>
     <string name="kb_backspace_icon" translatable="false">⌫</string>
