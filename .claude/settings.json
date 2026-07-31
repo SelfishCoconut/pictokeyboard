@@ -1,6 +1,6 @@
 {
+  "$comment": "Skills, agents and hooks live in this repo (see .claude/) rather than coming from the android-devkit plugin, so they work on any machine with no marketplace setup. android-devkit remains the shareable, generic copy; changes worth keeping should be ported there by hand.",
   "enabledPlugins": {
-    "android-devkit@android-devkit": true,
     "code-review@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
@@ -10,5 +10,33 @@
     "security-guidance@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "kotlin-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.sh\""
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/strings-sync.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/remind-board-issue.sh\""
+          }
+        ]
+      }
+    ]
   }
 }
