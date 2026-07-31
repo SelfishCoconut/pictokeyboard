@@ -56,16 +56,16 @@
     <string name="nav_about">Acerca de</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_greeting">Bienvenido a</string>
-    <string name="dashboard_tagline">Toca pictogramas para hablar y escribir. Una forma sencilla de comunicarse.</string>
+    <!-- El encabezado es una miniatura en vivo del tablero real. -->
+    <string name="dashboard_board_title">Tu tablero</string>
+    <string name="dashboard_board_counts">%1$d categorías · %2$d pictogramas</string>
+    <string name="dashboard_board_a11y">Vista previa del tablero: %1$d categorías, %2$d pictogramas. Toca para editarlo.</string>
+    <string name="dashboard_board_empty">Aún no hay tablero. Toca para añadir tu primera categoría.</string>
     <string name="dashboard_setup_title">Configuración del teclado</string>
     <string name="dashboard_setup_subtitle">Dos pasos rápidos para empezar a usar PictoKeyboard.</string>
     <string name="dashboard_setup_ready_title">Todo listo</string>
-    <string name="dashboard_setup_ready_desc">PictoKeyboard está activado y en uso. Abre cualquier campo de texto para usarlo.</string>
     <string name="dashboard_step_enabled_done">Activado en los ajustes de Android</string>
     <string name="dashboard_step_selected_done">Seleccionado como teclado activo</string>
-    <string name="dashboard_stat_categories">Categorías</string>
-    <string name="dashboard_stat_pictos">Pictogramas</string>
     <string name="dashboard_build">Crea tu tablero</string>
     <string name="dashboard_build_desc">Añade las categorías y los pictos que verá el usuario.</string>
     <string name="dashboard_tips_title">Bueno saberlo</string>

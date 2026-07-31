@@ -68,16 +68,16 @@
     <string name="nav_about">About</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_greeting">Welcome to</string>
-    <string name="dashboard_tagline">Tap pictograms to speak and type. A simple way to communicate.</string>
+    <!-- The hero is a live miniature of the real board. -->
+    <string name="dashboard_board_title">Your board</string>
+    <string name="dashboard_board_counts">%1$d categories · %2$d pictograms</string>
+    <string name="dashboard_board_a11y">Board preview: %1$d categories, %2$d pictograms. Tap to edit it.</string>
+    <string name="dashboard_board_empty">No board yet. Tap to add your first category.</string>
     <string name="dashboard_setup_title">Keyboard setup</string>
     <string name="dashboard_setup_subtitle">Two quick steps to start using PictoKeyboard.</string>
     <string name="dashboard_setup_ready_title">You\'re all set</string>
-    <string name="dashboard_setup_ready_desc">PictoKeyboard is enabled and active. Open any text field to use it.</string>
     <string name="dashboard_step_enabled_done">Enabled in Android settings</string>
     <string name="dashboard_step_selected_done">Selected as the active keyboard</string>
-    <string name="dashboard_stat_categories">Categories</string>
-    <string name="dashboard_stat_pictos">Pictograms</string>
     <string name="dashboard_build">Build your board</string>
     <string name="dashboard_build_desc">Add the categories and pictograms the user will see.</string>
     <string name="dashboard_tips_title">Good to know</string>
