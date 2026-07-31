@@ -16,23 +16,19 @@ import org.pictokeyboard.data.db.CategoryEntity
 import java.io.File
 
 class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
-    ListAdapter<CategoryEntity, CategoryAdapter.VH>(DIFF) {
+    ListAdapter<CategoryAdapter.Row, CategoryAdapter.VH>(DIFF) {
 
-    private var selectedId: String? = null
+    /**
+     * One chip as it should be drawn. Selection is folded into the item for the
+     * same reason the picto tile folds in its style: as adapter state it was
+     * invisible to DiffUtil and had to be repainted from `submitList`'s
+     * completion callback, which AsyncListDiffer drops when a newer submit
+     * supersedes the diff -- leaving the selected chip drawn as unselected.
+     */
+    data class Row(val category: CategoryEntity, val selected: Boolean)
 
     fun submit(categories: List<CategoryEntity>, selectedId: String?) {
-        // Selection is adapter state, not entity state, so DiffUtil cannot see
-        // it: repaint the old and new selected rows explicitly.
-        val previousId = this.selectedId
-        this.selectedId = selectedId
-        submitList(categories) {
-            if (previousId != selectedId) {
-                listOfNotNull(previousId, selectedId).forEach { id ->
-                    val index = currentList.indexOfFirst { it.id == id }
-                    if (index >= 0) notifyItemChanged(index)
-                }
-            }
-        }
+        submitList(categories.map { Row(it, it.id == selectedId) })
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -42,8 +38,7 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        val item = getItem(position)
-        holder.bind(item, item.id == selectedId)
+        holder.bind(getItem(position))
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
@@ -51,7 +46,9 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
         private val name: TextView = view.findViewById(R.id.category_name)
         private val icon: ImageView = view.findViewById(R.id.category_icon)
 
-        fun bind(category: CategoryEntity, selected: Boolean) {
+        fun bind(item: Row) {
+            val category = item.category
+            val selected = item.selected
             name.text = category.name
             val color = category.colorArgb
             val fill = if (selected) color else ViewStyles.tint(color, 0x33)
@@ -87,11 +84,11 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
     }
 
     companion object {
-        val DIFF = object : DiffUtil.ItemCallback<CategoryEntity>() {
-            override fun areItemsTheSame(oldItem: CategoryEntity, newItem: CategoryEntity) =
-                oldItem.id == newItem.id
+        val DIFF = object : DiffUtil.ItemCallback<Row>() {
+            override fun areItemsTheSame(oldItem: Row, newItem: Row) =
+                oldItem.category.id == newItem.category.id
 
-            override fun areContentsTheSame(oldItem: CategoryEntity, newItem: CategoryEntity) =
+            override fun areContentsTheSame(oldItem: Row, newItem: Row) =
                 oldItem == newItem
         }
     }

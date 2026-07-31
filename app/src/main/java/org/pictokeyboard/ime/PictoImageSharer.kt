@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * Sends a pictogram into the focused field as an image, via the Commit Content
@@ -25,8 +26,19 @@ import java.io.File
  */
 class PictoImageSharer(private val context: Context) {
 
+    /** Distinguishes overlapping sends of the same picto. */
+    private val sequence = java.util.concurrent.atomic.AtomicLong()
+
     /** The field currently being typed into. */
     data class Target(val connection: InputConnection, val editorInfo: EditorInfo)
+
+    /**
+     * Identifies *which* field a [Target] points at, so a resumed coroutine can
+     * tell "the field I started in" from "whatever has focus now". The view id
+     * survives a configuration-change restart of the same field, so rotating
+     * mid-render does not cancel the send.
+     */
+    private fun Target.fieldId(): Pair<String?, Int> = editorInfo.packageName to editorInfo.fieldId
 
     /**
      * Renders [picto] as a captioned card and commits it to the field named by
@@ -34,9 +46,12 @@ class PictoImageSharer(private val context: Context) {
      * [attribution], when non-null, is drawn beneath the caption and copied into
      * the clip description so the ARASAAC licence credit travels with the picture.
      *
-     * [currentTarget] is a lookup rather than a value because rendering suspends:
-     * the user can move to another field in the meantime, and a captured
-     * connection would by then be pointing at a field that no longer has focus.
+     * [currentTarget] is a lookup rather than a value because rendering suspends.
+     * A captured connection would go stale; but a merely *fresh* one is not
+     * enough either, because focus may have moved to a different field or a
+     * different app entirely. The field is therefore identified before the
+     * render and checked again after it, and the send is abandoned if it moved --
+     * delivering a picture into the wrong conversation is worse than not sending.
      *
      * Calls [onError] with a string resource when the picto has no image yet or
      * the field cannot accept rich content.
@@ -48,30 +63,37 @@ class PictoImageSharer(private val context: Context) {
         currentTarget: () -> Target?,
         onError: (Int) -> Unit,
     ) {
-        val editorInfo = currentTarget()?.editorInfo ?: return
-        val source = picto.imagePath?.let { File(it) }
-        if (source == null || !source.exists()) {
-            onError(R.string.img_not_ready)
-            return
-        }
-        val mime = negotiateMime(editorInfo)
+        val started = currentTarget() ?: return
+        val mime = negotiateMime(started.editorInfo)
         if (mime == null) {
             onError(R.string.img_unsupported)
             return
         }
 
         val caption = picto.label.ifBlank { picto.spokenText }.trim()
+        val source = picto.imagePath
+        if (source == null) {
+            onError(R.string.img_not_ready)
+            return
+        }
         val file = labeledImage(
-            Card(source, picto.id, caption, frameColor, attribution, mime),
+            Card(File(source), picto.id, caption, frameColor, attribution, mime),
         )
         if (file == null) {
-            onError(R.string.img_unsupported)
+            onError(R.string.img_not_ready)
             return
         }
 
-        // Rendering suspended, so re-read the focused field rather than commit
-        // through the connection we negotiated with: it may have gone away.
+        // The render suspended. Re-read the focused field, and abandon the send
+        // unless it is still the same one -- see the note on [currentTarget].
         val target = currentTarget() ?: return
+        if (target.fieldId() != started.fieldId()) return
+        // Same field, but a restart can change what it accepts, and the file is
+        // already encoded for the format negotiated above.
+        if (negotiateMime(target.editorInfo) != mime) {
+            onError(R.string.img_unsupported)
+            return
+        }
 
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val clipLabel = picto.label.ifBlank { picto.spokenText }
@@ -109,6 +131,17 @@ class PictoImageSharer(private val context: Context) {
         }
     }
 
+    /**
+     * Deletes cards from earlier sessions. A send cannot delete its own file --
+     * the host reads the content URI after commitContent returns, so the bytes
+     * must outlive the call -- but nothing was ever cleaning this directory, so
+     * it grew for the life of the install.
+     */
+    private fun sweepStale(dir: File) {
+        val cutoff = System.currentTimeMillis() - STALE_AFTER_MS
+        dir.listFiles()?.forEach { if (it.lastModified() < cutoff) it.delete() }
+    }
+
     /** Everything [labeledImage] needs to draw one shared card. */
     private data class Card(
         val source: File,
@@ -138,6 +171,7 @@ class PictoImageSharer(private val context: Context) {
         val mime = card.mime
         val frameColor = card.frameColor
         runCatching {
+            if (!source.exists()) return@runCatching null
             val src = android.graphics.BitmapFactory.decodeFile(source.absolutePath)
                 ?: return@runCatching null
             val size = CARD_SIZE
@@ -227,7 +261,8 @@ class PictoImageSharer(private val context: Context) {
 
             val dir = File(context.filesDir, "shared").apply { mkdirs() }
             val ext = if (mime == "image/webp") "webp" else "png"
-            val file = File(dir, "send_${card.id}.$ext")
+            sweepStale(dir)
+            val file = File(dir, "send_${card.id}_${sequence.incrementAndGet()}.$ext")
             file.outputStream().use { os ->
                 val format = when {
                     mime != "image/webp" -> android.graphics.Bitmap.CompressFormat.PNG
@@ -266,5 +301,8 @@ class PictoImageSharer(private val context: Context) {
         const val ATTRIBUTION_STEP = 1f
 
         const val COMPRESS_QUALITY = 100
+
+        /** Long enough that any host has finished reading; short enough to bound the directory. */
+        val STALE_AFTER_MS = TimeUnit.HOURS.toMillis(1)
     }
 }

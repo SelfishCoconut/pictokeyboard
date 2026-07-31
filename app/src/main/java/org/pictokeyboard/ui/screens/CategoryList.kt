@@ -36,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -246,7 +245,6 @@ private fun CategoryIcon(category: CategoryEntity) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(44.dp)
-            .clip(CircleShape)
             .background(Color.White, CircleShape)
             .border(category.borderWidthDp.dp, Color(category.colorArgb), CircleShape)
             .padding(4.dp),
