@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
@@ -15,9 +17,8 @@ import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
 
 class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLongClick: (PictoEntity) -> Unit = {}) :
-    RecyclerView.Adapter<PictoAdapter.VH>() {
+    ListAdapter<PictoEntity, PictoAdapter.VH>(DIFF) {
 
-    private var items: List<PictoEntity> = emptyList()
     private var categoryColor: Int = Color.LTGRAY
     private var borderStyle: String = BorderStyles.SOLID
     private var borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP
@@ -30,12 +31,19 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
         borderStyle: String = BorderStyles.SOLID,
         borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
     ) {
-        this.items = pictos
+        // These four are presentation, not list content, so a change to any of
+        // them has to repaint every bound tile -- DiffUtil only sees the items.
+        val styleChanged = this.categoryColor != categoryColor ||
+            this.borderStyle != borderStyle ||
+            this.borderWidthDp != borderWidthDp ||
+            this.showLabels != showLabels
         this.categoryColor = categoryColor
         this.borderStyle = borderStyle
         this.borderWidthDp = borderWidthDp
         this.showLabels = showLabels
-        notifyDataSetChanged()
+        submitList(pictos) {
+            if (styleChanged) notifyItemRangeChanged(0, itemCount)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -44,10 +52,8 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
         return VH(view)
     }
 
-    override fun getItemCount(): Int = items.size
-
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(items[position], categoryColor, borderStyle, borderWidthDp, showLabels)
+        holder.bind(getItem(position), categoryColor, borderStyle, borderWidthDp, showLabels)
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
@@ -91,5 +97,15 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
 
         private fun dp(value: Int): Int =
             (value * itemView.resources.displayMetrics.density).toInt()
+    }
+
+    companion object {
+        val DIFF = object : DiffUtil.ItemCallback<PictoEntity>() {
+            override fun areItemsTheSame(oldItem: PictoEntity, newItem: PictoEntity) =
+                oldItem.id == newItem.id
+
+            override fun areContentsTheSame(oldItem: PictoEntity, newItem: PictoEntity) =
+                oldItem == newItem
+        }
     }
 }
