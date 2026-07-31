@@ -46,8 +46,8 @@
     <ID>FunctionNaming:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -&gt; Unit)? = null)</ID>
     <ID>FunctionNaming:Theme.kt$@Composable fun PictoKeyboardTheme( darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit, )</ID>
     <ID>FunctionNaming:UnlockScreen.kt$@Composable fun UnlockScreen( verify: suspend (String) -&gt; Boolean, onUnlocked: () -&gt; Unit, )</ID>
-    <ID>LongMethod:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
-    <ID>LongMethod:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>LongMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
     <ID>LongMethod:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
@@ -68,20 +68,6 @@
     <ID>LongParameterList:PictoRepository.kt$PictoRepository$( categoryId: String, result: ArasaacResult, spokenText: String, label: String, language: String, options: ArasaacOptions = ArasaacOptions(), colorArgbOverride: Int? = null, )</ID>
     <ID>LongParameterList:PictosScreen.kt$( picto: PictoEntity, frameColor: Color, borderStyle: String, borderWidthDp: Int, showLabel: Boolean, reordering: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onMoveUp: () -&gt; Unit, onMoveDown: () -&gt; Unit, onClick: () -&gt; Unit, )</ID>
     <ID>LongParameterList:SettingsScreen.kt$( label: String, value: Float, range: ClosedFloatingPointRange&lt;Float&gt;, steps: Int, valueText: String, onChange: (Float) -&gt; Unit, )</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0x22000000</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0x44000000</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF1A1A1A</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF4B2E1E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF616161</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF6B4423</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF8B5A2B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFB5482E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFB87A4B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFBDBDBD</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFD49E7A</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFE6C76E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFF0C27B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFF1C9A5</ID>
     <ID>MagicNumber:AppDatabase.kt$AppDatabase.Companion.&lt;no name provided&gt;$3</ID>
     <ID>MagicNumber:BlindKeyboardView.kt$BlindKeyboardView$14</ID>
     <ID>MagicNumber:BlindKeyboardView.kt$BlindKeyboardView$28</ID>

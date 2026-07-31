@@ -23,6 +23,12 @@ style:
     # function; the limit still applies to returns in the body proper.
     excludeGuardClauses: true
 
+  MagicNumber:
+    # Naming a constant means writing the literal exactly once, in the
+    # declaration. Flagging that line asks for something impossible; the rule
+    # still applies everywhere the number is used.
+    ignorePropertyDeclaration: true
+
 complexity:
   LongParameterList:
     # A stateless Composable takes one callback per thing the user can do, so
