@@ -14,7 +14,7 @@ class ArasaacRepository(private val api: ArasaacApi) {
                         id = dto.id,
                         keyword = dto.keywords.firstOrNull()?.keyword?.takeIf { it.isNotBlank() }
                             ?: query.trim(),
-                        imageUrl = ImageCache.arasaacImageUrl(dto.id),
+                        imageUrl = ArasaacUrls.image(dto.id),
                     )
                 }
             }

@@ -57,8 +57,24 @@ This gives a non-reading user an instant, full-field, pre-linguistic signal of c
 | `tile` | `#FFFFFF` | `#FFFFFF` | picto tiles, cards |
 | `ink` | `#191713` | `#F0EDE6` | primary text |
 | `inkSoft` | `#6A645C` | `#A39C92` | secondary text |
-| `line` | `#E2DED6` | `#2C2822` | hairlines, unpressed key fill |
+| `line` | `#E2DED6` | `#2C2822` | **decorative only** — dividers, unpressed key fill |
+| `lineStrong` | `#8A8378` | `#6E675C` | boundaries of interactive controls |
 | `accent` | `#24303F` | `#C9D6E6` | buttons, focus ring, switches |
+
+**Verified contrast.** Computed from WCAG relative luminance rather than asserted:
+
+| Pair | Light | Dark | Requirement |
+|---|---|---|---|
+| `ink` on `paper` | 15.9:1 | 15.9:1 | 4.5:1 body ✓ |
+| `inkSoft` on `paper` | 5.18:1 | 6.83:1 | 4.5:1 body ✓ |
+| `accent` on `paper` | 11.9:1 | 12.6:1 | 3:1 UI ✓ |
+| `tile` text on `accent` | 13.4:1 | 12.6:1 | 4.5:1 body ✓ |
+| `lineStrong` on `paper` | 3.32:1 | 3.32:1 | 3:1 UI ✓ |
+| `line` on `paper` | 1.19:1 | 1.27:1 | decorative only |
+
+`line` fails 3:1 in both schemes, which is why it is split in two. A hairline separating two rows of text carries no information and may sit at 1.19:1; the same colour drawn around a control the user must find is an accessibility defect. **Anything outlining an interactive element uses `lineStrong`.** Getting this wrong is invisible to a sighted developer on a good screen and completely disabling on a phone in sunlight — which is where this app gets used.
+
+These values are the contract. Any change to a token re-runs this table.
 
 `paper` is derived rather than chosen: exactly one step below tile white so white tiles float, and near-zero chroma so it clashes with none of the 26 category hues.
 
@@ -244,7 +260,11 @@ Applied throughout, per `compose-ui`:
 
 ### Localization
 
-Spanish strings land in the same commit as the English ones. `strings.xml` is **already drifting** — 175 keys in `values/` against 170 in `values-es/` — and that gap is closed as part of this work. The `strings-sync` hook reports drift on every edit; it must be silent before any PR merges.
+Spanish strings land in the same commit as the English ones, never after.
+
+The locales are currently **in sync**, and it is worth keeping them that way. `values/strings.xml` holds 175 `<string>` entries against 170 in `values-es/`, but that gap is exactly the five `translatable="false"` keys — the four `kb_*_icon` glyphs and `arasaac_share_attribution` — which are legitimately absent from every other locale. Every translatable key is present in both.
+
+The redesign adds a substantial number of new strings (sentence bar, high contrast, haptics, regrouped settings sections), which is precisely when locales drift. The `strings-sync` hook reports drift on every edit; it must be silent before any PR merges, and `lintDebug` must pass with `MissingTranslation` and `ExtraTranslation` unsuppressed.
 
 ### Verification
 

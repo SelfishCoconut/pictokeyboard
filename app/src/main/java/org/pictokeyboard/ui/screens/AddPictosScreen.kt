@@ -70,7 +70,7 @@ import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
-import org.pictokeyboard.data.arasaac.ImageCache
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
@@ -346,7 +346,7 @@ private fun PictoDetailDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 AsyncImage(
-                    model = ImageCache.imageUrl(arasaacId, options),
+                    model = ArasaacUrls.customizedOrPlain(arasaacId, options),
                     contentDescription = null,
                     modifier = Modifier
                         .size(120.dp)
@@ -575,9 +575,7 @@ private fun ImportFromCategoriesDialog(
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     val model: Any = picto.imagePath?.let { File(it) }
-                                        ?: picto.arasaacId?.let {
-                                            "https://static.arasaac.org/pictograms/$it/${it}_500.png"
-                                        }
+                                        ?: picto.arasaacId?.let { ArasaacUrls.image(it) }
                                         ?: R.drawable.ic_picto_placeholder
                                     AsyncImage(
                                         model = model,

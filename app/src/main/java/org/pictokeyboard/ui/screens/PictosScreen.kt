@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
 import java.io.File
@@ -168,7 +169,7 @@ private fun PictoTile(
             contentAlignment = Alignment.Center,
         ) {
             val model: Any = picto.imagePath?.let { File(it) }
-                ?: picto.arasaacId?.let { "https://static.arasaac.org/pictograms/$it/${it}_500.png" }
+                ?: picto.arasaacId?.let { ArasaacUrls.image(it) }
                 ?: R.drawable.ic_picto_placeholder
             AsyncImage(
                 model = model,
@@ -217,7 +218,7 @@ private fun EditPictoDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 val model: Any = picto.imagePath?.let { File(it) }
-                    ?: picto.arasaacId?.let { "https://static.arasaac.org/pictograms/$it/${it}_500.png" }
+                    ?: picto.arasaacId?.let { ArasaacUrls.image(it) }
                     ?: R.drawable.ic_picto_placeholder
                 AsyncImage(
                     model = model,

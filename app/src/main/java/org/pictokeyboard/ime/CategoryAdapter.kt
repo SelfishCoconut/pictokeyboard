@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import java.io.File
 
@@ -58,8 +59,7 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) : RecyclerV
             val iconPath = category.iconImagePath
             val iconModel: Any? = when {
                 iconPath != null && File(iconPath).exists() -> File(iconPath)
-                category.iconArasaacId != null ->
-                    "https://static.arasaac.org/pictograms/${category.iconArasaacId}/${category.iconArasaacId}_500.png"
+                category.iconArasaacId != null -> ArasaacUrls.image(category.iconArasaacId)
                 else -> null
             }
             if (iconModel != null) {

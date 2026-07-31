@@ -58,6 +58,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.seed.CategoryTemplate
@@ -201,9 +202,7 @@ fun CategoriesScreen(
                                 .padding(4.dp),
                         ) {
                             val iconModel: Any? = category.iconImagePath?.let { java.io.File(it) }
-                                ?: category.iconArasaacId?.let {
-                                    "https://static.arasaac.org/pictograms/$it/${it}_500.png"
-                                }
+                                ?: category.iconArasaacId?.let { ArasaacUrls.image(it) }
                             if (iconModel != null) {
                                 coil.compose.AsyncImage(
                                     model = iconModel,
@@ -307,9 +306,6 @@ fun CategoriesScreen(
     }
 }
 
-private fun arasaacThumb(id: Int): String =
-    "https://static.arasaac.org/pictograms/$id/${id}_300.png"
-
 @Composable
 private fun NewCategoryChooserDialog(
     language: String,
@@ -343,7 +339,8 @@ private fun NewCategoryChooserDialog(
                         accent = Color(0xFF00897B),
                         title = suggestedName,
                         subtitle = stringResource(R.string.category_suggested_desc),
-                        thumbs = suggested.mapNotNull { it.arasaacId }.take(4).map(::arasaacThumb),
+                        thumbs = suggested.mapNotNull { it.arasaacId }.take(4)
+                            .map { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
                         highlighted = true,
                         onClick = { onSuggested(suggested) },
                     )
@@ -367,7 +364,8 @@ private fun NewCategoryChooserDialog(
                         accent = Color(template.color),
                         title = template.name(language),
                         subtitle = stringResource(R.string.category_pictos_count, template.pictos.size),
-                        thumbs = template.pictos.take(4).map { arasaacThumb(it.arasaacId) },
+                        thumbs = template.pictos.take(4)
+                            .map { ArasaacUrls.image(it.arasaacId, ArasaacUrls.THUMB) },
                         onClick = { onTemplate(template) },
                     )
                 }

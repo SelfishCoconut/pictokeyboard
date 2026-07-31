@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
@@ -73,7 +74,7 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
                     error(R.drawable.ic_picto_placeholder)
                 }
             } else if (picto.arasaacId != null) {
-                image.load("https://static.arasaac.org/pictograms/${picto.arasaacId}/${picto.arasaacId}_500.png")
+                image.load(ArasaacUrls.image(picto.arasaacId))
             } else {
                 image.setImageResource(R.drawable.ic_picto_placeholder)
             }
