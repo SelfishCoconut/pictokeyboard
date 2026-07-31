@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -14,18 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,25 +29,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
+import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Stateful wrapper: owns the view model, the file pickers and the toasts, so
+ * that [SettingsScreenContent] can stay free of anything a `@Preview` cannot
+ * supply -- an activity result registry, in particular.
+ */
 @Composable
 fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var showPinDialog by remember { mutableStateOf(false) }
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -81,6 +80,52 @@ fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
         }
     }
 
+    SettingsScreenContent(
+        settings = settings,
+        onBack = onBack,
+        onLanguage = viewModel::setLanguage,
+        onColumns = viewModel::setColumns,
+        onRows = viewModel::setRows,
+        onShowLabels = viewModel::setShowLabels,
+        onAddSpace = viewModel::setAddSpace,
+        onSpeak = viewModel::setSpeak,
+        onTtsRate = viewModel::setTtsRate,
+        onTtsPitch = viewModel::setTtsPitch,
+        onBlindMode = viewModel::setBlindMode,
+        onSetPin = { pin, onDone -> viewModel.setPin(pin, onDone) },
+        onRemovePin = viewModel::removePin,
+        onExport = {
+            scope.launch {
+                pendingExportJson = viewModel.exportJson()
+                exportLauncher.launch("pictokeyboard-board.json")
+            }
+        },
+        onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+    )
+}
+
+/** Stateless settings screen. Everything it needs arrives as a value or a callback. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreenContent(
+    settings: Settings,
+    onBack: (() -> Unit)?,
+    onLanguage: (String) -> Unit,
+    onColumns: (Int) -> Unit,
+    onRows: (Int) -> Unit,
+    onShowLabels: (Boolean) -> Unit,
+    onAddSpace: (Boolean) -> Unit,
+    onSpeak: (Boolean) -> Unit,
+    onTtsRate: (Float) -> Unit,
+    onTtsPitch: (Float) -> Unit,
+    onBlindMode: (Boolean) -> Unit,
+    onSetPin: (String, () -> Unit) -> Unit,
+    onRemovePin: () -> Unit,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+) {
+    var showPinDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,128 +151,72 @@ fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Language
-            Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(settings.defaultLanguage == "es", { viewModel.setLanguage("es") }, { Text("Español") })
-                FilterChip(settings.defaultLanguage == "en", { viewModel.setLanguage("en") }, { Text("English") })
-            }
-
+            LanguageSection(settings.defaultLanguage, onLanguage)
             HorizontalDivider()
-
-            // Grid
-            SliderRow(
-                label = stringResource(R.string.settings_grid_columns),
-                value = settings.gridColumns.toFloat(),
-                range = 2f..6f,
-                steps = 3,
-                valueText = settings.gridColumns.toString(),
-                onChange = { viewModel.setColumns(it.toInt()) },
-            )
-            SliderRow(
-                label = stringResource(R.string.settings_grid_rows),
-                value = settings.gridRows.toFloat(),
-                range = 2f..8f,
-                steps = 5,
-                valueText = settings.gridRows.toString(),
-                onChange = { viewModel.setRows(it.toInt()) },
-            )
-
-            SwitchRow(stringResource(R.string.settings_show_labels), settings.showLabels, viewModel::setShowLabels)
-            SwitchRow(stringResource(R.string.settings_add_space), settings.addSpaceAfter, viewModel::setAddSpace)
-            SwitchRow(stringResource(R.string.settings_speak), settings.speakOnTap, viewModel::setSpeak)
-
-            SliderRow(
-                label = stringResource(R.string.settings_tts_rate),
-                value = settings.ttsRate,
-                range = 0.5f..2f,
-                steps = 0,
-                valueText = "%.1fx".format(settings.ttsRate),
-                onChange = { viewModel.setTtsRate(it) },
-            )
-            SliderRow(
-                label = stringResource(R.string.settings_tts_pitch),
-                value = settings.ttsPitch,
-                range = 0.5f..2f,
-                steps = 0,
-                valueText = "%.1f".format(settings.ttsPitch),
-                onChange = { viewModel.setTtsPitch(it) },
-            )
-
+            GridSection(settings, onColumns, onRows, onShowLabels, onAddSpace)
+            SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
             HorizontalDivider()
-
-            // Blind mode
-            SwitchRow(stringResource(R.string.settings_blind_mode), settings.blindMode, viewModel::setBlindMode)
-            Text(
-                stringResource(R.string.settings_blind_mode_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
+            BlindModeSection(settings.blindMode, onBlindMode)
             HorizontalDivider()
-
-            // PIN
-            Text(stringResource(R.string.settings_pin), style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { showPinDialog = true }) {
-                    Text(stringResource(R.string.settings_pin_set))
-                }
-                if (settings.hasPin) {
-                    OutlinedButton(onClick = { viewModel.removePin() }) {
-                        Text(stringResource(R.string.settings_pin_remove))
-                    }
-                }
-            }
-
+            PinSection(settings.hasPin, onSetPinClick = { showPinDialog = true }, onRemovePin = onRemovePin)
             HorizontalDivider()
-
-            // Backup
-            Text(stringResource(R.string.settings_backup), style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    scope.launch {
-                        pendingExportJson = viewModel.exportJson()
-                        exportLauncher.launch("pictokeyboard-board.json")
-                    }
-                }) { Text(stringResource(R.string.settings_export)) }
-                OutlinedButton(onClick = {
-                    importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
-                }) { Text(stringResource(R.string.settings_import)) }
-            }
+            BackupSection(onExport, onImport)
         }
     }
 
     if (showPinDialog) {
         SetPinDialog(
             onDismiss = { showPinDialog = false },
-            onSet = { pin -> viewModel.setPin(pin) { showPinDialog = false } },
+            onSet = { pin -> onSetPin(pin) { showPinDialog = false } },
         )
     }
 }
 
+@Preview(name = "Settings", showBackground = true)
 @Composable
-private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+private fun SettingsScreenPreview() {
+    PictoKeyboardTheme {
+        SettingsScreenContent(
+            settings = Settings(),
+            onBack = {},
+            onLanguage = {},
+            onColumns = {},
+            onRows = {},
+            onShowLabels = {},
+            onAddSpace = {},
+            onSpeak = {},
+            onTtsRate = {},
+            onTtsPitch = {},
+            onBlindMode = {},
+            onSetPin = { _, done -> done() },
+            onRemovePin = {},
+            onExport = {},
+            onImport = {},
+        )
     }
 }
 
+@Preview(name = "Settings · PIN set", showBackground = true)
 @Composable
-private fun SliderRow(
-    label: String,
-    value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    steps: Int,
-    valueText: String,
-    onChange: (Float) -> Unit,
-) {
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, modifier = Modifier.weight(1f))
-            Text(valueText, style = MaterialTheme.typography.labelLarge)
-        }
-        Slider(value = value, onValueChange = onChange, valueRange = range, steps = steps)
+private fun SettingsScreenWithPinPreview() {
+    PictoKeyboardTheme {
+        SettingsScreenContent(
+            settings = Settings(hasPin = true, blindMode = true, defaultLanguage = "en"),
+            onBack = {},
+            onLanguage = {},
+            onColumns = {},
+            onRows = {},
+            onShowLabels = {},
+            onAddSpace = {},
+            onSpeak = {},
+            onTtsRate = {},
+            onTtsPitch = {},
+            onBlindMode = {},
+            onSetPin = { _, done -> done() },
+            onRemovePin = {},
+            onExport = {},
+            onImport = {},
+        )
     }
 }
 

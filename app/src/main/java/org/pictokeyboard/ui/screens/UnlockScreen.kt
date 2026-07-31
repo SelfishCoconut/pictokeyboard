@@ -23,10 +23,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 
+/**
+ * Already stateless: the caller supplies verification, and the typed PIN is
+ * local UI state that must not outlive the screen.
+ */
 @Composable
 fun UnlockScreen(
     verify: suspend (String) -> Boolean,
@@ -78,5 +84,13 @@ fun UnlockScreen(
         ) {
             Text(stringResource(R.string.pin_unlock))
         }
+    }
+}
+
+@Preview(name = "Unlock", showBackground = true)
+@Composable
+private fun UnlockScreenPreview() {
+    PictoKeyboardTheme {
+        UnlockScreen(verify = { false }, onUnlocked = {})
     }
 }
