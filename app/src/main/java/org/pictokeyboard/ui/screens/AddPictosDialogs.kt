@@ -467,10 +467,9 @@ private val HAIR_SWATCHES = mapOf(
 )
 
 /**
- * Stand-in for an ARASAAC value we have no swatch for. Unlike the swatches
- * above it is chrome, not data, so it comes from the token layer at the call
- * site rather than being a literal here.
+ * Stand-in for an ARASAAC skin or hair value we have no swatch for. A literal for
+ * the same reason the swatches above are: it stands in for a colour the remote
+ * renderer will produce, so it must not shift with the light/dark scheme. Only
+ * the ring around it is themed.
  */
 private val SWATCH_UNKNOWN = Color(0xFFBDBDBD)
-
-/** Hairline ring around an unselected swatch, so a pale one still has an edge. */
