@@ -1,6 +1,5 @@
 package org.pictokeyboard.ime
 
-import android.content.ClipDescription
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.view.KeyEvent
@@ -10,9 +9,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.core.view.inputmethod.EditorInfoCompat
-import androidx.core.view.inputmethod.InputConnectionCompat
-import androidx.core.view.inputmethod.InputContentInfoCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -41,6 +37,7 @@ class PictoKeyboardService : InputMethodService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val locator by lazy { App.locator() }
     private lateinit var tts: TtsManager
+    private lateinit var imageSharer: PictoImageSharer
 
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var pictoAdapter: PictoAdapter
@@ -65,6 +62,7 @@ class PictoKeyboardService : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         tts = TtsManager(this)
+        imageSharer = PictoImageSharer(this)
     }
 
     override fun onCreateInputView(): View {
@@ -209,185 +207,39 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     /**
-     * Long-press: send the pictogram as an image into the focused field via the
-     * Commit Content API (the mechanism keyboards use for GIFs/stickers). The
-     * picto's caption is rendered onto the image — framed like the on-screen key
-     * with the word across the bottom — so the text travels with the picture.
-     * For WhatsApp it's a 512×512 WEBP so it arrives as a sticker; other apps get
-     * a PNG. Falls back to a toast if the field can't accept rich content.
+     * The field being typed into right now, or null if the keyboard is not
+     * attached to one. Read on demand so callers that suspend see the field the
+     * user is actually in, not the one they started in.
      */
-    private fun sendPictoAsImage(picto: PictoEntity) {
-        val ic = currentInputConnection ?: return
-        val editorInfo = currentInputEditorInfo ?: return
-        val source = picto.imagePath?.let { java.io.File(it) }
-        if (source == null || !source.exists()) {
-            toast(R.string.img_not_ready)
-            return
-        }
-        val supported = EditorInfoCompat.getContentMimeTypes(editorInfo)
-        if (supported.isEmpty()) {
-            toast(R.string.img_unsupported)
-            return
-        }
-        fun accepts(mime: String) = supported.any { ClipDescription.compareMimeTypes(mime, it) }
-        val isWhatsApp = editorInfo.packageName?.startsWith("com.whatsapp") == true
-        val caption = picto.label.ifBlank { picto.spokenText }.trim()
-        val frameColor = picto.colorArgbOverride
-            ?: categories.firstOrNull { it.id == picto.categoryId }?.colorArgb
-            ?: android.graphics.Color.LTGRAY
-        // ARASAAC's licence requires attribution to travel with the picture, so
-        // ARASAAC-sourced pictos (arasaacId != null) get a small visible credit
-        // baked on and the same text copied into the clip description. Imported
-        // images aren't ARASAAC's, so they carry none.
-        val attribution = if (picto.arasaacId != null) getString(R.string.arasaac_share_attribution) else null
-
-        val mime = when {
-            isWhatsApp && accepts("image/webp") -> "image/webp"
-            accepts("image/png") -> "image/png"
-            accepts("image/webp") -> "image/webp"
-            accepts("image/*") -> "image/png"
-            else -> null
-        }
-        val file = mime?.let { labeledImage(source, picto.id, caption, frameColor, attribution, it) }
-        if (file == null || mime == null) {
-            toast(R.string.img_unsupported)
-            return
-        }
-
-        val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val clipLabel = picto.label.ifBlank { picto.spokenText }
-        val description = ClipDescription(
-            if (attribution != null) "$clipLabel — $attribution" else clipLabel,
-            arrayOf(mime),
-        )
-        val content = InputContentInfoCompat(uri, description, null)
-        InputConnectionCompat.commitContent(
-            ic,
-            editorInfo,
-            content,
-            InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION,
-            null,
-        )
+    private fun currentTarget(): PictoImageSharer.Target? {
+        val connection = currentInputConnection ?: return null
+        val editorInfo = currentInputEditorInfo ?: return null
+        return PictoImageSharer.Target(connection, editorInfo)
     }
 
     /**
-     * Builds a 512×512 card holding the pictogram with its [caption] written
-     * across the bottom — so the word is part of the image that's sent — framed
-     * in [frameColor] like the on-screen key (white fill, rounded, transparent
-     * corners). When [attribution] is non-null (ARASAAC pictos) a small blue
-     * credit line is drawn beneath the caption so the licence credit travels with
-     * the picture. Saved as lossless WEBP (for WhatsApp stickers) or PNG per
-     * [mime]. Returns null if the source image can't be decoded.
+     * Long-press: send the pictogram as an image into the focused field. The
+     * caption is rendered onto the picture so the word travels with it; for
+     * WhatsApp it arrives as a sticker, other apps get a PNG.
+     *
+     * ARASAAC-sourced pictos (arasaacId != null) carry a baked-on licence
+     * credit. Imported images aren't ARASAAC's, so they carry none.
      */
-    private fun labeledImage(
-        source: java.io.File,
-        id: String,
-        caption: String,
-        frameColor: Int,
-        attribution: String?,
-        mime: String,
-    ): java.io.File? = runCatching {
-        val src = android.graphics.BitmapFactory.decodeFile(source.absolutePath) ?: return null
-        val size = 512
-        val pad = size * 0.06f
-        val corner = size * 0.10f
-        val strokeWidth = size * 0.045f
-        val out = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(out)
-
-        // Rounded white card with a coloured frame (corners left transparent).
-        val rect = android.graphics.RectF(
-            strokeWidth / 2f,
-            strokeWidth / 2f,
-            size - strokeWidth / 2f,
-            size - strokeWidth / 2f,
-        )
-        val fill = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.WHITE
-        }
-        canvas.drawRoundRect(rect, corner, corner, fill)
-
-        // Caption band across the bottom; shrink the word until it fits the width.
-        val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.BLACK
-            textAlign = android.graphics.Paint.Align.CENTER
-            typeface =
-                android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
-        }
-        // Small blue ARASAAC attribution line drawn beneath the caption.
-        val attrPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0xFF1565C0.toInt()
-            textAlign = android.graphics.Paint.Align.CENTER
-        }
-        var captionHeight = 0f
-        if (caption.isNotBlank()) {
-            textPaint.textSize = size * 0.16f
-            while (textPaint.textSize > size * 0.07f && textPaint.measureText(caption) > size - 2 * pad) {
-                textPaint.textSize -= 2f
+    private fun sendPictoAsImage(picto: PictoEntity) {
+        val frameColor = picto.colorArgbOverride
+            ?: categories.firstOrNull { it.id == picto.categoryId }?.colorArgb
+            ?: android.graphics.Color.LTGRAY
+        val attribution =
+            if (picto.arasaacId != null) getString(R.string.arasaac_share_attribution) else null
+        scope.launch {
+            imageSharer.send(picto, frameColor, attribution, ::currentTarget) { resId ->
+                android.widget.Toast.makeText(
+                    this@PictoKeyboardService,
+                    resId,
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
             }
-            captionHeight = textPaint.fontSpacing
         }
-        var attrHeight = 0f
-        if (attribution != null) {
-            attrPaint.textSize = size * 0.052f
-            while (attrPaint.textSize > size * 0.032f && attrPaint.measureText(attribution) > size - 2 * pad) {
-                attrPaint.textSize -= 1f
-            }
-            attrHeight = attrPaint.fontSpacing
-        }
-        val bandHeight = if (captionHeight > 0f || attrHeight > 0f) captionHeight + attrHeight + pad else 0f
-
-        // Fit the pictogram (preserving aspect) into the area above the band.
-        val areaW = size - 2 * pad
-        val areaH = size - 2 * pad - bandHeight
-        val scale = minOf(areaW / src.width, areaH / src.height)
-        val drawW = src.width * scale
-        val drawH = src.height * scale
-        val dst = android.graphics.RectF(
-            pad + (areaW - drawW) / 2f,
-            pad + (areaH - drawH) / 2f,
-            pad + (areaW + drawW) / 2f,
-            pad + (areaH + drawH) / 2f,
-        )
-        canvas.drawBitmap(src, null, dst, android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG))
-
-        // Bottom text block: caption first, then the attribution line beneath it.
-        var baseY = size - pad
-        if (attribution != null) {
-            canvas.drawText(attribution, size / 2f, baseY - attrPaint.fontMetrics.descent, attrPaint)
-            baseY -= attrHeight
-        }
-        if (caption.isNotBlank()) {
-            canvas.drawText(caption, size / 2f, baseY - textPaint.fontMetrics.descent, textPaint)
-        }
-
-        // Coloured frame on top of everything.
-        val border = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            style = android.graphics.Paint.Style.STROKE
-            this.strokeWidth = strokeWidth
-            color = frameColor
-        }
-        canvas.drawRoundRect(rect, corner, corner, border)
-
-        val dir = java.io.File(filesDir, "shared").apply { mkdirs() }
-        val ext = if (mime == "image/webp") "webp" else "png"
-        val file = java.io.File(dir, "send_$id.$ext")
-        file.outputStream().use { os ->
-            val format = when {
-                mime != "image/webp" -> android.graphics.Bitmap.CompressFormat.PNG
-                android.os.Build.VERSION.SDK_INT >= 30 -> android.graphics.Bitmap.CompressFormat.WEBP_LOSSLESS
-                else -> {
-                    @Suppress("DEPRECATION")
-                    android.graphics.Bitmap.CompressFormat.WEBP
-                }
-            }
-            out.compress(format, 100, os)
-        }
-        file
-    }.getOrNull()
-
-    private fun toast(resId: Int) {
-        android.widget.Toast.makeText(this, resId, android.widget.Toast.LENGTH_SHORT).show()
     }
 
     /**
