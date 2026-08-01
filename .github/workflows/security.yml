@@ -46,7 +46,7 @@ jobs:
         with:
           languages: java-kotlin
           build-mode: manual
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-disabled: true
       # `clean` and `--no-build-cache` are load-bearing: a cached, up-to-date

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tracks bg_key_recessive: the pressed face is accent, so the label inverts. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="@color/on_accent"
+        android:state_pressed="true" />
+    <item android:color="@color/ink" />
+</selector>

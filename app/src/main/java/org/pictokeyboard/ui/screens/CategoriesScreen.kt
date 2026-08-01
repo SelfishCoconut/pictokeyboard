@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -21,15 +19,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
+import org.pictokeyboard.data.repo.CategoryIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 
 /** Stateful wrapper: the board's category list, owned by the view model. */
 @Composable
@@ -50,9 +49,22 @@ fun CategoriesScreen(
         loadSuggested = { viewModel.topUsed() },
         onAddFromTemplate = { template -> viewModel.addCategoryFromTemplate(template, settings.defaultLanguage) },
         onAddSuggested = { name, records -> viewModel.addSuggestedCategory(name, records) },
-        onAddBlank = { name, color, style, width -> viewModel.addCategory(name, color, style, width) },
-        onUpdate = viewModel::updateCategory,
+        onAddBlank = { edit ->
+            viewModel.addCategory(edit.name, edit.color, edit.borderStyle, edit.borderWidthDp, edit.icon)
+        },
+        onUpdate = { category, icon -> viewModel.updateCategory(category, icon) },
         onDelete = viewModel::deleteCategory,
+        // The only place the picker meets the view model. Everything below this
+        // call stays previewable without one -- see CategoryPickerSlot.
+        pickerDialog = { categoryId, onDismissPicker, onPicked ->
+            CategoryIconPickerDialog(
+                viewModel = viewModel,
+                categoryId = categoryId,
+                language = settings.defaultLanguage,
+                onDismiss = onDismissPicker,
+                onPicked = onPicked,
+            )
+        },
     )
 }
 
@@ -80,9 +92,10 @@ fun CategoriesScreenContent(
     loadSuggested: suspend () -> List<UsageEntity>,
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
-    onAddBlank: (String, Int, String, Int) -> Unit,
-    onUpdate: (CategoryEntity) -> Unit,
+    onAddBlank: (CategoryEdit) -> Unit,
+    onUpdate: (CategoryEntity, CategoryIcon) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
+    pickerDialog: CategoryPickerSlot,
 ) {
     var dialog by remember { mutableStateOf<CategoryDialog?>(null) }
     var reordering by remember { mutableStateOf(false) }
@@ -98,9 +111,10 @@ fun CategoriesScreenContent(
         },
         floatingActionButton = {
             if (!reordering) {
-                FloatingActionButton(onClick = { dialog = CategoryDialog.Chooser }) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.category_add))
-                }
+                AddFab(
+                    contentDescription = stringResource(R.string.category_add),
+                    onClick = { dialog = CategoryDialog.Chooser },
+                )
             }
         },
     ) { padding ->
@@ -126,6 +140,7 @@ fun CategoriesScreenContent(
         onAddBlank = onAddBlank,
         onUpdate = onUpdate,
         onDelete = onDelete,
+        pickerDialog = pickerDialog,
     )
 }
 
@@ -169,16 +184,17 @@ private fun CategoryDialogs(
     loadSuggested: suspend () -> List<UsageEntity>,
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
-    onAddBlank: (String, Int, String, Int) -> Unit,
-    onUpdate: (CategoryEntity) -> Unit,
+    onAddBlank: (CategoryEdit) -> Unit,
+    onUpdate: (CategoryEntity, CategoryIcon) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
+    pickerDialog: CategoryPickerSlot,
 ) {
     when (dialog) {
         null -> Unit
 
         CategoryDialog.Chooser -> {
             val suggestedName = stringResource(R.string.category_suggested)
-            NewCategoryChooserDialog(
+            NewCategoryChooserSheet(
                 language = language,
                 suggestedName = suggestedName,
                 loadSuggested = loadSuggested,
@@ -198,26 +214,32 @@ private fun CategoryDialogs(
         CategoryDialog.Blank -> CategoryEditDialog(
             initial = null,
             onDismiss = onDismiss,
-            onSave = { name, color, style, width ->
-                onAddBlank(name, color, style, width)
+            onSave = { edit ->
+                onAddBlank(edit)
                 onDismiss()
             },
+            pickerDialog = pickerDialog,
         )
 
         is CategoryDialog.Edit -> CategoryEditDialog(
             initial = dialog.category,
             onDismiss = onDismiss,
-            onSave = { name, color, style, width ->
+            onSave = { edit ->
+                // The icon travels beside the entity rather than on it: choosing
+                // an ARASAAC picto may still need downloading, so the repository
+                // is what turns the choice into stored columns.
                 onUpdate(
                     dialog.category.copy(
-                        name = name,
-                        colorArgb = color,
-                        borderStyle = style,
-                        borderWidthDp = width,
+                        name = edit.name,
+                        colorArgb = edit.color,
+                        borderStyle = edit.borderStyle,
+                        borderWidthDp = edit.borderWidthDp,
                     ),
+                    edit.icon,
                 )
                 onDismiss()
             },
+            pickerDialog = pickerDialog,
         )
 
         is CategoryDialog.Delete -> DeleteCategoryDialog(
@@ -246,7 +268,7 @@ private fun DeleteCategoryDialog(category: CategoryEntity, onDismiss: () -> Unit
     )
 }
 
-@Preview(name = "Categories", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun CategoriesScreenPreview() {
     // Built from the real templates, so the preview shows the actual palette.
@@ -270,9 +292,12 @@ private fun CategoriesScreenPreview() {
             loadSuggested = { emptyList() },
             onAddFromTemplate = {},
             onAddSuggested = { _, _ -> },
-            onAddBlank = { _, _, _, _ -> },
-            onUpdate = {},
+            onAddBlank = {},
+            onUpdate = { _, _ -> },
             onDelete = {},
+            // No view model in a preview, so no picker. The editor still renders;
+            // tapping "choose picto" simply does nothing here.
+            pickerDialog = { _, _, _ -> },
         )
     }
 }

@@ -16,13 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.SearchState
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 
 /**
  * Full-screen, visual ARASAAC picker. Search, tap thumbnails to select several
@@ -192,7 +192,7 @@ fun AddPictosScreenContent(
     }
 
     detail?.let { result ->
-        PictoDetailDialog(
+        PictoDetailSheet(
             arasaacId = result.id,
             initialText = result.keyword,
             initialLanguage = language,
@@ -207,7 +207,7 @@ fun AddPictosScreenContent(
     }
 }
 
-@Preview(name = "Add pictos · empty", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun AddPictosEmptyPreview() {
     PictoKeyboardTheme {
@@ -225,7 +225,7 @@ private fun AddPictosEmptyPreview() {
     }
 }
 
-@Preview(name = "Add pictos · no results", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun AddPictosEmptyResultsPreview() {
     PictoKeyboardTheme {

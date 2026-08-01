@@ -48,6 +48,8 @@
     <ID>FunctionNaming:UnlockScreen.kt$@Composable fun UnlockScreen( verify: suspend (String) -&gt; Boolean, onUnlocked: () -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>LongMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
     <ID>LongMethod:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
@@ -159,8 +161,8 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$11461</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$11538</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2299</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2339</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23392</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2339</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2367</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23710</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23718</ID>
@@ -174,12 +176,12 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$24825</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2494</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$24976</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2519</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25191</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2519</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2530</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2541</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2549</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25498</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2549</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2573</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25790</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25900</ID>
@@ -200,8 +202,8 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$31310</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$3155</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$3241</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$3244</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32446</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$3244</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32464</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32648</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32669</ID>
@@ -320,8 +322,8 @@
     <ID>MaxLineLength:UsageDao.kt$UsageDao$"UPDATE usage SET count = count + 1, lastUsedAt = :now, label = :label, spokenText = :spokenText, language = :language WHERE id = :id"</ID>
     <ID>ReturnCount:ConfigViewModel.kt$ConfigViewModel$private fun &lt;T&gt; movedBy(list: List&lt;T&gt;, match: (T) -&gt; Boolean, up: Boolean): List&lt;T&gt;?</ID>
     <ID>ReturnCount:ImageCropper.kt$CropImageView$fun getCroppedBitmap(out: Int = 512): Bitmap?</ID>
-    <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun deleteLastWord()</ID>
     <ID>ReturnCount:PictoImageSharer.kt$PictoImageSharer$suspend fun send( picto: PictoEntity, frameColor: Int, attribution: String?, currentTarget: () -&gt; Target?, onError: (Int) -&gt; Unit, )</ID>
+    <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun deleteLastWord()</ID>
     <ID>ReturnCount:SettingsStore.kt$SettingsStore$suspend fun verifyPin(pin: String): Boolean</ID>
     <ID>TooManyFunctions:CategoryDao.kt$CategoryDao</ID>
     <ID>TooManyFunctions:ConfigViewModel.kt$ConfigViewModel : ViewModel</ID>

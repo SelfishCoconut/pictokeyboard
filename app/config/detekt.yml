@@ -14,9 +14,10 @@ naming:
 
 style:
   # @Preview functions are entry points called by the tooling, never by us, so
-  # "unused" is exactly what a correct one looks like.
+  # "unused" is exactly what a correct one looks like. ScreenPreviews is our own
+  # multipreview annotation (ui/theme/Previews.kt) and is one to detekt's eyes.
   UnusedPrivateMember:
-    ignoreAnnotated: ['Preview']
+    ignoreAnnotated: ['Preview', 'ScreenPreviews']
 
   ReturnCount:
     # Guard clauses are the readable way to reject bad input at the top of a

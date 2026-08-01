@@ -1,11 +1,11 @@
 package org.pictokeyboard.ime
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -80,8 +80,10 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
             tile.background = ViewStyles.framedTile(
                 colorArgb = item.frameColor,
                 strokeWidthPx = dp(item.borderWidthDp),
-                cornerRadiusPx = dp(12).toFloat(),
-                fillArgb = Color.WHITE,
+                cornerRadiusPx = dp(TILE_CORNER_DP).toFloat(),
+                // `tile`, not white-in-light-only: ARASAAC art is black line work,
+                // so the tile stays white in dark mode too.
+                fillArgb = ContextCompat.getColor(itemView.context, R.color.tile),
                 borderStyle = item.borderStyle,
             )
 
@@ -113,6 +115,8 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
     }
 
     companion object {
+        private const val TILE_CORNER_DP = 12
+
         val DIFF = object : DiffUtil.ItemCallback<Tile>() {
             override fun areItemsTheSame(oldItem: Tile, newItem: Tile) =
                 oldItem.picto.id == newItem.picto.id

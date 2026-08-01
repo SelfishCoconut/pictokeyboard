@@ -6,12 +6,10 @@ import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Settings
@@ -30,16 +28,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.flowOf
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.CategoryEntity
+import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
+import org.pictokeyboard.ui.theme.Spacing
 
 /** Whether the PictoKeyboard IME is currently enabled / selected as active. */
 data class KeyboardStatus(val enabled: Boolean, val selected: Boolean) {
@@ -77,8 +77,8 @@ private fun rememberKeyboardStatus(): KeyboardStatus {
 }
 
 /**
- * Stateful wrapper: counts come from the view model, and the keyboard status
- * from the system, which is the part a `@Preview` cannot answer.
+ * Stateful wrapper: the board contents come from the view model, and the keyboard
+ * status from the system, which is the part a `@Preview` cannot answer.
  */
 @Composable
 fun DashboardScreen(
@@ -90,8 +90,16 @@ fun DashboardScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val pictoCount by viewModel.pictoCount.collectAsStateWithLifecycle()
 
+    // The hero shows the first category's pictos, which is what the keyboard opens
+    // on, so the preview matches what the user will actually see first.
+    val firstCategoryId = categories.firstOrNull()?.id
+    val heroPictos by remember(firstCategoryId) {
+        firstCategoryId?.let(viewModel::pictos) ?: flowOf(emptyList())
+    }.collectAsStateWithLifecycle(emptyList())
+
     DashboardScreenContent(
-        categoryCount = categories.size,
+        categories = categories,
+        heroPictos = heroPictos,
         pictoCount = pictoCount,
         status = rememberKeyboardStatus(),
         onEnableKeyboard = onEnableKeyboard,
@@ -104,7 +112,8 @@ fun DashboardScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreenContent(
-    categoryCount: Int,
+    categories: List<CategoryEntity>,
+    heroPictos: List<PictoEntity>,
     pictoCount: Int,
     status: KeyboardStatus,
     onEnableKeyboard: () -> Unit,
@@ -114,9 +123,9 @@ fun DashboardScreenContent(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold) },
+                title = { Text(stringResource(R.string.app_name)) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
@@ -126,10 +135,15 @@ fun DashboardScreenContent(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
-            WelcomeHero()
+            BoardMiniature(
+                categories = categories,
+                pictos = heroPictos,
+                pictoCount = pictoCount,
+                onClick = onOpenBoard,
+            )
 
             SetupStatusCard(
                 status = status,
@@ -137,36 +151,48 @@ fun DashboardScreenContent(
                 onSelect = onSelectKeyboard,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    value = categoryCount.toString(),
-                    label = stringResource(R.string.dashboard_stat_categories),
-                    modifier = Modifier.weight(1f),
-                )
-                StatCard(
-                    value = pictoCount.toString(),
-                    label = stringResource(R.string.dashboard_stat_pictos),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
             BuildBoardCard(onClick = onOpenBoard)
 
             BlindControlsCard()
 
             TipsCard()
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.xs))
         }
     }
 }
 
-@Preview(name = "Dashboard · ready", showBackground = true)
+/** Enough pictos to fill the hero's 4x2 grid. */
+private const val PREVIEW_PICTOS = 8
+
+/** A board just big enough to fill the hero, for the previews. */
+private fun sampleBoard(): Pair<List<CategoryEntity>, List<PictoEntity>> {
+    val categories = listOf(
+        CategoryEntity(id = "people", name = "Personas", colorArgb = 0xFFFFC107.toInt(), position = 0),
+        CategoryEntity(id = "actions", name = "Acciones", colorArgb = 0xFF4CAF50.toInt(), position = 1),
+        CategoryEntity(id = "food", name = "Comida", colorArgb = 0xFFFF9800.toInt(), position = 2),
+    )
+    val pictos = List(PREVIEW_PICTOS) { index ->
+        PictoEntity(
+            id = "p$index",
+            categoryId = "people",
+            label = "picto $index",
+            spokenText = "picto $index",
+            language = "es",
+            position = index,
+        )
+    }
+    return categories to pictos
+}
+
+@ScreenPreviews
 @Composable
 private fun DashboardReadyPreview() {
+    val (categories, pictos) = sampleBoard()
     PictoKeyboardTheme {
         DashboardScreenContent(
-            categoryCount = 8,
+            categories = categories,
+            heroPictos = pictos,
             pictoCount = 108,
             status = KeyboardStatus(enabled = true, selected = true),
             onEnableKeyboard = {},
@@ -176,12 +202,14 @@ private fun DashboardReadyPreview() {
     }
 }
 
-@Preview(name = "Dashboard · setup needed", showBackground = true)
+/** Empty state: no board yet, and the keyboard not yet enabled. */
+@ScreenPreviews
 @Composable
 private fun DashboardSetupPreview() {
     PictoKeyboardTheme {
         DashboardScreenContent(
-            categoryCount = 0,
+            categories = emptyList(),
+            heroPictos = emptyList(),
             pictoCount = 0,
             status = KeyboardStatus(enabled = false, selected = false),
             onEnableKeyboard = {},

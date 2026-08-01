@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -21,10 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,6 +52,8 @@ import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
+import org.pictokeyboard.ui.theme.PictoTheme
+import org.pictokeyboard.ui.theme.Spacing
 import java.io.File
 
 // The dialogs behind the add-pictos screen: the ARASAAC detail sheet, the
@@ -55,8 +61,19 @@ import java.io.File
 // here so AddPictosScreen.kt stays the screen rather than the screen plus its
 // four modal flows.
 
+/**
+ * The picto being added: its words, its frame colour, and the ARASAAC skin/hair
+ * customisation.
+ *
+ * A bottom sheet rather than an `AlertDialog`. This is the longest form in the
+ * app — two text fields, a language pair, a 27-swatch colour picker, two swatch
+ * rows and a switch — and as a dialog it was a box scrolling all of that inside
+ * itself, with the live preview scrolling out of sight exactly when the swatches
+ * that change it came into view. A sheet gives the form the height it needs.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun PictoDetailDialog(
+internal fun PictoDetailSheet(
     arasaacId: Int,
     initialText: String,
     initialLanguage: String,
@@ -73,73 +90,127 @@ internal fun PictoDetailDialog(
 
     val options = ArasaacOptions(skin = skin, hair = hair, color = color)
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.picto_edit_details)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                AsyncImage(
-                    model = ArasaacUrls.customizedOrPlain(arasaacId, options),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .background(Color.White, RoundedCornerShape(12.dp))
-                        .padding(8.dp),
-                )
-                OutlinedTextField(
-                    value = spoken,
-                    onValueChange = { spoken = it },
-                    label = { Text(stringResource(R.string.picto_spoken_text)) },
-                    singleLine = true,
-                )
-                OutlinedTextField(
-                    value = label,
-                    onValueChange = { label = it },
-                    label = { Text(stringResource(R.string.picto_label)) },
-                    singleLine = true,
-                )
-                LanguageChips(language) { language = it }
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.lg)
+                .padding(bottom = Spacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            Text(
+                stringResource(R.string.picto_edit_details),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            PictoPreview(
+                arasaacId = arasaacId,
+                options = options,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            OutlinedTextField(
+                value = spoken,
+                onValueChange = { spoken = it },
+                label = { Text(stringResource(R.string.picto_spoken_text)) },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = label,
+                onValueChange = { label = it },
+                label = { Text(stringResource(R.string.picto_label)) },
+                singleLine = true,
+            )
+            LanguageChips(language) { language = it }
 
-                Text(stringResource(R.string.picto_frame_color), style = MaterialTheme.typography.labelLarge)
-                PictoColorPicker(selected = frameColor, onSelect = { frameColor = it })
+            Text(stringResource(R.string.picto_frame_color), style = MaterialTheme.typography.labelLarge)
+            PictoColorPicker(selected = frameColor, onSelect = { frameColor = it })
 
-                Text(stringResource(R.string.picto_customize), style = MaterialTheme.typography.labelLarge)
-                SwatchRow(
-                    label = stringResource(R.string.picto_skin),
-                    values = ArasaacOptions.SKIN_TONES,
-                    selected = skin,
-                    colorFor = ::skinSwatch,
-                    onSelect = { skin = it },
-                )
-                SwatchRow(
-                    label = stringResource(R.string.picto_hair),
-                    values = ArasaacOptions.HAIR_COLORS,
-                    selected = hair,
-                    colorFor = ::hairSwatch,
-                    onSelect = { hair = it },
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.picto_color), modifier = Modifier.weight(1f))
-                    Switch(checked = color, onCheckedChange = { color = it })
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (spoken.isNotBlank()) onConfirm(spoken.trim(), label.trim(), language, options, frameColor)
-                },
-                enabled = spoken.isNotBlank(),
-            ) { Text(stringResource(R.string.add)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
+            ArasaacCustomization(
+                skin = skin,
+                hair = hair,
+                color = color,
+                onSkin = { skin = it },
+                onHair = { hair = it },
+                onColor = { color = it },
+            )
+
+            SheetActions(
+                confirmLabel = stringResource(R.string.add),
+                confirmEnabled = spoken.isNotBlank(),
+                onDismiss = onDismiss,
+                onConfirm = { onConfirm(spoken.trim(), label.trim(), language, options, frameColor) },
+            )
+        }
+    }
+}
+
+/** The picto as it will look with the options currently chosen. */
+@Composable
+private fun PictoPreview(arasaacId: Int, options: ArasaacOptions, modifier: Modifier = Modifier) {
+    AsyncImage(
+        model = ArasaacUrls.customizedOrPlain(arasaacId, options),
+        contentDescription = null,
+        modifier = modifier
+            .size(120.dp)
+            .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
+            .padding(8.dp),
     )
+}
+
+/** The three ARASAAC render parameters: skin tone, hair colour, and colour on/off. */
+@Composable
+private fun ArasaacCustomization(
+    skin: String?,
+    hair: String?,
+    color: Boolean,
+    onSkin: (String?) -> Unit,
+    onHair: (String?) -> Unit,
+    onColor: (Boolean) -> Unit,
+) {
+    Text(stringResource(R.string.picto_customize), style = MaterialTheme.typography.labelLarge)
+    SwatchRow(
+        label = stringResource(R.string.picto_skin),
+        values = ArasaacOptions.SKIN_TONES,
+        selected = skin,
+        colorFor = ::skinSwatch,
+        onSelect = onSkin,
+    )
+    SwatchRow(
+        label = stringResource(R.string.picto_hair),
+        values = ArasaacOptions.HAIR_COLORS,
+        selected = hair,
+        colorFor = ::hairSwatch,
+        onSelect = onHair,
+    )
+    SwitchRow(stringResource(R.string.picto_color), color, onColor)
+}
+
+/**
+ * Cancel and confirm at the foot of a sheet.
+ *
+ * A sheet has no `confirmButton` slot to put these in, so they are part of the
+ * content — which is an improvement: they are full-width targets at the bottom
+ * edge rather than two small text buttons in a corner.
+ */
+@Composable
+private fun SheetActions(
+    confirmLabel: String,
+    confirmEnabled: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.cancel))
+        }
+        Button(
+            onClick = onConfirm,
+            enabled = confirmEnabled,
+            modifier = Modifier.weight(1f),
+        ) { Text(confirmLabel) }
+    }
 }
 
 @Composable
@@ -177,7 +248,11 @@ private fun Swatch(fill: Color, isSelected: Boolean, isNone: Boolean, onClick: (
             .background(fill, CircleShape)
             .border(
                 width = if (isSelected) 3.dp else 1.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else SWATCH_EDGE,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outline
+                },
                 shape = CircleShape,
             )
             .clickable(onClick = onClick),
@@ -214,7 +289,7 @@ internal fun CustomImageDialog(
                     modifier = Modifier
                         .size(120.dp)
                         .align(Alignment.CenterHorizontally)
-                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                         .padding(8.dp),
                 )
                 OutlinedTextField(
@@ -297,7 +372,7 @@ internal fun ImportFromCategoriesDialog(
                                 Box(
                                     modifier = Modifier
                                         .size(72.dp)
-                                        .background(Color.White, RoundedCornerShape(12.dp))
+                                        .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                                         .categoryFrame(
                                             pictoColor,
                                             if (isSelected) 4.dp else 2.dp,
@@ -369,6 +444,11 @@ private fun hairSwatch(value: String): Color = HAIR_SWATCHES[value] ?: SWATCH_UN
  * spellings, including "assian", and must match them to keep the API happy.
  */
 private val SKIN_SWATCHES = mapOf(
+    // These are the only legitimate colour literals in the UI layer: they are not
+    // theme, they are *data* -- an approximation of what ARASAAC's own skin and
+    // hair parameters produce, so the swatch shows the caregiver what they are
+    // choosing. They must not follow the light/dark scheme, because the pictogram
+    // they describe does not either.
     "white" to Color(0xFFF1C9A5),
     "mulatto" to Color(0xFFD49E7A),
     "aztec" to Color(0xFFB87A4B),
@@ -386,8 +466,10 @@ private val HAIR_SWATCHES = mapOf(
     "black" to Color(0xFF1A1A1A),
 )
 
-/** Shown for an option this build does not have a colour for. */
+/**
+ * Stand-in for an ARASAAC skin or hair value we have no swatch for. A literal for
+ * the same reason the swatches above are: it stands in for a colour the remote
+ * renderer will produce, so it must not shift with the light/dark scheme. Only
+ * the ring around it is themed.
+ */
 private val SWATCH_UNKNOWN = Color(0xFFBDBDBD)
-
-/** Hairline ring around an unselected swatch, so a pale one still has an edge. */
-private val SWATCH_EDGE = Color(0x44000000)

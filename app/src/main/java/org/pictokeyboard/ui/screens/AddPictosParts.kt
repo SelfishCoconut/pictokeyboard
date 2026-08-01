@@ -42,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +50,7 @@ import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacResult
 import org.pictokeyboard.ui.SearchState
+import org.pictokeyboard.ui.theme.PictoTheme
 
 // The pieces AddPictosScreen is assembled from: its bar, search box, and the
 // results grid. Separated so the screen file reads as a layout.
@@ -200,7 +200,9 @@ internal fun ResultsGrid(
     ) {
         items(items, key = { it.id }) { item ->
             val isSelected = item.id in selectedIds
-            val ring = if (isSelected) MaterialTheme.colorScheme.primary else TILE_EDGE
+            // outline, not a black wash: a picto tile is always white, so its
+            // edge has to be a token that holds 3:1 in both schemes.
+            val ring = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.combinedClickable(
@@ -213,7 +215,7 @@ internal fun ResultsGrid(
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .border(if (isSelected) 3.dp else 1.dp, ring, RoundedCornerShape(12.dp))
-                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                         .padding(6.dp),
                 ) {
                     AsyncImage(
@@ -243,6 +245,3 @@ internal fun ResultsGrid(
         }
     }
 }
-
-/** Faint ring around an unticked result, so a white tile still has an edge. */
-private val TILE_EDGE = Color(0x22000000)

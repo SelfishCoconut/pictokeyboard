@@ -56,16 +56,16 @@
     <string name="nav_about">Acerca de</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_greeting">Bienvenido a</string>
-    <string name="dashboard_tagline">Toca pictogramas para hablar y escribir. Una forma sencilla de comunicarse.</string>
+    <!-- El encabezado es una miniatura en vivo del tablero real. -->
+    <string name="dashboard_board_title">Tu tablero</string>
+    <string name="dashboard_board_counts">%1$d categorías · %2$d pictogramas</string>
+    <string name="dashboard_board_a11y">Vista previa del tablero: %1$d categorías, %2$d pictogramas. Toca para editarlo.</string>
+    <string name="dashboard_board_empty">Aún no hay tablero. Toca para añadir tu primera categoría.</string>
     <string name="dashboard_setup_title">Configuración del teclado</string>
     <string name="dashboard_setup_subtitle">Dos pasos rápidos para empezar a usar PictoKeyboard.</string>
     <string name="dashboard_setup_ready_title">Todo listo</string>
-    <string name="dashboard_setup_ready_desc">PictoKeyboard está activado y en uso. Abre cualquier campo de texto para usarlo.</string>
     <string name="dashboard_step_enabled_done">Activado en los ajustes de Android</string>
     <string name="dashboard_step_selected_done">Seleccionado como teclado activo</string>
-    <string name="dashboard_stat_categories">Categorías</string>
-    <string name="dashboard_stat_pictos">Pictogramas</string>
     <string name="dashboard_build">Crea tu tablero</string>
     <string name="dashboard_build_desc">Añade las categorías y los pictos que verá el usuario.</string>
     <string name="dashboard_tips_title">Bueno saberlo</string>
@@ -101,10 +101,25 @@
     <string name="category_add">Nueva categoría</string>
     <string name="category_edit">Editar categoría</string>
     <string name="category_name">Nombre de la categoría</string>
+    <string name="category_picto">Picto de la categoría</string>
+    <string name="category_picto_title">Elige el picto de la categoría</string>
+    <string name="category_picto_choose">Elegir un picto</string>
+    <string name="category_picto_remove">Quitar el picto</string>
+    <string name="category_picto_chosen">Picto actual de la categoría</string>
+    <string name="category_picto_chosen_named">Picto de la categoría: %1$s</string>
+    <string name="category_picto_searching">Buscando en ARASAAC</string>
+    <string name="category_picto_none">Sin picto</string>
+    <string name="category_picto_from_own">Un símbolo de esta categoría</string>
+    <string name="category_picto_source_arasaac">Buscar en ARASAAC</string>
+    <string name="category_picto_source_photo">Elegir una foto</string>
+    <string name="category_picto_source_camera">Hacer una foto</string>
+    <string name="category_picto_save_failed">No se ha podido guardar esa imagen. Prueba con otra.</string>
     <string name="category_frame_color">Color del marco</string>
     <string name="category_frame_style">Estilo del marco</string>
     <string name="category_frame_thickness">Grosor del marco</string>
     <string name="category_builtin">Predeterminada</string>
+    <string name="category_more">Más opciones</string>
+    <string name="picto_color_inherit">Usar el color de la categoría</string>
     <string name="category_delete_confirm">¿Eliminar esta categoría y todos sus pictos?</string>
     <string name="category_pictos_count">%1$d pictos</string>
     <string name="category_blank">Categoría vacía</string>
@@ -157,6 +172,15 @@
     <string name="crop_failed">No se pudo recortar la imagen.</string>
 
     <string name="settings_title">Ajustes</string>
+
+    <!-- Los seis grupos en los que se organiza la pantalla de ajustes. -->
+    <string name="settings_group_language">Idioma</string>
+    <string name="settings_group_keyboard">Teclado</string>
+    <string name="settings_group_voice">Voz</string>
+    <string name="settings_group_accessibility">Accesibilidad</string>
+    <string name="settings_group_security">Seguridad</string>
+    <string name="settings_group_backup">Copia de seguridad</string>
+
     <string name="settings_language">Idioma predeterminado</string>
     <string name="settings_grid_columns">Columnas de la cuadrícula</string>
     <string name="settings_grid_rows">Filas visibles (altura)</string>

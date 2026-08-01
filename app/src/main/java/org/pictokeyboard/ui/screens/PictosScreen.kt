@@ -19,12 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -55,6 +52,8 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.PictoTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 import java.io.File
 
 /** Stateful wrapper: resolves the category and its pictos from the view model. */
@@ -113,9 +112,10 @@ fun PictosScreenContent(
         },
         floatingActionButton = {
             if (!reordering) {
-                FloatingActionButton(onClick = onAddPictos) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.picto_add))
-                }
+                AddFab(
+                    contentDescription = stringResource(R.string.picto_add),
+                    onClick = onAddPictos,
+                )
             }
         },
     ) { padding ->
@@ -235,7 +235,7 @@ private fun PictoTile(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(Color.White, RoundedCornerShape(12.dp))
+                .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
                 .categoryFrame(frameColor, borderWidthDp.dp, borderStyle, 12.dp)
                 .padding(8.dp),
             contentAlignment = Alignment.Center,
@@ -343,7 +343,7 @@ private fun EditPictoDialog(
 /** Neutral grey for pictos shown before their category resolves. */
 private const val DEFAULT_TILE_ARGB = 0xFF9E9E9E.toInt()
 
-@Preview(name = "Pictos", showBackground = true)
+@ScreenPreviews
 @Composable
 private fun PictosScreenPreview() {
     val category = CategoryEntity(

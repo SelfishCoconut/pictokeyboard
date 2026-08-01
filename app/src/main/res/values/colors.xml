@@ -1,12 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="kb_background">#FFECEFF1</color>
-    <color name="kb_category_panel">#FFFFFFFF</color>
-    <color name="kb_control_key">#FFCFD8DC</color>
-    <color name="kb_text">#FF212121</color>
-    <color name="kb_hint">#FF757575</color>
+<!--
+    The same tokens as ui/theme/Tokens.kt, for the parts of the product that are
+    Views rather than Composables: the keyboard, and the window background.
 
-    <color name="purple_500">#FF6750A4</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="black">#FF000000</color>
+    Two layers, one palette. The names match the Kotlin tokens exactly so a change
+    made in one place is findable in the other, and the contrast table that governs
+    both is asserted in TokenContrastTest.
+
+    values-night/ overrides these. Anything added here needs an answer there too.
+-->
+<resources>
+    <!-- Chrome background, for both the app window and the keyboard. -->
+    <color name="paper">#FFF3F1ED</color>
+
+    <!-- The config app's raised surface. Unlike `tile`, this follows the scheme. -->
+    <color name="card">#FFFFFFFF</color>
+
+    <!--
+        Surfaces carrying ARASAAC artwork. Stays white in dark mode as well: the
+        pictograms are black line work and a dark tile destroys them. Its content
+        colours are therefore scheme-invariant too - see on_tile.
+    -->
+    <color name="tile">#FFFFFFFF</color>
+    <color name="on_tile">#FF191713</color>
+    <color name="on_tile_soft">#FF6A645C</color>
+
+    <color name="ink">#FF191713</color>
+    <color name="ink_soft">#FF6A645C</color>
+
+    <!-- Decorative only: dividers, unpressed key fill. See line_strong. -->
+    <color name="line">#FFE2DED6</color>
+
+    <!-- Anything outlining a control the user has to find. Verified at 3:1. -->
+    <color name="line_strong">#FF8A8378</color>
+
+    <color name="accent">#FF24303F</color>
+    <color name="on_accent">#FFFFFFFF</color>
 </resources>

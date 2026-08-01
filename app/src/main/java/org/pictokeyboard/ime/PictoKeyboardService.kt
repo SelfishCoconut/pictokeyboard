@@ -26,6 +26,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.tts.TtsManager
+import org.pictokeyboard.ui.theme.CategoryColors
 
 /**
  * The pictogram keyboard. Left strip = colour-coded categories, right grid =
@@ -82,7 +83,8 @@ class PictoKeyboardService : InputMethodService() {
         emptyHint = normalView.findViewById(R.id.empty_hint)
 
         normalView.findViewById<Button>(R.id.key_settings).setOnClickListener { openSettings() }
-        normalView.findViewById<Button>(R.id.key_switch).setOnClickListener { switchKeyboard() }
+        // An ImageButton, not a Button -- the globe is a tinted vector now.
+        normalView.findViewById<View>(R.id.key_switch).setOnClickListener { switchKeyboard() }
         normalView.findViewById<Button>(R.id.key_space).setOnClickListener { commit(" ") }
         normalView.findViewById<Button>(R.id.key_backspace).setOnClickListener { backspace() }
         normalView.findViewById<Button>(R.id.key_enter).setOnClickListener { onEnter() }
@@ -171,11 +173,15 @@ class PictoKeyboardService : InputMethodService() {
         pictoJob?.cancel()
         if (categoryId == null) {
             pictoAdapter.submit(emptyList(), 0, settings.showLabels)
+            applyCategoryWash(null)
             updateEmptyHint(true)
             return
         }
         val category = categories.firstOrNull { it.id == categoryId }
         val color = category?.colorArgb ?: 0
+        // Pass the nullable through: applyCategoryWash maps null to transparent,
+        // whereas 0 is opaque black and washes the grid 6% grey.
+        applyCategoryWash(category?.colorArgb)
         val borderStyle = category?.borderStyle ?: org.pictokeyboard.data.db.BorderStyles.SOLID
         val borderWidthDp = category?.borderWidthDp ?: org.pictokeyboard.data.db.BorderStyles.DEFAULT_WIDTH_DP
         pictoJob = locator.pictoRepository.observePictos(categoryId)
@@ -184,6 +190,29 @@ class PictoKeyboardService : InputMethodService() {
                 updateEmptyHint(pictos.isEmpty())
             }
             .launchIn(scope)
+    }
+
+    /**
+     * Floods the picto grid with a 6% wash of the selected category's colour.
+     *
+     * This is the signature of the design: tap *Comida* and the whole board reads
+     * orange, tap *Acciones* and it reads green. A user who cannot read gets a
+     * full-field, pre-linguistic signal of which context they are in — which is
+     * precisely the job AAC colour coding exists to do, and was previously spent
+     * on a 3dp frame.
+     *
+     * 6% is deliberately faint: it sits *under* white picto tiles and must not
+     * touch their contrast, so it registers as a cast rather than as a colour.
+     */
+    private fun applyCategoryWash(colorArgb: Int?) {
+        if (!::pictoGrid.isInitialized) return
+        pictoGrid.setBackgroundColor(
+            if (colorArgb == null) {
+                android.graphics.Color.TRANSPARENT
+            } else {
+                CategoryColors.wash(colorArgb)
+            },
+        )
     }
 
     private fun updateEmptyHint(empty: Boolean) {
@@ -199,11 +228,26 @@ class PictoKeyboardService : InputMethodService() {
         val toInsert = if (settings.addSpaceAfter) "$text " else text
         commit(toInsert)
         if (settings.speakOnTap) tts.speak(text, picto.language)
-        scope.launch { locator.pictoRepository.recordUsage(picto) }
+        recordUsage(picto)
     }
 
     private fun commit(text: String) {
         currentInputConnection?.commitText(text, 1)
+    }
+
+    /**
+     * Remembers the picto for the "Suggested" category, unless the field it went
+     * into asked not to be learned from — see [allowsUsageRecording].
+     *
+     * The field is read here rather than inside the coroutine on purpose. The
+     * question is about the field the word was actually committed to, and by the
+     * time a launched block runs the focus may have moved somewhere else; a
+     * password box that loses focus first would otherwise be recorded against
+     * whatever followed it.
+     */
+    private fun recordUsage(picto: PictoEntity) {
+        if (!currentInputEditorInfo.allowsUsageRecording()) return
+        scope.launch { locator.pictoRepository.recordUsage(picto) }
     }
 
     /**
@@ -333,6 +377,7 @@ class PictoKeyboardService : InputMethodService() {
         val cat = categories.getOrNull(blindCatIndex)
         if (cat == null) {
             blindView.setCaption("")
+            blindView.setSurfaceColor(null)
             blindView.setHint(getString(R.string.blind_no_board))
             tts.speak(getString(R.string.blind_no_board), settings.defaultLanguage)
             return
@@ -353,6 +398,9 @@ class PictoKeyboardService : InputMethodService() {
     private fun speakBlindCurrent(announcements: List<String> = emptyList()) {
         val cat = categories.getOrNull(blindCatIndex)
         blindView.setHint(cat?.name ?: "")
+        // The whole surface takes the category's hue, so the cue is unmissable
+        // even to someone who can only make out large blocks of colour.
+        blindView.setSurfaceColor(cat?.colorArgb)
         val parts = announcements.map { TtsManager.Part(it, settings.defaultLanguage) }.toMutableList()
         val picto = blindPictos.getOrNull(blindPictoIndex)
         if (picto == null) {
@@ -373,7 +421,7 @@ class PictoKeyboardService : InputMethodService() {
         if (text.isBlank()) return
         commit(if (settings.addSpaceAfter) "$text " else text)
         tts.speak(text, picto.language)
-        scope.launch { locator.pictoRepository.recordUsage(picto) }
+        recordUsage(picto)
     }
 
     override fun onDestroy() {

@@ -8,8 +8,9 @@
     <!-- Keyboard control keys -->
     <string name="kb_settings">Settings</string>
     <string name="kb_settings_icon" translatable="false">⚙</string>
+    <!-- No kb_switch_icon: the globe is drawable/ic_switch_keyboard.xml, so it
+         takes the key's text colour instead of the emoji font's blue. -->
     <string name="kb_switch">Switch keyboard</string>
-    <string name="kb_switch_icon" translatable="false">🌐</string>
     <string name="kb_space">space</string>
     <string name="kb_backspace">Backspace</string>
     <string name="kb_backspace_icon" translatable="false">⌫</string>
@@ -67,16 +68,16 @@
     <string name="nav_about">About</string>
 
     <!-- Dashboard -->
-    <string name="dashboard_greeting">Welcome to</string>
-    <string name="dashboard_tagline">Tap pictograms to speak and type. A simple way to communicate.</string>
+    <!-- The hero is a live miniature of the real board. -->
+    <string name="dashboard_board_title">Your board</string>
+    <string name="dashboard_board_counts">%1$d categories · %2$d pictograms</string>
+    <string name="dashboard_board_a11y">Board preview: %1$d categories, %2$d pictograms. Tap to edit it.</string>
+    <string name="dashboard_board_empty">No board yet. Tap to add your first category.</string>
     <string name="dashboard_setup_title">Keyboard setup</string>
     <string name="dashboard_setup_subtitle">Two quick steps to start using PictoKeyboard.</string>
     <string name="dashboard_setup_ready_title">You\'re all set</string>
-    <string name="dashboard_setup_ready_desc">PictoKeyboard is enabled and active. Open any text field to use it.</string>
     <string name="dashboard_step_enabled_done">Enabled in Android settings</string>
     <string name="dashboard_step_selected_done">Selected as the active keyboard</string>
-    <string name="dashboard_stat_categories">Categories</string>
-    <string name="dashboard_stat_pictos">Pictograms</string>
     <string name="dashboard_build">Build your board</string>
     <string name="dashboard_build_desc">Add the categories and pictograms the user will see.</string>
     <string name="dashboard_tips_title">Good to know</string>
@@ -114,10 +115,27 @@
     <string name="category_add">New category</string>
     <string name="category_edit">Edit category</string>
     <string name="category_name">Category name</string>
+    <string name="category_picto">Category picto</string>
+    <string name="category_picto_title">Choose the category picto</string>
+    <string name="category_picto_choose">Choose a picto</string>
+    <string name="category_picto_remove">Remove picto</string>
+    <string name="category_picto_chosen">Current category picto</string>
+    <!-- Spoken to a screen reader so a chosen picto is identifiable by name, not
+         just as "a picto". %1$s is the pictogram's keyword or label. -->
+    <string name="category_picto_chosen_named">Category picto: %1$s</string>
+    <string name="category_picto_searching">Searching ARASAAC</string>
+    <string name="category_picto_none">No picto</string>
+    <string name="category_picto_from_own">A symbol from this category</string>
+    <string name="category_picto_source_arasaac">Search ARASAAC</string>
+    <string name="category_picto_source_photo">Choose a photo</string>
+    <string name="category_picto_source_camera">Take a photo</string>
+    <string name="category_picto_save_failed">That picture could not be saved. Try another one.</string>
     <string name="category_frame_color">Frame colour</string>
     <string name="category_frame_style">Frame style</string>
     <string name="category_frame_thickness">Frame thickness</string>
     <string name="category_builtin">Default</string>
+    <string name="category_more">More options</string>
+    <string name="picto_color_inherit">Use the category colour</string>
     <string name="category_delete_confirm">Delete this category and all its pictos?</string>
     <string name="category_pictos_count">%1$d pictos</string>
     <string name="category_blank">Blank category</string>
@@ -172,6 +190,15 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+
+    <!-- The six groups the settings screen is organised into. -->
+    <string name="settings_group_language">Language</string>
+    <string name="settings_group_keyboard">Keyboard</string>
+    <string name="settings_group_voice">Voice</string>
+    <string name="settings_group_accessibility">Accessibility</string>
+    <string name="settings_group_security">Security</string>
+    <string name="settings_group_backup">Backup</string>
+
     <string name="settings_language">Default language</string>
     <string name="settings_grid_columns">Grid columns</string>
     <string name="settings_grid_rows">Visible rows (height)</string>
