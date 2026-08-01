@@ -7,9 +7,10 @@ name: Instrumented tests
 #     required check that does not run does not report, so GitHub blocks the
 #     merge forever waiting for a status that never arrives (shown only as
 #     "Expected", never as an error). A docs-only PR would be unmergeable.
-#     The cost is real -- roughly 8-12 minutes on PRs that cannot have broken
-#     anything -- and it is the price of these jobs being allowed to block a
-#     merge at all. An unenforceable test is not a gate.
+#     The cost is real -- the two API levels run concurrently at roughly 3m30s
+#     each, so a PR that cannot have broken anything still waits for them --
+#     and it is the price of these jobs being allowed to block a merge at all.
+#     An unenforceable test is not a gate.
 #
 #   push to main -- still filtered. Nothing gates on this run, so skipping it
 #     for doc-only merges just saves the time.
