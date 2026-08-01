@@ -4,12 +4,15 @@ name: Play Store compliance
 # rejections before an upload burns a versionCode or a review cycle. The
 # declaration-level checks (Data Safety accuracy, privacy policy content,
 # listing assets) are human work -- see the play-release skill.
+#
+# Deliberately NOT path-filtered, even though it only ever reads the build
+# config. This is a required check, and a required check that does not run does
+# not report -- GitHub then blocks the merge forever waiting for a status that
+# is never coming, with no error, just "Expected". A filter here would brick
+# every docs-only PR. The whole job takes about three seconds, so running it
+# on changes it cannot possibly care about costs nothing worth saving.
 on:
   pull_request:
-    paths:
-      - "app/build.gradle.kts"
-      - "app/src/main/AndroidManifest.xml"
-      - "gradle/**"
   workflow_dispatch:
 
 permissions:
