@@ -12,6 +12,13 @@ app/build/
 build/
 .kotlin/
 
+# Signing material. The upload key lives in CI secrets and on the keyholder's
+# machine; a key committed here is a key that has to be rotated, and Play will
+# not let you re-key an app that is already published.
+*.jks
+*.keystore
+keystore.properties
+
 # Large binaries — distributed as GitHub Release assets, not tracked in git
 *.apk
 *.mp4

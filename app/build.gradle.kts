@@ -12,6 +12,20 @@ kotlin {
     }
 }
 
+// Release signing material and the version code, by the names release.yml
+// already passes them under. An environment variable is how CI supplies them;
+// the Gradle property fallback is for signing a build by hand without putting
+// a password on the command line (put them in ~/.gradle/gradle.properties,
+// never in the repo).
+fun releaseSecret(name: String): String? =
+    System.getenv(name) ?: providers.gradleProperty(name).orNull
+
+// Absent on any machine without the upload key, which is every machine except
+// the release runner. Checked for existence rather than trusted: a path that
+// does not resolve makes AGP fail at execution time with a stack trace instead
+// of the plain "built unsigned" that a developer actually wants.
+val upstreamKeystore = releaseSecret("KEYSTORE_FILE")?.let(::file)?.takeIf { it.isFile }
+
 android {
     namespace = "org.pictokeyboard"
     compileSdk = 37
@@ -20,10 +34,25 @@ android {
         applicationId = "org.pictokeyboard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        // Play burns a versionCode permanently on upload -- including on an
+        // upload that was then rejected -- so it must never repeat. CI passes
+        // the run number, which is monotonic. A local build gets 1, which is
+        // fine because a locally-built artifact never reaches the console.
+        versionCode = releaseSecret("VERSION_CODE")?.toInt() ?: 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+    }
+
+    signingConfigs {
+        create("release") {
+            upstreamKeystore?.let {
+                storeFile = it
+                storePassword = releaseSecret("KEYSTORE_PASSWORD")
+                keyAlias = releaseSecret("KEY_ALIAS")
+                keyPassword = releaseSecret("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -33,6 +62,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Left unsigned rather than falling back to the debug key when
+            // there is no keystore. Play rejects a debug-signed artifact, and a
+            // debug key here would turn that rejection into something only the
+            // console tells you about -- after the versionCode is spent.
+            // release.yml's apksigner step is what catches an unsigned upload.
+            signingConfig = upstreamKeystore?.let { signingConfigs.getByName("release") }
         }
     }
     compileOptions {
