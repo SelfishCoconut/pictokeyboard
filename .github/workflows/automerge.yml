@@ -1,13 +1,21 @@
 name: Auto-merge
 
-# Enables GitHub's native auto-merge (squash) on eligible PRs. GitHub then
-# merges them once required status checks pass -- this workflow never merges
-# anything itself, so branch protection stays authoritative.
+# Enables GitHub's native auto-merge (squash) on every non-draft PR. GitHub then
+# merges each one once branch protection is satisfied -- this workflow never
+# merges anything itself, so branch protection stays authoritative.
 #
-# Eligible: PRs labeled `automerge`, and Dependabot PRs.
+# There is no opt-in label. That makes the required-checks list on `main` the
+# only thing standing between a green tick and a merge, so it has to be honest:
+# a check that is not required cannot block anything, no matter how red it goes.
+# Anything added to CI that is meant to gate a merge must also be added to the
+# required checks, and must run on EVERY pull request -- see the comments in
+# instrumented.yml and playstore-check.yml for why path filters and required
+# checks cannot coexist.
+#
+# The opt-out is draft: mark a PR draft to keep it from landing unattended.
 on:
   pull_request:
-    types: [opened, labeled, ready_for_review, reopened]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 permissions:
   contents: write
@@ -17,13 +25,25 @@ jobs:
   enable:
     name: enable auto-merge
     runs-on: ubuntu-latest
-    if: >-
-      !github.event.pull_request.draft &&
-      (contains(github.event.pull_request.labels.*.name, 'automerge') ||
-       github.event.pull_request.user.login == 'dependabot[bot]')
+    if: '!github.event.pull_request.draft'
     steps:
+      # `synchronize` is in the trigger list above so that a PR opened before
+      # this workflow existed picks auto-merge up on its next push, instead of
+      # having to be closed and reopened. Re-running on an already-enabled PR
+      # is a no-op.
       - name: Enable squash auto-merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --squash --auto "$PR_URL"
+        run: |
+          # Conflicts are the one failure that is expected and self-healing:
+          # resolving them means pushing, which reruns this job. Tolerated
+          # explicitly rather than by ignoring the exit code, so that a real
+          # breakage -- a permissions change, an API change -- still fails
+          # loudly instead of silently switching auto-merge off repo-wide.
+          state=$(gh pr view "$PR_URL" --json mergeable --jq .mergeable)
+          if [ "$state" = "CONFLICTING" ]; then
+            echo "::warning::Conflicts with the base branch, so auto-merge cannot be enabled yet. Resolve them and push; this job reruns and enables it then."
+            exit 0
+          fi
+          gh pr merge --squash --auto "$PR_URL"
