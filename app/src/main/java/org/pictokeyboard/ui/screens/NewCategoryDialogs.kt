@@ -41,6 +41,8 @@ import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
+import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.currentIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
 import org.pictokeyboard.ui.theme.PictoTheme
@@ -202,12 +204,11 @@ private fun ChooserCard(
 internal fun CategoryEditDialog(
     initial: CategoryEntity?,
     onDismiss: () -> Unit,
-    onSave: (String, Int, String, Int) -> Unit,
+    onSave: (CategoryEdit) -> Unit,
+    pickerDialog: CategoryPickerSlot,
 ) {
-    var name by remember { mutableStateOf(initial?.name ?: "") }
-    var color by remember { mutableStateOf(initial?.colorArgb ?: CategoryPalette.first().toInt()) }
-    var borderStyle by remember { mutableStateOf(initial?.borderStyle ?: BorderStyles.SOLID) }
-    var borderWidth by remember { mutableStateOf(initial?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP) }
+    var edit by remember { mutableStateOf(initial.toEdit()) }
+    var picking by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -215,36 +216,108 @@ internal fun CategoryEditDialog(
             Text(stringResource(if (initial == null) R.string.category_add else R.string.category_edit))
         },
         text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.category_name)) },
-                    singleLine = true,
-                )
-                Text(stringResource(R.string.category_frame_color), style = MaterialTheme.typography.labelLarge)
-                ColorPalettePicker(selected = color, onSelect = { color = it })
-
-                Text(stringResource(R.string.category_frame_style), style = MaterialTheme.typography.labelLarge)
-                BorderStylePicker(color = Color(color), selected = borderStyle, onSelect = { borderStyle = it })
-
-                Text(stringResource(R.string.category_frame_thickness), style = MaterialTheme.typography.labelLarge)
-                ThicknessPicker(color = Color(color), selected = borderWidth, onSelect = { borderWidth = it })
-            }
+            CategoryEditForm(edit = edit, onChange = { edit = it }, onChoosePicto = { picking = true })
         },
         confirmButton = {
             TextButton(
-                onClick = { if (name.isNotBlank()) onSave(name.trim(), color, borderStyle, borderWidth) },
-                enabled = name.isNotBlank(),
+                onClick = { if (edit.name.isNotBlank()) onSave(edit.copy(name = edit.name.trim())) },
+                enabled = edit.name.isNotBlank(),
             ) { Text(stringResource(R.string.save)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
+
+    if (picking) {
+        pickerDialog(
+            initial?.id,
+            { picking = false },
+            {
+                edit = edit.copy(icon = it)
+                picking = false
+            },
+        )
+    }
+}
+
+/**
+ * How the editor reaches the picto picker.
+ *
+ * The picker needs the ConfigViewModel (ARASAAC search, the category's own
+ * symbols, saving a cropped photo), and this file is deliberately free of it so
+ * the screen stays previewable and testable without one. So it arrives as a
+ * slot: the viewModel-aware caller supplies the real dialog, and a preview or a
+ * test supplies an empty lambda.
+ */
+typealias CategoryPickerSlot =
+    @Composable (categoryId: String?, onDismiss: () -> Unit, onPicked: (CategoryIcon) -> Unit) -> Unit
+
+/** Everything the category editor collects, saved in one write. */
+data class CategoryEdit(
+    val name: String,
+    val color: Int,
+    val borderStyle: String,
+    val borderWidthDp: Int,
+    val icon: CategoryIcon,
+)
+
+/** The editor's starting values: an existing category's, or the defaults for a new one. */
+private fun CategoryEntity?.toEdit() = CategoryEdit(
+    name = this?.name ?: "",
+    color = this?.colorArgb ?: CategoryPalette.first().toInt(),
+    borderStyle = this?.borderStyle ?: BorderStyles.SOLID,
+    borderWidthDp = this?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
+    icon = this?.currentIcon() ?: CategoryIcon.None,
+)
+
+/**
+ * The category editor: **picto · name · colour · frame style · frame thickness**,
+ * in that order, because the picto is what the communicator navigates by and the
+ * name is what the caregiver reads.
+ */
+@Composable
+private fun CategoryEditForm(
+    edit: CategoryEdit,
+    onChange: (CategoryEdit) -> Unit,
+    onChoosePicto: () -> Unit,
+) {
+    val accent = Color(edit.color)
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(stringResource(R.string.category_picto), style = MaterialTheme.typography.labelLarge)
+        CategoryIconField(
+            icon = edit.icon,
+            accent = accent,
+            onChoose = onChoosePicto,
+            onClear = { onChange(edit.copy(icon = CategoryIcon.None)) },
+        )
+
+        OutlinedTextField(
+            value = edit.name,
+            onValueChange = { onChange(edit.copy(name = it)) },
+            label = { Text(stringResource(R.string.category_name)) },
+            singleLine = true,
+        )
+        Text(stringResource(R.string.category_frame_color), style = MaterialTheme.typography.labelLarge)
+        ColorPalettePicker(selected = edit.color, onSelect = { onChange(edit.copy(color = it)) })
+
+        Text(stringResource(R.string.category_frame_style), style = MaterialTheme.typography.labelLarge)
+        BorderStylePicker(
+            color = accent,
+            selected = edit.borderStyle,
+            onSelect = { onChange(edit.copy(borderStyle = it)) },
+        )
+
+        Text(stringResource(R.string.category_frame_thickness), style = MaterialTheme.typography.labelLarge)
+        ThicknessPicker(
+            color = accent,
+            selected = edit.borderWidthDp,
+            onSelect = { onChange(edit.copy(borderWidthDp = it)) },
+        )
+    }
 }
 
 /** Thumbnails previewed on a chooser card. */

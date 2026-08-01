@@ -4,6 +4,22 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- A picto can be a photo, so a camera is useful but never required: the
+         app is fully usable on a device without one. Note there is deliberately
+         no CAMERA permission — the picture is taken by the device's own camera
+         app, writing into a file we hand it, which needs no grant from us. -->
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+
+    <!-- Needed to see whether any camera app exists before offering the option;
+         without it package visibility hides them all and the check says no. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".App"
         android:allowBackup="true"

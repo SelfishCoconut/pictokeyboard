@@ -228,11 +228,26 @@ class PictoKeyboardService : InputMethodService() {
         val toInsert = if (settings.addSpaceAfter) "$text " else text
         commit(toInsert)
         if (settings.speakOnTap) tts.speak(text, picto.language)
-        scope.launch { locator.pictoRepository.recordUsage(picto) }
+        recordUsage(picto)
     }
 
     private fun commit(text: String) {
         currentInputConnection?.commitText(text, 1)
+    }
+
+    /**
+     * Remembers the picto for the "Suggested" category, unless the field it went
+     * into asked not to be learned from — see [allowsUsageRecording].
+     *
+     * The field is read here rather than inside the coroutine on purpose. The
+     * question is about the field the word was actually committed to, and by the
+     * time a launched block runs the focus may have moved somewhere else; a
+     * password box that loses focus first would otherwise be recorded against
+     * whatever followed it.
+     */
+    private fun recordUsage(picto: PictoEntity) {
+        if (!currentInputEditorInfo.allowsUsageRecording()) return
+        scope.launch { locator.pictoRepository.recordUsage(picto) }
     }
 
     /**
@@ -406,7 +421,7 @@ class PictoKeyboardService : InputMethodService() {
         if (text.isBlank()) return
         commit(if (settings.addSpaceAfter) "$text " else text)
         tts.speak(text, picto.language)
-        scope.launch { locator.pictoRepository.recordUsage(picto) }
+        recordUsage(picto)
     }
 
     override fun onDestroy() {

@@ -4,4 +4,7 @@
          is long-pressed to send the pictogram as an image. -->
     <files-path name="pictos" path="pictos/" />
     <files-path name="shared" path="shared/" />
+    <!-- Where the camera app writes a picture taken for a category's picto. It
+         is cropped and copied into "pictos" from there, so this stays scratch. -->
+    <cache-path name="camera" path="camera/" />
 </paths>

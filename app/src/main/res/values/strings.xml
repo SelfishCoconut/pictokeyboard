@@ -115,6 +115,21 @@
     <string name="category_add">New category</string>
     <string name="category_edit">Edit category</string>
     <string name="category_name">Category name</string>
+    <string name="category_picto">Category picto</string>
+    <string name="category_picto_title">Choose the category picto</string>
+    <string name="category_picto_choose">Choose a picto</string>
+    <string name="category_picto_remove">Remove picto</string>
+    <string name="category_picto_chosen">Current category picto</string>
+    <!-- Spoken to a screen reader so a chosen picto is identifiable by name, not
+         just as "a picto". %1$s is the pictogram's keyword or label. -->
+    <string name="category_picto_chosen_named">Category picto: %1$s</string>
+    <string name="category_picto_searching">Searching ARASAAC</string>
+    <string name="category_picto_none">No picto</string>
+    <string name="category_picto_from_own">A symbol from this category</string>
+    <string name="category_picto_source_arasaac">Search ARASAAC</string>
+    <string name="category_picto_source_photo">Choose a photo</string>
+    <string name="category_picto_source_camera">Take a photo</string>
+    <string name="category_picto_save_failed">That picture could not be saved. Try another one.</string>
     <string name="category_frame_color">Frame colour</string>
     <string name="category_frame_style">Frame style</string>
     <string name="category_frame_thickness">Frame thickness</string>
