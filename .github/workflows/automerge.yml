@@ -12,6 +12,12 @@ name: Auto-merge
 # instrumented.yml and playstore-check.yml for why path filters and required
 # checks cannot coexist.
 #
+# Only PRs targeting `main` qualify, because `main` is the only branch with
+# required checks. A PR onto any other branch has nothing gating it, so enabling
+# auto-merge there means merging on no checks whatsoever -- #15 landed on the #14
+# branch in 60 seconds with six jobs still running. Stacked PRs therefore need a
+# deliberate human merge, which is the honest outcome rather than a loophole.
+#
 # The opt-out is draft: mark a PR draft to keep it from landing unattended.
 on:
   pull_request:
@@ -25,7 +31,9 @@ jobs:
   enable:
     name: enable auto-merge
     runs-on: ubuntu-latest
-    if: '!github.event.pull_request.draft'
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.base.ref == 'main'
     steps:
       # `synchronize` is in the trigger list above so that a PR opened before
       # this workflow existed picks auto-merge up on its next push, instead of
