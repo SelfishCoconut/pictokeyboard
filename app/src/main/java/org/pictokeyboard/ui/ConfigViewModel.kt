@@ -16,6 +16,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.prefs.Settings
+import org.pictokeyboard.data.repo.CategoryIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 
 /** Search panel UI state for the ARASAAC picker. */
@@ -68,12 +69,13 @@ class ConfigViewModel : ViewModel() {
         colorArgb: Int,
         borderStyle: String,
         borderWidthDp: Int,
+        icon: CategoryIcon = CategoryIcon.None,
     ) = viewModelScope.launch {
-        repo.addCategory(name, colorArgb, borderStyle, borderWidthDp)
+        repo.addCategory(name, colorArgb, borderStyle, borderWidthDp, icon)
     }
 
-    fun updateCategory(category: CategoryEntity) = viewModelScope.launch {
-        repo.updateCategory(category)
+    fun updateCategory(category: CategoryEntity, icon: CategoryIcon) = viewModelScope.launch {
+        repo.updateCategory(category, icon)
     }
 
     fun deleteCategory(category: CategoryEntity) = viewModelScope.launch {
@@ -147,6 +149,14 @@ class ConfigViewModel : ViewModel() {
 
     /** Decodes an image the user picked, downsampled, for the cropper. */
     suspend fun decodeImage(imageUri: Uri): android.graphics.Bitmap? = repo.loadImage(imageUri)
+
+    /**
+     * Saves a cropped image to the cache for use as a category's picto, calling
+     * back with its path — or with null if the write failed, which the picker
+     * surfaces rather than silently leaving the category unchanged.
+     */
+    fun saveIconImage(bitmap: android.graphics.Bitmap, onSaved: (String?) -> Unit) =
+        viewModelScope.launch { onSaved(repo.saveImage(bitmap)) }
 
     /** Adds a cropped image as a picto (the bitmap is saved to the cache). */
     fun addCroppedImagePicto(

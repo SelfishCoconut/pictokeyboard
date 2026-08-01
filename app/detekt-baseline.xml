@@ -7,46 +7,6 @@
     <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun labeledImage( source: java.io.File, id: String, caption: String, frameColor: Int, attribution: String?, mime: String, ): java.io.File?</ID>
     <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun sendPictoAsImage(picto: PictoEntity)</ID>
     <ID>EmptyFunctionBlock:TtsManager.kt$TtsManager.&lt;no name provided&gt;${}</ID>
-    <ID>FunctionNaming:AboutScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AboutScreen(onBack: (() -&gt; Unit)? = null)</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun CustomImageDialog( bitmap: Bitmap, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, Int?) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun Swatch(fill: Color, isSelected: Boolean, isNone: Boolean, onClick: () -&gt; Unit)</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun SwatchRow( label: String, values: List&lt;String&gt;, selected: String?, colorFor: (String) -&gt; Color, onSelect: (String?) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@OptIn(ExperimentalFoundationApi::class) @Composable private fun ResultsGrid( items: List&lt;ArasaacResult&gt;, selectedIds: Set&lt;Int&gt;, onToggle: (ArasaacResult) -&gt; Unit, onLongPick: (ArasaacResult) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:AppLocale.kt$@Composable fun ProvideAppLocale(language: String, content: @Composable () -&gt; Unit)</ID>
-    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun CategoryEditDialog( initial: CategoryEntity?, onDismiss: () -&gt; Unit, onSave: (String, Int, String, Int) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun ChooserCard( accent: Color, title: String, subtitle: String, thumbs: List&lt;String&gt;, highlighted: Boolean = false, onClick: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun NewCategoryChooserDialog( language: String, suggestedName: String, loadSuggested: suspend () -&gt; List&lt;org.pictokeyboard.data.db.UsageEntity&gt;, onDismiss: () -&gt; Unit, onBlank: () -&gt; Unit, onTemplate: (CategoryTemplate) -&gt; Unit, onSuggested: (List&lt;org.pictokeyboard.data.db.UsageEntity&gt;) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:Components.kt$@Composable fun BorderStylePicker( color: Color, selected: String, onSelect: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
-    <ID>FunctionNaming:Components.kt$@Composable fun ThicknessPicker( color: Color, selected: Int, onSelect: (Int) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
-    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun ColorPalettePicker( selected: Int, onSelect: (Int) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
-    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun PictoColorPicker( selected: Int?, onSelect: (Int?) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
-    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LanguageChips(selected: String, onSelect: (String) -&gt; Unit)</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BlindControlRow(icon: ImageVector, action: String, gesture: String)</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BlindControlsCard()</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BuildBoardCard(onClick: () -&gt; Unit)</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun SetupStep( index: Int, done: Boolean, title: String, doneTitle: String, action: String, onAction: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun StatCard(value: String, label: String, modifier: Modifier = Modifier)</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun TipRow(icon: ImageVector, text: String)</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun TipsCard()</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun WelcomeHero()</ID>
-    <ID>FunctionNaming:DashboardScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun DashboardScreen( viewModel: ConfigViewModel, onEnableKeyboard: () -&gt; Unit, onSelectKeyboard: () -&gt; Unit, onOpenBoard: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:ImageCropper.kt$@Composable fun CropImageDialog( imageUri: Uri, viewModel: ConfigViewModel, onDismiss: () -&gt; Unit, onCropped: (Bitmap) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:MainActivity.kt$@Composable private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings)</ID>
-    <ID>FunctionNaming:MainActivity.kt$@Composable private fun ConfigApp(viewModel: ConfigViewModel)</ID>
-    <ID>FunctionNaming:PictosScreen.kt$@Composable private fun EditPictoDialog( picto: PictoEntity, onDismiss: () -&gt; Unit, onSave: (PictoEntity) -&gt; Unit, onDelete: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:PictosScreen.kt$@Composable private fun PictoTile( picto: PictoEntity, frameColor: Color, borderStyle: String, borderWidthDp: Int, showLabel: Boolean, reordering: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onMoveUp: () -&gt; Unit, onMoveDown: () -&gt; Unit, onClick: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:PictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PictosScreen( viewModel: ConfigViewModel, categoryId: String, onBack: () -&gt; Unit, onAddPictos: () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SetPinDialog(onDismiss: () -&gt; Unit, onSet: (String) -&gt; Unit)</ID>
-    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SliderRow( label: String, value: Float, range: ClosedFloatingPointRange&lt;Float&gt;, steps: Int, valueText: String, onChange: (Float) -&gt; Unit, )</ID>
-    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -&gt; Unit)</ID>
-    <ID>FunctionNaming:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -&gt; Unit)? = null)</ID>
-    <ID>FunctionNaming:Theme.kt$@Composable fun PictoKeyboardTheme( darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit, )</ID>
-    <ID>FunctionNaming:UnlockScreen.kt$@Composable fun UnlockScreen( verify: suspend (String) -&gt; Boolean, onUnlocked: () -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>

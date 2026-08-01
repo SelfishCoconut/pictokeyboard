@@ -139,6 +139,9 @@ spotless {
 detekt {
     buildUponDefaultConfig = true
     allRules = false
+    // Overrides layered on the defaults -- currently just letting Composables
+    // keep their PascalCase names, which ktlint already allows above.
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     // The baseline records the debt that exists today so it does not block,
     // while any NEW finding fails the build. Regenerate it only when the debt
     // is genuinely paid down -- never to silence a fresh finding.
