@@ -1,9 +1,20 @@
 name: Instrumented tests
 
-# Path-filtered so it only fires when app code or build config changes --
-# doc-only and workflow-only PRs skip the emulator entirely. This is the
-# slowest job in the repo (roughly 8-12 minutes); the filter is what keeps it
-# affordable. No schedule: it runs on the change, not on the clock.
+# The slowest job in the repo. The two triggers are filtered differently on
+# purpose:
+#
+#   pull_request -- NOT filtered. These jobs are required checks, and a
+#     required check that does not run does not report, so GitHub blocks the
+#     merge forever waiting for a status that never arrives (shown only as
+#     "Expected", never as an error). A docs-only PR would be unmergeable.
+#     The cost is real -- roughly 8-12 minutes on PRs that cannot have broken
+#     anything -- and it is the price of these jobs being allowed to block a
+#     merge at all. An unenforceable test is not a gate.
+#
+#   push to main -- still filtered. Nothing gates on this run, so skipping it
+#     for doc-only merges just saves the time.
+#
+# No schedule: it runs on the change, not on the clock.
 on:
   push:
     branches: [main]
@@ -13,11 +24,6 @@ on:
       - "gradle/**"
       - "*.gradle.kts"
   pull_request:
-    paths:
-      - "app/src/**"
-      - "app/build.gradle.kts"
-      - "gradle/**"
-      - "*.gradle.kts"
   workflow_dispatch:
 
 concurrency:
