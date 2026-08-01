@@ -101,6 +101,17 @@
     <string name="category_add">Nueva categoría</string>
     <string name="category_edit">Editar categoría</string>
     <string name="category_name">Nombre de la categoría</string>
+    <string name="category_picto">Picto de la categoría</string>
+    <string name="category_picto_title">Elige el picto de la categoría</string>
+    <string name="category_picto_choose">Elegir un picto</string>
+    <string name="category_picto_remove">Quitar el picto</string>
+    <string name="category_picto_chosen">Picto actual de la categoría</string>
+    <string name="category_picto_none">Sin picto</string>
+    <string name="category_picto_from_own">Un símbolo de esta categoría</string>
+    <string name="category_picto_source_arasaac">Buscar en ARASAAC</string>
+    <string name="category_picto_source_photo">Elegir una foto</string>
+    <string name="category_picto_source_camera">Hacer una foto</string>
+    <string name="category_picto_save_failed">No se ha podido guardar esa imagen. Prueba con otra.</string>
     <string name="category_frame_color">Color del marco</string>
     <string name="category_frame_style">Estilo del marco</string>
     <string name="category_frame_thickness">Grosor del marco</string>

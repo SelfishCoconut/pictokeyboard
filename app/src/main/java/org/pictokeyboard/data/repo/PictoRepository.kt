@@ -102,13 +102,17 @@ class PictoRepository(
         colorArgb: Int,
         borderStyle: String = BorderStyles.SOLID,
         borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
+        icon: CategoryIcon = CategoryIcon.None,
     ): CategoryEntity {
+        val (iconArasaacId, iconImagePath) = resolveIcon(icon)
         val cat = CategoryEntity(
             id = "cat-" + UUID.randomUUID(),
             name = name,
             colorArgb = colorArgb,
             position = categoryDao.maxPosition() + 1,
             builtin = false,
+            iconArasaacId = iconArasaacId,
+            iconImagePath = iconImagePath,
             borderStyle = borderStyle,
             borderWidthDp = borderWidthDp,
         )
@@ -152,7 +156,35 @@ class PictoRepository(
             cat
         }
 
-    suspend fun updateCategory(category: CategoryEntity) = categoryDao.update(category)
+    /**
+     * Saves the category editor's changes, [icon] included. The icon is resolved
+     * — and downloaded, if it is a fresh ARASAAC pick — before the single row
+     * update, so the keyboard chip never flickers through a half-applied state.
+     */
+    suspend fun updateCategory(category: CategoryEntity, icon: CategoryIcon) {
+        val (iconArasaacId, iconImagePath) = resolveIcon(icon)
+        categoryDao.update(category.copy(iconArasaacId = iconArasaacId, iconImagePath = iconImagePath))
+    }
+
+    /**
+     * Turns a picker choice into the (id, path) pair a category stores.
+     *
+     * A fresh ARASAAC pick is cached here so the keyboard keeps showing it
+     * offline. A failed download still stores the id: the chip then renders from
+     * the CDN, and [warmImageCache] retries on a later launch — a category that
+     * shows a picto only when online beats one that shows nothing ever.
+     */
+    private suspend fun resolveIcon(icon: CategoryIcon): Pair<Int?, String?> = when (icon) {
+        CategoryIcon.None -> null to null
+        is CategoryIcon.Arasaac -> icon.id to imageCache.downloadArasaac(icon.id)
+        is CategoryIcon.Local -> icon.arasaacId to icon.path
+    }
+
+    /**
+     * Saves [bitmap] into the image cache and returns its path, for a photo the
+     * caregiver picked as a category's picto rather than as a picto of its own.
+     */
+    suspend fun saveImage(bitmap: Bitmap): String? = imageCache.saveBitmap(bitmap)
 
     suspend fun deleteCategory(category: CategoryEntity) = categoryDao.delete(category)
 
