@@ -16,11 +16,25 @@ import java.io.File
  */
 sealed interface CategoryIcon {
 
+    /**
+     * What to call this picto out loud: the ARASAAC keyword, or the label of the
+     * category's own picto that was promoted. Null when there is nothing to say —
+     * an imported photo has no name, and a picto restored from the database has
+     * lost the one it was picked under, since no column stores it.
+     *
+     * This exists for the caregiver who cannot see the preview. Without it every
+     * picto announces identically and a mis-tap is indistinguishable from the
+     * right choice, which makes the picker operable but not verifiable.
+     */
+    val label: String?
+
     /** No picto: the category is shown by its name alone, as today. */
-    data object None : CategoryIcon
+    data object None : CategoryIcon {
+        override val label: String? = null
+    }
 
     /** An ARASAAC pictogram just picked by search; its image is not cached yet. */
-    data class Arasaac(val id: Int) : CategoryIcon
+    data class Arasaac(val id: Int, override val label: String? = null) : CategoryIcon
 
     /**
      * An image already in the local cache — one of the category's own pictos
@@ -28,7 +42,7 @@ sealed interface CategoryIcon {
      * carried over when the source was an ARASAAC picto, so the chip can still
      * fall back to the CDN if the cached file is ever lost.
      */
-    data class Local(val path: String, val arasaacId: Int? = null) : CategoryIcon
+    data class Local(val path: String, val arasaacId: Int? = null, override val label: String? = null) : CategoryIcon
 }
 
 /**
@@ -64,8 +78,12 @@ fun CategoryIcon.previewModel(): Any? = when (this) {
  * path to a picture, and usually the right one: the picture for *Food* is nearly
  * always already inside *Food*.
  */
-fun PictoEntity.asCategoryIcon(): CategoryIcon? = when {
-    imagePath != null -> CategoryIcon.Local(imagePath, arasaacId)
-    arasaacId != null -> CategoryIcon.Arasaac(arasaacId)
-    else -> null
+fun PictoEntity.asCategoryIcon(): CategoryIcon? {
+    // Same name the row announces, so picking one does not rename it mid-gesture.
+    val name = label.ifBlank { spokenText }
+    return when {
+        imagePath != null -> CategoryIcon.Local(imagePath, arasaacId, name)
+        arasaacId != null -> CategoryIcon.Arasaac(arasaacId, name)
+        else -> null
+    }
 }

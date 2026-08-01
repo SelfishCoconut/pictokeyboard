@@ -119,6 +119,10 @@
     <string name="category_picto_choose">Choose a picto</string>
     <string name="category_picto_remove">Remove picto</string>
     <string name="category_picto_chosen">Current category picto</string>
+    <!-- Spoken to a screen reader so a chosen picto is identifiable by name, not
+         just as "a picto". %1$s is the pictogram's keyword or label. -->
+    <string name="category_picto_chosen_named">Category picto: %1$s</string>
+    <string name="category_picto_searching">Searching ARASAAC</string>
     <string name="category_picto_none">No picto</string>
     <string name="category_picto_from_own">A symbol from this category</string>
     <string name="category_picto_source_arasaac">Search ARASAAC</string>

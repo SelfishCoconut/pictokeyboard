@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -49,6 +51,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -91,10 +97,11 @@ fun CategoryIconField(
             OutlinedButton(onClick = onChoose) {
                 Text(stringResource(R.string.category_picto_choose))
             }
-            if (icon != CategoryIcon.None) {
-                TextButton(onClick = onClear) {
-                    Text(stringResource(R.string.category_picto_remove))
-                }
+            // Kept mounted and disabled rather than removed when there is nothing
+            // to clear: unmounting it drops accessibility focus mid-gesture, which
+            // silently throws a screen-reader user back to the top of the editor.
+            TextButton(onClick = onClear, enabled = icon != CategoryIcon.None) {
+                Text(stringResource(R.string.category_picto_remove))
             }
         }
     }
@@ -108,15 +115,28 @@ fun CategoryIconField(
 @Composable
 private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Unit) {
     val model = icon.previewModel()
+    // Pictos are drawn for a white background, so the plate stays white under one.
+    // The empty state is text, not a picto, and needs the themed pair instead --
+    // on white it would be near-invisible in dark mode.
+    val plate = if (model == null) MaterialTheme.colorScheme.surfaceVariant else Color.White
+    val spoken = icon.label
+        ?.let { stringResource(R.string.category_picto_chosen_named, it) }
+        ?: stringResource(R.string.category_picto_chosen)
     Box(
         contentAlignment = Alignment.Center,
+        // A floor rather than a fixed size, so "No picto" can grow at a large font
+        // scale instead of clipping to a sliver. The picto itself is bounded
+        // below -- without that the tile stretches to fill the row.
         modifier = Modifier
-            .size(72.dp)
-            .background(Color.White, RoundedCornerShape(12.dp))
+            .sizeIn(minWidth = 72.dp, minHeight = 72.dp)
+            .background(plate, RoundedCornerShape(12.dp))
             .categoryFrame(accent, BorderStyles.DEFAULT_WIDTH_DP.dp, BorderStyles.SOLID, 12.dp)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, onClickLabel = stringResource(R.string.category_picto_choose))
             .padding(8.dp)
-            .semantics(mergeDescendants = true) {},
+            // Polite, so closing the picker speaks the picto just chosen. Without
+            // it the caregiver who cannot see the tile gets no confirmation at all
+            // and cannot tell a right pick from a mis-tap.
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
     ) {
         if (model == null) {
             Text(
@@ -127,8 +147,11 @@ private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Un
         } else {
             AsyncImage(
                 model = model,
-                contentDescription = stringResource(R.string.category_picto_chosen),
-                modifier = Modifier.fillMaxSize(),
+                contentDescription = spoken,
+                // 72dp tile less its 8dp padding. Fixed, not fillMaxSize: the box
+                // has no maximum any more, so the image would drive it as wide as
+                // the row allows and shove the buttons off the dialog.
+                modifier = Modifier.size(56.dp),
             )
         }
     }
@@ -202,9 +225,9 @@ fun CategoryIconPickerDialog(
             viewModel = viewModel,
             language = language,
             onDismiss = { searching = false },
-            onPicked = { id ->
+            onPicked = { id, keyword ->
                 searching = false
-                onPicked(CategoryIcon.Arasaac(id))
+                onPicked(CategoryIcon.Arasaac(id, keyword))
             },
         )
     }
@@ -270,14 +293,22 @@ private fun SourceList(
                 stringResource(R.string.category_picto_save_failed),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
+                // Assertive: a failed save looks exactly like a successful one to
+                // someone who cannot see the tile, and they will re-shoot the photo
+                // indefinitely unless the failure interrupts them.
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
             )
         }
-        if (own.isNotEmpty()) {
+        // Gated on what can actually be offered, not on the raw list: a picto
+        // still waiting on its first download has nothing to promote, and
+        // filtering inside the row would leave this header standing over nothing.
+        val offerable = own.mapNotNull { picto -> picto.asCategoryIcon()?.let { picto to it } }
+        if (offerable.isNotEmpty()) {
             Text(
                 stringResource(R.string.category_picto_from_own),
                 style = MaterialTheme.typography.labelLarge,
             )
-            OwnPictoRow(pictos = own, onPick = sources.onPick)
+            OwnPictoRow(pictos = offerable, onPick = sources.onPick)
         }
         SourceButton(
             icon = Icons.Filled.Search,
@@ -301,25 +332,34 @@ private fun SourceList(
 
 /** The category's own symbols, offered first — usually the right picture already. */
 @Composable
-private fun OwnPictoRow(pictos: List<PictoEntity>, onPick: (CategoryIcon) -> Unit) {
+private fun OwnPictoRow(
+    pictos: List<Pair<PictoEntity, CategoryIcon>>,
+    onPick: (CategoryIcon) -> Unit,
+) {
+    val choose = stringResource(R.string.category_picto_choose)
     Row(
         modifier = Modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        pictos.forEach { picto ->
-            // A picto still waiting on its first download has nothing to promote.
-            val choice = picto.asCategoryIcon() ?: return@forEach
+        pictos.forEach { (picto, choice) ->
+            val name = picto.label.ifBlank { picto.spokenText }
             Box(
                 contentAlignment = Alignment.Center,
+                // The name goes on the tappable box itself rather than on the
+                // image inside it, so the node a screen reader focuses is the same
+                // node that carries the name -- not two nodes that have to be
+                // merged for the announcement to make sense.
                 modifier = Modifier
                     .size(72.dp)
                     .background(Color.White, RoundedCornerShape(12.dp))
-                    .clickable { onPick(choice) }
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                    .clickable(onClickLabel = choose, role = Role.Button) { onPick(choice) }
+                    .semantics(mergeDescendants = true) { contentDescription = name }
                     .padding(6.dp),
             ) {
                 AsyncImage(
                     model = choice.previewModel(),
-                    contentDescription = picto.label.ifBlank { picto.spokenText },
+                    contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -349,7 +389,7 @@ private fun ArasaacIconSearchDialog(
     viewModel: ConfigViewModel,
     language: String,
     onDismiss: () -> Unit,
-    onPicked: (Int) -> Unit,
+    onPicked: (Int, String) -> Unit,
 ) {
     val state by viewModel.search.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
@@ -370,7 +410,10 @@ private fun ArasaacIconSearchDialog(
         },
         title = { Text(stringResource(R.string.category_picto_source_arasaac)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
@@ -389,9 +432,9 @@ private fun ArasaacIconSearchDialog(
                     keyboardActions = KeyboardActions(onSearch = { run() }),
                 )
                 LanguageChips(lang) { lang = it }
-                SearchResults(state = state) { id ->
+                SearchResults(state = state) { id, keyword ->
                     viewModel.clearSearch()
-                    onPicked(id)
+                    onPicked(id, keyword)
                 }
             }
         },
@@ -409,11 +452,26 @@ private fun ArasaacIconSearchDialog(
 
 /** ARASAAC results, one tap being the whole choice. Bounded so the dialog still fits on a small screen. */
 @Composable
-private fun SearchResults(state: SearchState, onPick: (Int) -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp, max = 320.dp)) {
+private fun SearchResults(state: SearchState, onPick: (Int, String) -> Unit) {
+    // Hoisted: stringResource cannot be called inside a semantics lambda.
+    val searchingLabel = stringResource(R.string.category_picto_searching)
+    Box(
+        // A live region because every one of these states arrives with no other
+        // signal: without it, searching offline is indistinguishable from silence
+        // and the caregiver has no way to learn the search failed.
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 96.dp, max = 320.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
         when (state) {
             SearchState.Idle -> Unit
-            SearchState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+            // A bare spinner announces nothing, so the state is said in words.
+            SearchState.Loading -> CircularProgressIndicator(
+                Modifier
+                    .align(Alignment.Center)
+                    .semantics { contentDescription = searchingLabel },
+            )
             SearchState.Empty ->
                 Text(stringResource(R.string.picto_no_results), Modifier.align(Alignment.Center))
             SearchState.Error ->
@@ -430,7 +488,11 @@ private fun SearchResults(state: SearchState, onPick: (Int) -> Unit) {
                         modifier = Modifier
                             .aspectRatio(1f)
                             .background(Color.White, RoundedCornerShape(12.dp))
-                            .clickable { onPick(item.id) }
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                            .clickable(
+                                onClickLabel = stringResource(R.string.category_picto_choose),
+                                role = Role.Button,
+                            ) { onPick(item.id, item.keyword) }
                             .padding(6.dp),
                     )
                 }

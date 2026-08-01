@@ -24,11 +24,16 @@ class CategoryIconTest {
         iconImagePath = imagePath,
     )
 
-    private fun picto(arasaacId: Int? = null, imagePath: String? = null) = PictoEntity(
+    private fun picto(
+        arasaacId: Int? = null,
+        imagePath: String? = null,
+        label: String = "apple",
+        spokenText: String = "apple",
+    ) = PictoEntity(
         id = "pic-1",
         categoryId = "cat-1",
-        label = "apple",
-        spokenText = "apple",
+        label = label,
+        spokenText = spokenText,
         language = "en",
         arasaacId = arasaacId,
         imagePath = imagePath,
@@ -80,14 +85,40 @@ class CategoryIconTest {
     @Test
     fun `a promoted picto keeps its arasaac id for the CDN fallback`() {
         assertEquals(
-            CategoryIcon.Local("/data/pictos/arasaac_2309.png", 2309),
+            CategoryIcon.Local("/data/pictos/arasaac_2309.png", 2309, "apple"),
             picto(arasaacId = 2309, imagePath = "/data/pictos/arasaac_2309.png").asCategoryIcon(),
         )
     }
 
     @Test
     fun `a picto with nothing cached yet is promoted by id`() {
-        assertEquals(CategoryIcon.Arasaac(2309), picto(arasaacId = 2309).asCategoryIcon())
+        assertEquals(CategoryIcon.Arasaac(2309, "apple"), picto(arasaacId = 2309).asCategoryIcon())
+    }
+
+    @Test
+    fun `a promoted picto carries its name so a screen reader can confirm the pick`() {
+        // Without this the tile announces "Current category picto" for every
+        // choice, and a caregiver who cannot see it has no way to tell a mis-tap
+        // from the symbol they meant.
+        assertEquals("apple", picto(arasaacId = 2309).asCategoryIcon()?.label)
+    }
+
+    @Test
+    fun `a picto with a blank label falls back to what it speaks`() {
+        // Matches what the picker row already announces, so choosing one does not
+        // rename it halfway through the gesture.
+        assertEquals(
+            "manzana",
+            picto(arasaacId = 2309, label = "  ", spokenText = "manzana").asCategoryIcon()?.label,
+        )
+    }
+
+    @Test
+    fun `a picto read back from the database has no name to announce`() {
+        // No column stores it, so the tile falls back to the generic description
+        // rather than inventing one. Honest silence beats a wrong name.
+        assertNull(category(arasaacId = 2309).currentIcon().label)
+        assertNull(category(imagePath = "/data/pictos/custom_abc.png").currentIcon().label)
     }
 
     @Test
