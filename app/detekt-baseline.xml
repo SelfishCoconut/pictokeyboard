@@ -4,16 +4,57 @@
   <CurrentIssues>
     <ID>CyclomaticComplexMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>CyclomaticComplexMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
-    <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun labeledImage( source: java.io.File, id: String, caption: String, frameColor: Int, attribution: String?, mime: String, ): java.io.File?</ID>
-    <ID>CyclomaticComplexMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun sendPictoAsImage(picto: PictoEntity)</ID>
+    <ID>CyclomaticComplexMethod:PictoImageSharer.kt$PictoImageSharer$private suspend fun labeledImage(card: Card): File?</ID>
     <ID>EmptyFunctionBlock:TtsManager.kt$TtsManager.&lt;no name provided&gt;${}</ID>
+    <ID>FunctionNaming:AboutScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AboutScreen(onBack: (() -&gt; Unit)? = null)</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun CustomImageDialog( bitmap: Bitmap, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, Int?) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun Swatch(fill: Color, isSelected: Boolean, isNone: Boolean, onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@Composable private fun SwatchRow( label: String, values: List&lt;String&gt;, selected: String?, colorFor: (String) -&gt; Color, onSelect: (String?) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@OptIn(ExperimentalFoundationApi::class) @Composable private fun ResultsGrid( items: List&lt;ArasaacResult&gt;, selectedIds: Set&lt;Int&gt;, onToggle: (ArasaacResult) -&gt; Unit, onLongPick: (ArasaacResult) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:AppLocale.kt$@Composable fun ProvideAppLocale(language: String, content: @Composable () -&gt; Unit)</ID>
+    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun CategoryEditDialog( initial: CategoryEntity?, onDismiss: () -&gt; Unit, onSave: (String, Int, String, Int) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun ChooserCard( accent: Color, title: String, subtitle: String, thumbs: List&lt;String&gt;, highlighted: Boolean = false, onClick: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:CategoriesScreen.kt$@Composable private fun NewCategoryChooserDialog( language: String, suggestedName: String, loadSuggested: suspend () -&gt; List&lt;org.pictokeyboard.data.db.UsageEntity&gt;, onDismiss: () -&gt; Unit, onBlank: () -&gt; Unit, onTemplate: (CategoryTemplate) -&gt; Unit, onSuggested: (List&lt;org.pictokeyboard.data.db.UsageEntity&gt;) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:Components.kt$@Composable fun BorderStylePicker( color: Color, selected: String, onSelect: (String) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:Components.kt$@Composable fun ThicknessPicker( color: Color, selected: Int, onSelect: (Int) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun ColorPalettePicker( selected: Int, onSelect: (Int) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalLayoutApi::class) @Composable fun PictoColorPicker( selected: Int?, onSelect: (Int?) -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:Components.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LanguageChips(selected: String, onSelect: (String) -&gt; Unit)</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BlindControlRow(icon: ImageVector, action: String, gesture: String)</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BlindControlsCard()</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun BuildBoardCard(onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun SetupStep( index: Int, done: Boolean, title: String, doneTitle: String, action: String, onAction: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun StatCard(value: String, label: String, modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun TipRow(icon: ImageVector, text: String)</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun TipsCard()</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@Composable private fun WelcomeHero()</ID>
+    <ID>FunctionNaming:DashboardScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun DashboardScreen( viewModel: ConfigViewModel, onEnableKeyboard: () -&gt; Unit, onSelectKeyboard: () -&gt; Unit, onOpenBoard: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:ImageCropper.kt$@Composable fun CropImageDialog( imageUri: Uri, viewModel: ConfigViewModel, onDismiss: () -&gt; Unit, onCropped: (Bitmap) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:MainActivity.kt$@Composable private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings)</ID>
+    <ID>FunctionNaming:MainActivity.kt$@Composable private fun ConfigApp(viewModel: ConfigViewModel)</ID>
+    <ID>FunctionNaming:PictosScreen.kt$@Composable private fun EditPictoDialog( picto: PictoEntity, onDismiss: () -&gt; Unit, onSave: (PictoEntity) -&gt; Unit, onDelete: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:PictosScreen.kt$@Composable private fun PictoTile( picto: PictoEntity, frameColor: Color, borderStyle: String, borderWidthDp: Int, showLabel: Boolean, reordering: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onMoveUp: () -&gt; Unit, onMoveDown: () -&gt; Unit, onClick: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:PictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PictosScreen( viewModel: ConfigViewModel, categoryId: String, onBack: () -&gt; Unit, onAddPictos: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SetPinDialog(onDismiss: () -&gt; Unit, onSet: (String) -&gt; Unit)</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SliderRow( label: String, value: Float, range: ClosedFloatingPointRange&lt;Float&gt;, steps: Int, valueText: String, onChange: (Float) -&gt; Unit, )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -&gt; Unit)</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -&gt; Unit)? = null)</ID>
+    <ID>FunctionNaming:Theme.kt$@Composable fun PictoKeyboardTheme( darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:UnlockScreen.kt$@Composable fun UnlockScreen( verify: suspend (String) -&gt; Boolean, onUnlocked: () -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
+    <ID>LongMethod:AddPictosDialogs.kt$@Composable internal fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@Composable private fun ImportFromCategoriesDialog( viewModel: ConfigViewModel, currentCategoryId: String, onDismiss: () -&gt; Unit, onAdd: (List&lt;Pair&lt;PictoEntity, Int&gt;&gt;) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@Composable private fun PictoDetailDialog( arasaacId: Int, initialText: String, initialLanguage: String, onDismiss: () -&gt; Unit, onConfirm: (String, String, String, ArasaacOptions, Int?) -&gt; Unit, )</ID>
     <ID>LongMethod:AddPictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class) @Composable fun AddPictosScreen( viewModel: ConfigViewModel, categoryId: String, defaultLanguage: String, onBack: () -&gt; Unit, )</ID>
     <ID>LongMethod:CategoriesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun CategoriesScreen( viewModel: org.pictokeyboard.ui.ConfigViewModel, onBack: (() -&gt; Unit)? = null, onOpenCategory: (String) -&gt; Unit, )</ID>
     <ID>LongMethod:DashboardScreen.kt$@Composable private fun SetupStatusCard( status: KeyboardStatus, onEnable: () -&gt; Unit, onSelect: () -&gt; Unit, )</ID>
     <ID>LongMethod:MainActivity.kt$@Composable private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings)</ID>
-    <ID>LongMethod:PictoKeyboardService.kt$PictoKeyboardService$private fun labeledImage( source: java.io.File, id: String, caption: String, frameColor: Int, attribution: String?, mime: String, ): java.io.File?</ID>
+    <ID>LongMethod:PictoImageSharer.kt$PictoImageSharer$private suspend fun labeledImage(card: Card): File?</ID>
     <ID>LongMethod:PictosScreen.kt$@Composable private fun EditPictoDialog( picto: PictoEntity, onDismiss: () -&gt; Unit, onSave: (PictoEntity) -&gt; Unit, onDelete: () -&gt; Unit, )</ID>
     <ID>LongMethod:PictosScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PictosScreen( viewModel: ConfigViewModel, categoryId: String, onBack: () -&gt; Unit, onAddPictos: () -&gt; Unit, )</ID>
     <ID>LongMethod:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -&gt; Unit)? = null)</ID>
@@ -29,20 +70,6 @@
     <ID>LongParameterList:PictoRepository.kt$PictoRepository$( categoryId: String, result: ArasaacResult, spokenText: String, label: String, language: String, options: ArasaacOptions = ArasaacOptions(), colorArgbOverride: Int? = null, )</ID>
     <ID>LongParameterList:PictosScreen.kt$( picto: PictoEntity, frameColor: Color, borderStyle: String, borderWidthDp: Int, showLabel: Boolean, reordering: Boolean, canMoveUp: Boolean, canMoveDown: Boolean, onMoveUp: () -&gt; Unit, onMoveDown: () -&gt; Unit, onClick: () -&gt; Unit, )</ID>
     <ID>LongParameterList:SettingsScreen.kt$( label: String, value: Float, range: ClosedFloatingPointRange&lt;Float&gt;, steps: Int, valueText: String, onChange: (Float) -&gt; Unit, )</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0x22000000</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0x44000000</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF1A1A1A</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF4B2E1E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF616161</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF6B4423</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFF8B5A2B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFB5482E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFB87A4B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFBDBDBD</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFD49E7A</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFE6C76E</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFF0C27B</ID>
-    <ID>MagicNumber:AddPictosScreen.kt$0xFFF1C9A5</ID>
     <ID>MagicNumber:AppDatabase.kt$AppDatabase.Companion.&lt;no name provided&gt;$3</ID>
     <ID>MagicNumber:BlindKeyboardView.kt$BlindKeyboardView$14</ID>
     <ID>MagicNumber:BlindKeyboardView.kt$BlindKeyboardView$28</ID>
@@ -134,8 +161,8 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$11461</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$11538</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2299</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2339</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23392</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2339</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2367</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23710</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$23718</ID>
@@ -149,12 +176,12 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$24825</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2494</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$24976</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2519</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25191</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2519</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2530</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2541</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$2549</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25498</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$2549</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$2573</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25790</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$25900</ID>
@@ -175,8 +202,8 @@
     <ID>MagicNumber:DefaultData.kt$DefaultData$31310</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$3155</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$3241</ID>
-    <ID>MagicNumber:DefaultData.kt$DefaultData$3244</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32446</ID>
+    <ID>MagicNumber:DefaultData.kt$DefaultData$3244</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32464</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32648</ID>
     <ID>MagicNumber:DefaultData.kt$DefaultData$32669</ID>
@@ -295,8 +322,8 @@
     <ID>MaxLineLength:UsageDao.kt$UsageDao$"UPDATE usage SET count = count + 1, lastUsedAt = :now, label = :label, spokenText = :spokenText, language = :language WHERE id = :id"</ID>
     <ID>ReturnCount:ConfigViewModel.kt$ConfigViewModel$private fun &lt;T&gt; movedBy(list: List&lt;T&gt;, match: (T) -&gt; Boolean, up: Boolean): List&lt;T&gt;?</ID>
     <ID>ReturnCount:ImageCropper.kt$CropImageView$fun getCroppedBitmap(out: Int = 512): Bitmap?</ID>
+    <ID>ReturnCount:PictoImageSharer.kt$PictoImageSharer$suspend fun send( picto: PictoEntity, frameColor: Int, attribution: String?, currentTarget: () -&gt; Target?, onError: (Int) -&gt; Unit, )</ID>
     <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun deleteLastWord()</ID>
-    <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun sendPictoAsImage(picto: PictoEntity)</ID>
     <ID>ReturnCount:SettingsStore.kt$SettingsStore$suspend fun verifyPin(pin: String): Boolean</ID>
     <ID>TooManyFunctions:CategoryDao.kt$CategoryDao</ID>
     <ID>TooManyFunctions:ConfigViewModel.kt$ConfigViewModel : ViewModel</ID>

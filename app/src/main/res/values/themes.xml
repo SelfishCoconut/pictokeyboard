@@ -6,19 +6,39 @@
         targeting SDK 35, and on older releases enableEdgeToEdge() overrides it.
         The bar is transparent and the colour behind it comes from whatever the
         screen draws there: the TopAppBar container on every screen that has one.
-    -->
-    <style name="Theme.PictoKeyboard" parent="Theme.Material3.DayNight.NoActionBar" />
 
-    <style name="KbControlKey">
+        windowBackground is `paper` so a cold start opens onto the app's own colour
+        instead of flashing the platform's white and then repainting.
+    -->
+    <style name="Theme.PictoKeyboard" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/paper</item>
+    </style>
+
+    <!--
+        The keyboard's action row. Shared geometry lives here; the two subclasses
+        differ only in face, because a row of five identical grey keys tells the
+        user nothing about which one they want.
+    -->
+    <style name="KbKey">
         <item name="android:layout_marginStart">3dp</item>
         <item name="android:layout_marginEnd">3dp</item>
         <item name="android:minWidth">48dp</item>
         <item name="android:paddingStart">10dp</item>
         <item name="android:paddingEnd">10dp</item>
-        <item name="android:background">@drawable/bg_control_key</item>
-        <item name="android:textColor">@color/kb_text</item>
+        <item name="android:fontFamily">@font/atkinson_hyperlegible</item>
         <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="KbKey.Recessive">
+        <item name="android:background">@drawable/bg_key_recessive</item>
+        <item name="android:textColor">@color/key_text_recessive</item>
+    </style>
+
+    <style name="KbKey.Primary">
+        <item name="android:background">@drawable/bg_key_primary</item>
+        <item name="android:textColor">@color/key_text_primary</item>
     </style>
 
 </resources>

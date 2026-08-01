@@ -1,6 +1,6 @@
 package org.pictokeyboard.data.repo
 
-import org.pictokeyboard.data.arasaac.ImageCache
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
@@ -67,7 +67,9 @@ fun CategoryEntity.currentIcon(): CategoryIcon = when {
  */
 fun CategoryIcon.previewModel(): Any? = when (this) {
     CategoryIcon.None -> null
-    is CategoryIcon.Arasaac -> ImageCache.arasaacImageUrl(id)
+    // ArasaacUrls.image(id) defaults to FULL (500px) -- the same URL the removed
+    // ImageCache.arasaacImageUrl built, so the rendered picto is unchanged.
+    is CategoryIcon.Arasaac -> ArasaacUrls.image(id)
     is CategoryIcon.Local -> File(path)
 }
 

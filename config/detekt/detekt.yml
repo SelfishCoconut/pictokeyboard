@@ -1,9 +1,0 @@
-# Only the rules whose defaults do not fit this project. Everything else comes
-# from detekt's own defaults, since buildUponDefaultConfig is on.
-naming:
-  FunctionNaming:
-    # Composables are PascalCase by Compose API convention, not a violation.
-    # ktlint is already configured this way (ktlintRules in app/build.gradle.kts);
-    # this stops detekt from disagreeing with it and forcing every new Composable
-    # into the baseline, which would let the baseline grow forever.
-    ignoreAnnotated: ['Composable']

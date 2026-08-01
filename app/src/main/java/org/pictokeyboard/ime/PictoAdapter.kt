@@ -1,26 +1,43 @@
 package org.pictokeyboard.ime
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
+import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
 
 class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLongClick: (PictoEntity) -> Unit = {}) :
-    RecyclerView.Adapter<PictoAdapter.VH>() {
+    ListAdapter<PictoAdapter.Tile, PictoAdapter.VH>(DIFF) {
 
-    private var items: List<PictoEntity> = emptyList()
-    private var categoryColor: Int = Color.LTGRAY
-    private var borderStyle: String = BorderStyles.SOLID
-    private var borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP
-    private var showLabels: Boolean = true
+    /**
+     * One key as it should be drawn: the picto plus every presentation choice
+     * that affects it.
+     *
+     * The style used to live in adapter fields and be repainted from
+     * `submitList`'s completion callback. That callback is not guaranteed to run
+     * -- AsyncListDiffer drops it when a newer submit supersedes the diff -- so a
+     * style change arriving just before another list update was lost for good,
+     * leaving tiles painted in the previous category's colour. Folding the style
+     * into the item makes it something DiffUtil can see, and removes the need
+     * for a callback at all.
+     */
+    data class Tile(
+        val picto: PictoEntity,
+        val frameColor: Int,
+        val borderStyle: String,
+        val borderWidthDp: Int,
+        val showLabel: Boolean,
+    )
 
     fun submit(
         pictos: List<PictoEntity>,
@@ -29,12 +46,18 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
         borderStyle: String = BorderStyles.SOLID,
         borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
     ) {
-        this.items = pictos
-        this.categoryColor = categoryColor
-        this.borderStyle = borderStyle
-        this.borderWidthDp = borderWidthDp
-        this.showLabels = showLabels
-        notifyDataSetChanged()
+        submitList(
+            pictos.map { picto ->
+                Tile(
+                    picto = picto,
+                    // Borrowed pictos keep their original category's colour.
+                    frameColor = picto.colorArgbOverride ?: categoryColor,
+                    borderStyle = borderStyle,
+                    borderWidthDp = borderWidthDp,
+                    showLabel = showLabels && picto.label.isNotBlank(),
+                )
+            },
+        )
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -43,10 +66,8 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
         return VH(view)
     }
 
-    override fun getItemCount(): Int = items.size
-
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(items[position], categoryColor, borderStyle, borderWidthDp, showLabels)
+        holder.bind(getItem(position))
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
@@ -54,15 +75,16 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
         private val image: ImageView = view.findViewById(R.id.picto_image)
         private val label: TextView = view.findViewById(R.id.picto_label)
 
-        fun bind(picto: PictoEntity, categoryColor: Int, borderStyle: String, borderWidthDp: Int, showLabels: Boolean) {
-            // Borrowed pictos keep their original category's colour via the override.
-            val color = picto.colorArgbOverride ?: categoryColor
+        fun bind(item: Tile) {
+            val picto = item.picto
             tile.background = ViewStyles.framedTile(
-                colorArgb = color,
-                strokeWidthPx = dp(borderWidthDp),
-                cornerRadiusPx = dp(12).toFloat(),
-                fillArgb = Color.WHITE,
-                borderStyle = borderStyle,
+                colorArgb = item.frameColor,
+                strokeWidthPx = dp(item.borderWidthDp),
+                cornerRadiusPx = dp(TILE_CORNER_DP).toFloat(),
+                // `tile`, not white-in-light-only: ARASAAC art is black line work,
+                // so the tile stays white in dark mode too.
+                fillArgb = ContextCompat.getColor(itemView.context, R.color.tile),
+                borderStyle = item.borderStyle,
             )
 
             val path = picto.imagePath
@@ -73,13 +95,13 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
                     error(R.drawable.ic_picto_placeholder)
                 }
             } else if (picto.arasaacId != null) {
-                image.load("https://static.arasaac.org/pictograms/${picto.arasaacId}/${picto.arasaacId}_500.png")
+                image.load(ArasaacUrls.image(picto.arasaacId))
             } else {
                 image.setImageResource(R.drawable.ic_picto_placeholder)
             }
 
             label.text = picto.label
-            label.visibility = if (showLabels && picto.label.isNotBlank()) View.VISIBLE else View.GONE
+            label.visibility = if (item.showLabel) View.VISIBLE else View.GONE
 
             itemView.setOnClickListener { onClick(picto) }
             itemView.setOnLongClickListener {
@@ -90,5 +112,17 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
 
         private fun dp(value: Int): Int =
             (value * itemView.resources.displayMetrics.density).toInt()
+    }
+
+    companion object {
+        private const val TILE_CORNER_DP = 12
+
+        val DIFF = object : DiffUtil.ItemCallback<Tile>() {
+            override fun areItemsTheSame(oldItem: Tile, newItem: Tile) =
+                oldItem.picto.id == newItem.picto.id
+
+            override fun areContentsTheSame(oldItem: Tile, newItem: Tile) =
+                oldItem == newItem
+        }
     }
 }

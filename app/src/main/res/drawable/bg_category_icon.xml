@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A white disc behind a category's pictogram on the spine.
+
+    ARASAAC artwork is black line work. Without this the icon is drawn straight
+    onto the chip: over a 12% tint of the hue on near-black `paper` in dark mode it
+    disappears entirely, and on a selected chip whose hue is itself dark (the
+    palette includes black) it disappears in both schemes. The disc is `tile`, for
+    exactly the reason `tile` stays white.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/tile" />
+</shape>

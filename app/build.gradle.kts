@@ -138,10 +138,15 @@ spotless {
 
 detekt {
     buildUponDefaultConfig = true
+    // Overlay for the handful of default rules that misread Compose. See the
+    // file's own header for why each entry is a misconfiguration and not a
+    // suppression.
+    // One config, not two: `setFrom` REPLACES rather than appends, so a second
+    // call silently discards the first. #34 and #14 each added their own file;
+    // this one is the superset (it carries #34's FunctionNaming stanza verbatim
+    // plus four more overlays), so the other was removed rather than layered.
+    config.setFrom(files("config/detekt.yml"))
     allRules = false
-    // Overrides layered on the defaults -- currently just letting Composables
-    // keep their PascalCase names, which ktlint already allows above.
-    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     // The baseline records the debt that exists today so it does not block,
     // while any NEW finding fails the build. Regenerate it only when the debt
     // is genuinely paid down -- never to silence a fresh finding.

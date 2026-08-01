@@ -26,15 +26,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
+import org.pictokeyboard.ui.theme.ScreenPreviews
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Stateful wrapper: turns a URL into a browser intent. */
 @Composable
 fun AboutScreen(onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
-    fun open(url: String) {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
+    AboutScreenContent(
+        onBack = onBack,
+        onOpenUrl = { url -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+    )
+}
 
+/**
+ * The ARASAAC credit and licence links live here. They are a CC BY-NC-SA
+ * obligation rather than a courtesy, so this screen always shows them.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutScreenContent(onBack: (() -> Unit)?, onOpenUrl: (String) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -76,17 +87,27 @@ fun AboutScreen(onBack: (() -> Unit)? = null) {
                         stringResource(R.string.about_license_noncommercial),
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    OutlinedButton(onClick = { open("https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en") }) {
+                    OutlinedButton(onClick = {
+                        onOpenUrl("https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en")
+                    }) {
                         Text(stringResource(R.string.about_license_link))
                     }
-                    OutlinedButton(onClick = { open("https://arasaac.org/terms-of-use") }) {
+                    OutlinedButton(onClick = { onOpenUrl("https://arasaac.org/terms-of-use") }) {
                         Text(stringResource(R.string.about_terms_link))
                     }
-                    OutlinedButton(onClick = { open("https://arasaac.org") }) {
+                    OutlinedButton(onClick = { onOpenUrl("https://arasaac.org") }) {
                         Text(stringResource(R.string.about_website_link))
                     }
                 }
             }
         }
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun AboutScreenPreview() {
+    PictoKeyboardTheme {
+        AboutScreenContent(onBack = {}, onOpenUrl = {})
     }
 }

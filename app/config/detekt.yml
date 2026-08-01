@@ -1,0 +1,38 @@
+## Overlay on detekt's default config (buildUponDefaultConfig = true).
+##
+## Only rules whose defaults misread Jetpack Compose are adjusted here. Nothing
+## in this file exists to make a real finding go away -- that is what the
+## baseline is for, and the baseline is only ever regenerated when the debt is
+## actually paid down.
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by Compose API convention. ktlint is already
+    # told this (ktlintRules in app/build.gradle.kts); detekt never was, which
+    # is why the baseline carries 40 entries that are not defects.
+    ignoreAnnotated: ['Composable']
+
+style:
+  # @Preview functions are entry points called by the tooling, never by us, so
+  # "unused" is exactly what a correct one looks like. ScreenPreviews is our own
+  # multipreview annotation (ui/theme/Previews.kt) and is one to detekt's eyes.
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview', 'ScreenPreviews']
+
+  ReturnCount:
+    # Guard clauses are the readable way to reject bad input at the top of a
+    # function; the limit still applies to returns in the body proper.
+    excludeGuardClauses: true
+
+  MagicNumber:
+    # Naming a constant means writing the literal exactly once, in the
+    # declaration. Flagging that line asks for something impossible; the rule
+    # still applies everywhere the number is used.
+    ignorePropertyDeclaration: true
+
+complexity:
+  LongParameterList:
+    # A stateless Composable takes one callback per thing the user can do, so
+    # hoisting state correctly *raises* the parameter count. Penalising that
+    # would push screens back towards holding their own view model.
+    ignoreAnnotated: ['Composable']

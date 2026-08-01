@@ -37,7 +37,7 @@ class ImageCache(context: Context, private val client: OkHttpClient) {
                 fileForArasaac(id)
             }
             if (target.exists() && target.length() > 0) return@withContext target.absolutePath
-            val url = imageUrl(id, options)
+            val url = ArasaacUrls.customizedOrPlain(id, options)
             runCatching {
                 client.newCall(Request.Builder().url(url).build()).execute().use { resp ->
                     if (!resp.isSuccessful) return@withContext null
@@ -86,19 +86,5 @@ class ImageCache(context: Context, private val client: OkHttpClient) {
             target.outputStream().use { out -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, out) }
             target.absolutePath
         }.getOrNull()
-    }
-
-    companion object {
-        /** Static CDN URL for a 500px coloured ARASAAC pictogram. */
-        fun arasaacImageUrl(id: Int): String =
-            "https://static.arasaac.org/pictograms/$id/${id}_500.png"
-
-        /** Plain (CDN) or customized (api) image URL for pictogram [id]. */
-        fun imageUrl(id: Int, options: ArasaacOptions = ArasaacOptions()): String =
-            if (options.isCustomized) {
-                "https://api.arasaac.org/api/pictograms/$id${options.query()}"
-            } else {
-                arasaacImageUrl(id)
-            }
     }
 }
