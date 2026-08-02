@@ -21,6 +21,12 @@ name: Close linked issues
 # instead of GITHUB_TOKEN, at which point the merging actor is a real identity
 # and everything resumes on its own. This file becomes redundant then, and is
 # harmless: it only ever closes issues that a merged PR already declared.
+#
+# That fix has since landed -- automerge.yml now uses AUTOMERGE_TOKEN -- so this
+# sweeper is expected to find nothing to do. It is kept deliberately, as the
+# thing that notices if the PAT expires or is revoked: the failure mode of a
+# lapsed token is issues quietly staying open, which is exactly what this
+# closes. Delete it only if that risk is being handled some other way.
 on:
   schedule:
     # Hourly. An hour's delay before a fixed issue closes is tolerable; the
