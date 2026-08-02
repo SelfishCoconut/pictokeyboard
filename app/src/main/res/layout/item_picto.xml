@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:padding="4dp">
 
-    <org.pictokeyboard.ime.SquareFrameLayout
+    <org.pictokeyboard.ime.TileFrameLayout
         android:id="@+id/picto_tile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -19,7 +19,7 @@
             android:contentDescription="@null"
             android:padding="8dp"
             android:scaleType="fitCenter" />
-    </org.pictokeyboard.ime.SquareFrameLayout>
+    </org.pictokeyboard.ime.TileFrameLayout>
 
     <!--
         The caption sits below the tile, on the washed grid background, so it takes

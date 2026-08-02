@@ -6,8 +6,6 @@
     <string name="subtype_en">English</string>
 
     <!-- Keyboard control keys -->
-    <string name="kb_settings">Settings</string>
-    <string name="kb_settings_icon" translatable="false">⚙</string>
     <!-- No kb_switch_icon: the globe is drawable/ic_switch_keyboard.xml, so it
          takes the key's text colour instead of the emoji font's blue. -->
     <string name="kb_switch">Switch keyboard</string>
@@ -16,6 +14,13 @@
     <string name="kb_backspace_icon" translatable="false">⌫</string>
     <string name="kb_enter">Enter</string>
     <string name="kb_enter_icon" translatable="false">↵</string>
+
+    <!-- Board tabs and the sentence bar (#36) -->
+    <string name="kb_board_tab_role">Board</string>
+    <string name="kb_speak_all">Say the whole phrase</string>
+    <string name="kb_clear_sentence">Clear the phrase</string>
+    <string name="kb_sentence_empty">Nothing written yet</string>
+    <string name="kb_sentence_a11y">Written so far: %1$s</string>
     <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
     <string name="img_not_ready">Picture still downloading — try again in a moment.</string>
     <string name="img_unsupported">This field can\'t receive images.</string>
@@ -81,7 +86,7 @@
     <string name="dashboard_build">Build your board</string>
     <string name="dashboard_build_desc">Add the categories and pictograms the user will see.</string>
     <string name="dashboard_tips_title">Good to know</string>
-    <string name="dashboard_tip_settings">The ⚙ key on the keyboard reopens this setup app.</string>
+    <string name="dashboard_tip_boards">With more than one board, the tabs along the top of the keyboard switch between them.</string>
     <string name="dashboard_tip_switch">The 🌐 key switches between keyboards.</string>
     <string name="dashboard_tip_blind">A two-finger double-tap turns blind (eyes-free) mode on or off.</string>
 

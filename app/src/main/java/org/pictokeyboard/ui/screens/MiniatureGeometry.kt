@@ -22,26 +22,29 @@ internal const val KEYBOARD_STRIP_DP = 96
  * would show eight rows where the keyboard draws five — a promise about
  * behaviour, made in the one place a caregiver goes to check behaviour.
  *
+ * [chromeDp] is what the keyboard will stack above and below the board for this
+ * particular board — the sentence bar and the action row always, the tab strip
+ * only when the caregiver has more than one board to switch between. Passing it
+ * is what keeps the preview honest about the height the grid actually gets.
+ *
  * Everything is in dp, which the metrics take as happily as pixels: they are
  * ratios, so the unit cancels.
  */
 internal fun miniatureGeometry(
     previewWidthDp: Int,
-    screenWidthDp: Int,
-    screenHeightDp: Int,
-    columns: Int,
-    rows: Int,
+    screen: KeyboardMetrics.Screen,
+    chromeDp: Int,
+    grid: KeyboardMetrics.Grid,
 ): MiniatureGeometry {
     val body = KeyboardMetrics.bodyHeightPx(
-        screenWidthPx = screenWidthDp,
-        screenHeightPx = screenHeightDp,
+        screen = screen,
         categoryStripPx = KEYBOARD_STRIP_DP,
-        columns = columns,
-        rows = rows,
+        chromePx = chromeDp,
+        grid = grid,
     )
     // Guarded because a screen can never be 0dp wide but a preview harness can
     // report one, and a preview that divides by it takes the tooling down with it.
-    val scale = if (screenWidthDp > 0) previewWidthDp.toFloat() / screenWidthDp else 1f
+    val scale = if (screen.widthPx > 0) previewWidthDp.toFloat() / screen.widthPx else 1f
     return MiniatureGeometry(
         bodyHeightDp = (body * scale).toInt().coerceAtLeast(1),
         spineWidthDp = (KEYBOARD_STRIP_DP * scale).toInt().coerceAtLeast(1),

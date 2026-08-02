@@ -7,6 +7,100 @@
     android:orientation="vertical">
 
     <!--
+        Board tabs. Two axes, and they mean different things: horizontal along the
+        top is which *board* — which situation you are in — and vertical down the
+        left is which *category*. That maps onto the only two things a
+        communicator ever changes, and once learned it does not need re-learning.
+
+        Gone entirely when the caregiver has fewer than two boards to show, which
+        is everyone on day one: a tab strip with one tab in it is 52dp of height
+        spent saying nothing. See PictoKeyboardService.applyBoardTabs.
+    -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list_boards"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/kb_tab_height"
+        android:background="@color/line"
+        android:clipToPadding="false"
+        android:visibility="gone" />
+
+    <!--
+        The sentence bar: a mirror of what has been written, never a buffer.
+
+        Every picto still commits to the host field the instant it is tapped, so
+        nothing can be stranded here unsent. What the bar adds is a view of the
+        phrase for a person whose host app puts its field somewhere they cannot
+        read, or who cannot read it at all and needs 🔊 to hear it back.
+    -->
+    <LinearLayout
+        android:id="@+id/sentence_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/kb_sentence_bar_height"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp">
+
+        <HorizontalScrollView
+            android:id="@+id/sentence_scroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <TextView
+                android:id="@+id/sentence_text"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/atkinson_hyperlegible"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="8dp"
+                android:textColor="@color/ink"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </HorizontalScrollView>
+
+        <!--
+            Backspace lives here rather than in the action row, beside the words
+            it removes. It was one of four identical grey keys along the bottom,
+            which is where word-level undo went to be undiscoverable.
+        -->
+        <Button
+            android:id="@+id/key_backspace"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:contentDescription="@string/kb_backspace"
+            android:text="@string/kb_backspace_icon" />
+
+        <!--
+            Vectors rather than 🔊 and ✕, so they take the key's text colour and
+            invert with its pressed state. A colour emoji renders in its own
+            palette, and on this surface the only saturated colour is meant to be
+            the category hue, which carries meaning.
+        -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_speak"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:contentDescription="@string/kb_speak_all"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_speak"
+            app:tint="@color/key_text_recessive" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_clear"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:contentDescription="@string/kb_clear_sentence"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_clear_sentence"
+            app:tint="@color/key_text_recessive" />
+    </LinearLayout>
+
+    <!--
         Body: the category spine on the left, the picto grid on the right.
 
         The grid's background is set in code to a 6% wash of the selected
@@ -63,29 +157,25 @@
     <!-- A hairline so the action row reads as chrome, not as part of the board. -->
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/kb_hairline"
         android:background="@color/line" />
 
     <!--
-        Action row, moved below the board to match the design: it holds field-level
-        operations, and it sits where a thumb naturally rests rather than above the
-        content it acts on. `space` is the primary key because it is what the user
-        reaches for between words.
+        Action row: field-level operations, where a thumb naturally rests rather
+        than above the content it acts on. `space` is the primary key because it
+        is what the user reaches for between words.
+
+        The ⚙ key is gone. It launched the whole caregiver app from the
+        communicator's keyboard, mid-conversation, with no easy path back — a trap
+        sitting permanently under the thumb of the person least able to get out of
+        it. Configuration is the app's job (#16, #36).
     -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/kb_action_row_height"
         android:orientation="horizontal"
         android:paddingHorizontal="4dp"
         android:paddingVertical="6dp">
-
-        <Button
-            android:id="@+id/key_settings"
-            style="@style/KbKey.Recessive"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_settings"
-            android:text="@string/kb_settings_icon" />
 
         <!--
             An image key rather than a Button with an emoji, so the glyph takes the
@@ -114,14 +204,6 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:text="@string/kb_space" />
-
-        <Button
-            android:id="@+id/key_backspace"
-            style="@style/KbKey.Recessive"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:contentDescription="@string/kb_backspace"
-            android:text="@string/kb_backspace_icon" />
 
         <Button
             android:id="@+id/key_enter"

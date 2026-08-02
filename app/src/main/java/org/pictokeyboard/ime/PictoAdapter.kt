@@ -87,7 +87,7 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
-        private val tile: SquareFrameLayout = view.findViewById(R.id.picto_tile)
+        private val tile: TileFrameLayout = view.findViewById(R.id.picto_tile)
         private val image: ImageView = view.findViewById(R.id.picto_image)
         private val label: TextView = view.findViewById(R.id.picto_label)
 

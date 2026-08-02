@@ -15,6 +15,16 @@ interface BoardDao {
     fun observeAll(): Flow<List<BoardEntity>>
 
     /**
+     * The boards the keyboard offers as tabs.
+     *
+     * Scoped in SQL rather than filtered in the collector because the keyboard
+     * decides whether to draw the strip at all from this list's size, and a
+     * half-built board the caregiver has hidden must not count towards it.
+     */
+    @Query("SELECT * FROM boards WHERE showInKeyboard = 1 ORDER BY position ASC")
+    fun observeVisible(): Flow<List<BoardEntity>>
+
+    /**
      * The board currently in use.
      *
      * `LIMIT 1` is a safety net, not an expectation: [setActive] is the only

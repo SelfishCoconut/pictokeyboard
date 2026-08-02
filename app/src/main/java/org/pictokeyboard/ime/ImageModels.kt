@@ -1,6 +1,7 @@
 package org.pictokeyboard.ime
 
 import org.pictokeyboard.data.arasaac.ArasaacUrls
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
@@ -28,6 +29,9 @@ fun PictoEntity.keyboardImageModel(): Any? = cachedOrRemote(imagePath, arasaacId
 
 /** This category chip's icon, or null when the caregiver has not chosen one. */
 fun CategoryEntity.keyboardIconModel(): Any? = cachedOrRemote(iconImagePath, iconArasaacId)
+
+/** This board tab's picto, or null when the board has none. */
+fun BoardEntity.keyboardIconModel(): Any? = cachedOrRemote(iconImagePath, iconArasaacId)
 
 private fun cachedOrRemote(path: String?, arasaacId: Int?): Any? = when {
     path != null && File(path).exists() -> File(path)

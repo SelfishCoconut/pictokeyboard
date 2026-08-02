@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+        The keyboard's chrome, as explicit heights rather than as padding, so the
+        height budget in KeyboardMetrics can be computed from the same numbers the
+        views are laid out with. Chrome whose height lives only in a layout file,
+        with a guess at it in Kotlin, is a keyboard whose grid quietly loses a row.
+    -->
+    <dimen name="kb_tab_height">52dp</dimen>
+    <dimen name="kb_sentence_bar_height">48dp</dimen>
+    <dimen name="kb_action_row_height">60dp</dimen>
+    <dimen name="kb_hairline">1dp</dimen>
+
+    <!--
+        The word under a tile: 14sp of bold Atkinson plus its 4dp margin and the
+        item's own padding. Part of a row's height rather than an extra on top of
+        it, which is what makes "visible rows" count rows the user can see.
+    -->
+    <dimen name="kb_caption_height">28dp</dimen>
+
+    <!--
+        Where the body starts before the first measure, and what a keyboard with
+        no board yet falls back to. The real height comes from the board's rows.
+    -->
     <dimen name="kb_body_height">280dp</dimen>
     <dimen name="kb_category_width">96dp</dimen>
     <dimen name="kb_blind_height">300dp</dimen>

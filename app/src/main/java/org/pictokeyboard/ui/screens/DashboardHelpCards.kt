@@ -1,6 +1,5 @@
 package org.pictokeyboard.ui.screens
 
-import android.provider.Settings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +15,9 @@ import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.TouchApp
@@ -70,8 +69,10 @@ internal fun TipsCard() {
                 Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(stringResource(R.string.dashboard_tips_title), style = MaterialTheme.typography.titleMedium)
             }
-            TipRow(Icons.Filled.Settings, stringResource(R.string.dashboard_tip_settings))
+            // The ⚙ tip is gone with the key it described (#36). A help card
+            // naming a key that no longer exists sends the reader looking for it.
             TipRow(Icons.Filled.Language, stringResource(R.string.dashboard_tip_switch))
+            TipRow(Icons.Filled.GridView, stringResource(R.string.dashboard_tip_boards))
         }
     }
 }
