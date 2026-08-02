@@ -23,18 +23,32 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
 
-# `issues: write` is not for anything this workflow does itself -- it never
-# touches an issue. Closing a linked issue on merge is performed by GitHub as the
-# *merging actor*, and because auto-merge is enabled with GITHUB_TOKEN, that
-# actor is github-actions[bot] rather than a human. Without this scope the bot
-# merges the PR, GitHub parses the `Closes #n` (closingIssuesReferences is
-# populated), and then does nothing with it -- silently, so the only symptom is a
-# growing pile of issues that are fixed and still open. Every PR merged before
-# this line landed had to be closed by hand. See #64.
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+# Auto-merge is enabled with AUTOMERGE_TOKEN, a fine-grained PAT, rather than
+# with GITHUB_TOKEN. This is the whole point of the file and not an incidental
+# choice: GitHub raises no downstream events for actions taken with
+# GITHUB_TOKEN -- the anti-recursion rule that stops a workflow retriggering
+# itself -- so a bot-attributed merge landed a commit on `main` and then did
+# nothing. No `push` event, so none of the four push-triggered workflows ran
+# (#71); no issue closing, so `Closes #n` was parsed, recorded and ignored
+# (#64). A PAT makes the merging actor a real identity and both resume.
+#
+# An earlier attempt blamed #64 on a missing `issues: write` scope. That was a
+# permissions hypothesis for what is actually event suppression, and the
+# evidence disproved it -- granting the bot the scope to close an issue does
+# not help when GitHub never invokes the closing automation at all.
+#
+# The token needs, on this repository only: contents RW (the merge writes to
+# `main`), pull-requests RW (reading mergeable state and enabling auto-merge),
+# issues RW (the `Closes #n` handling), workflows RW (PRs here modify
+# .github/workflows, and GitHub refuses those writes without it), metadata RO.
+# It expires; when it does, every PR fails this job loudly, which is the
+# intended failure mode.
+
+# Empty because nothing in this job uses GITHUB_TOKEN any more -- every call is
+# authenticated with the PAT below. Left as an explicit `{}` rather than
+# deleted, so that adding a step which does need GITHUB_TOKEN has to state what
+# it needs instead of inheriting a permissive default.
+permissions: {}
 
 jobs:
   enable:
@@ -50,9 +64,20 @@ jobs:
       # is a no-op.
       - name: Enable squash auto-merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
+          set -euo pipefail
+
+          # A missing secret arrives as an empty string, and `gh` would report
+          # that as a generic authentication failure. Named explicitly, because
+          # the two ways this breaks -- never created, or expired -- both look
+          # like an auth error and have completely different fixes.
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::AUTOMERGE_TOKEN is unset or empty. Create a fine-grained PAT (contents RW, pull-requests RW, issues RW, workflows RW on this repo) and store it as the AUTOMERGE_TOKEN secret. Auto-merge is disabled until then."
+            exit 1
+          fi
+
           # Conflicts are the one failure that is expected and self-healing:
           # resolving them means pushing, which reruns this job. Tolerated
           # explicitly rather than by ignoring the exit code, so that a real
