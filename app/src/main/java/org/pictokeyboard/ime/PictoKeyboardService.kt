@@ -191,8 +191,14 @@ class PictoKeyboardService : InputMethodService() {
         // tell it. Rebuilding the whole input view is heavy-handed, but the key
         // captions are inflated from a layout and there is no lighter way to
         // re-resolve them -- and it happens only on a change the user just made.
+        //
+        // Guarded on there already being a view: onStartInputView can run with no
+        // onCreateInputView before it -- the two are gated on different
+        // conditions, which is #27's whole failure mode -- and building one here
+        // would put a keyboard on screen that the framework deliberately did not
+        // ask for.
         val language = currentAppLanguage()
-        if (language != viewLanguage) {
+        if (language != viewLanguage && ::normalView.isInitialized) {
             applyLanguage(language)
             setInputView(onCreateInputView())
         }
