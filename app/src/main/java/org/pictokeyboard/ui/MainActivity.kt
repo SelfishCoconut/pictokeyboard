@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -19,6 +21,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -66,7 +70,13 @@ private val NavItems = listOf(
     NavItem(Routes.ABOUT, R.string.nav_about, Icons.Filled.Info),
 )
 
-class MainActivity : ComponentActivity() {
+/**
+ * An [AppCompatActivity], not a [ComponentActivity], solely so the per-app
+ * language API works below API 33: appcompat backports it by hooking
+ * `attachBaseContext`, which only its own Activity base class does. The theme
+ * already descends from `Theme.AppCompat` via Material 3, so nothing else moves.
+ */
+class MainActivity : AppCompatActivity() {
 
     private val viewModel: ConfigViewModel by viewModels()
 
@@ -89,9 +99,38 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun ConfigApp(viewModel: ConfigViewModel) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    // The whole app follows the in-app "Default language" setting, not the system locale.
-    ProvideAppLocale(settings.defaultLanguage) {
-        AppNavigation(viewModel, settings)
+    ApplyAppLocale(settings.defaultLanguage)
+    AppNavigation(viewModel, settings)
+}
+
+/**
+ * Hands the in-app **Default language** to the platform's per-app language API.
+ *
+ * This replaces `ProvideAppLocale`, which re-skinned `LocalContext` for the
+ * composition. That worked for screen content and silently failed everywhere
+ * else: every Compose sub-window re-provides `LocalContext` from the platform,
+ * so dialogs, dropdown menus and bottom sheets discarded the override and
+ * rendered in the *system* locale while the screen behind them rendered in the
+ * app's. Capturing and re-providing the context at each call site does fix it,
+ * but it has to be repeated in every `AlertDialog` *slot* — nine call sites and
+ * about twenty wrappers of pure ceremony, and the next dialog someone adds
+ * forgets it.
+ *
+ * `setApplicationLocales` applies to the whole process instead, so popups,
+ * sheets, toasts and the IME follow with no per-site handling at all.
+ *
+ * Guarded on inequality because setting it **restarts the activity**: calling it
+ * unconditionally on every recomposition is an infinite restart loop. On a cold
+ * start appcompat has already restored the stored value in `attachBaseContext`,
+ * so the guard is satisfied and nothing restarts; only a genuine change costs a
+ * recreate, which is the documented behaviour of this API.
+ */
+@Composable
+private fun ApplyAppLocale(language: String) {
+    LaunchedEffect(language) {
+        if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != language) {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language))
+        }
     }
 }
 
