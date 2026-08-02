@@ -75,6 +75,9 @@ fun BoardDetailScreen(
     BoardDetailContent(
         summary = summary,
         pictoCounts = pictoCounts,
+        // How many boards the keyboard will offer as tabs. The Layout preview
+        // needs it to know whether the strip costs the grid any height.
+        keyboardBoardCount = summaries.count { it.board.showInKeyboard },
         status = status,
         onBack = onBack,
         onOpenCategory = onOpenCategory,
@@ -119,6 +122,7 @@ private enum class BoardTab(val label: Int) {
 internal fun BoardDetailContent(
     summary: BoardSummary,
     pictoCounts: Map<String, Int>,
+    keyboardBoardCount: Int,
     status: KeyboardStatus,
     onBack: () -> Unit,
     onOpenCategory: (String) -> Unit,
@@ -162,6 +166,7 @@ internal fun BoardDetailContent(
             onSelectTab = { tab = it },
             summary = summary,
             pictoCounts = pictoCounts,
+            keyboardBoardCount = keyboardBoardCount,
             reordering = reordering,
             onToggleReorder = { reordering = !reordering },
             onOpenCategory = onOpenCategory,
@@ -246,6 +251,7 @@ private fun BoardDetailBody(
     onSelectTab: (BoardTab) -> Unit,
     summary: BoardSummary,
     pictoCounts: Map<String, Int>,
+    keyboardBoardCount: Int,
     reordering: Boolean,
     onToggleReorder: () -> Unit,
     onOpenCategory: (String) -> Unit,
@@ -279,7 +285,11 @@ private fun BoardDetailBody(
                 onDelete = onDeleteCategory,
             )
 
-            BoardTab.Layout -> BoardLayoutTab(summary = summary, onSaveBoard = onSaveBoard)
+            BoardTab.Layout -> BoardLayoutTab(
+                summary = summary,
+                keyboardBoardCount = keyboardBoardCount,
+                onSaveBoard = onSaveBoard,
+            )
         }
     }
 }
@@ -391,6 +401,7 @@ private fun BoardDetailPreview(summary: BoardSummary) {
             pictoCounts = summary.categories
                 .mapIndexed { i, category -> category.id to i * PREVIEW_COUNT_STEP }
                 .toMap(),
+            keyboardBoardCount = 1,
             status = KeyboardStatus(enabled = true, selected = true),
             onBack = {},
             onOpenCategory = {},

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One board tab. The colour bar along the top is the board's own, which is also
+    the hue that floods the grid below once the board is active — so the border
+    and the board agree, and the strip reads as tabs rather than as another row of
+    buttons. Its thickness and the tab's background are set in code, because both
+    depend on which board is in use.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/board_tab_root"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:minWidth="88dp"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/board_tab_border"
+        android:layout_width="match_parent"
+        android:layout_height="3dp" />
+
+    <!--
+        Not a TextView with a compound drawable, as lint suggests: the picto is
+        loaded asynchronously by Coil, which needs a real ImageView to load into,
+        and a compound drawable cannot be swapped once the download lands. The
+        category chip declines the same suggestion for the same reason.
+    -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp"
+        tools:ignore="UseCompoundDrawables">
+
+        <ImageView
+            android:id="@+id/board_tab_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@null"
+            android:visibility="gone" />
+
+        <!--
+            One line with an ellipsis, unlike a category chip: a board name is a
+            label on a tab the user already knows, and a wrapping tab would change
+            the strip's height as boards are added.
+        -->
+        <TextView
+            android:id="@+id/board_tab_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/atkinson_hyperlegible"
+            android:maxLines="1"
+            android:maxWidth="120dp"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

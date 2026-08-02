@@ -47,6 +47,9 @@ class PictoRepository(
 
     fun observeActiveBoard(): Flow<BoardEntity?> = boardDao.observeActive()
 
+    /** The boards the keyboard shows as tabs — see [BoardEntity.showInKeyboard]. */
+    fun observeKeyboardBoards(): Flow<List<BoardEntity>> = boardDao.observeVisible()
+
     suspend fun activeBoard(): BoardEntity? = boardDao.getActive()
 
     suspend fun board(id: String): BoardEntity? = boardDao.getById(id)

@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,6 +99,11 @@ internal fun BoardMiniature(
  * down by however much narrower this is than the screen — so a caregiver who
  * drags **rows** to 8 on a short phone sees the same clipped last row the
  * keyboard gives them, rather than a promise the keyboard will not keep.
+ *
+ * [chromeDp] is what the keyboard will stack above and below this board, which
+ * is why it arrives as a number rather than being worked out here: whether the
+ * board strip is among it depends on how many boards exist, which is the calling
+ * screen's business and not the miniature's.
  */
 @Composable
 internal fun BoardLayoutPreview(
@@ -106,12 +112,14 @@ internal fun BoardLayoutPreview(
     columns: Int,
     rows: Int,
     showLabels: Boolean,
+    chromeDp: Int,
     modifier: Modifier = Modifier,
 ) {
     // The window's size rather than the display's: in split screen the keyboard
     // is sized to the window it opens in, and so is its model.
     val window = LocalWindowInfo.current.containerSize
     val density = LocalDensity.current
+    val captionDp = dimensionResource(R.dimen.kb_caption_height).value.toInt()
     MiniatureFrame(modifier = modifier) {
         if (categories.isEmpty()) {
             EmptyBoardHint()
@@ -120,10 +128,16 @@ internal fun BoardLayoutPreview(
                 val geometry = with(density) {
                     miniatureGeometry(
                         previewWidthDp = maxWidth.value.toInt(),
-                        screenWidthDp = window.width.toDp().value.toInt(),
-                        screenHeightDp = window.height.toDp().value.toInt(),
-                        columns = columns,
-                        rows = rows,
+                        screen = KeyboardMetrics.Screen(
+                            widthPx = window.width.toDp().value.toInt(),
+                            heightPx = window.height.toDp().value.toInt(),
+                        ),
+                        chromeDp = chromeDp,
+                        grid = KeyboardMetrics.Grid(
+                            columns = columns,
+                            rows = rows,
+                            captionPx = if (showLabels) captionDp else 0,
+                        ),
                     )
                 }
                 MiniBoard(
@@ -289,7 +303,9 @@ private fun MiniTile(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)
+                // 4:3, the shape the keyboard's own tiles took on when the board
+                // strip and the sentence bar started costing height (#36).
+                .aspectRatio(1f / KeyboardMetrics.TILE_ASPECT)
                 // `tile`, so the artwork stays legible in dark mode too.
                 .background(colors.tile, RoundedCornerShape(TILE_CORNER))
                 .border(2.dp, frame, RoundedCornerShape(TILE_CORNER))
@@ -377,6 +393,12 @@ private val CHIP_GLYPH = 30.dp
 private val TILE_CORNER = 8.dp
 private const val SPINE_CHIPS = 3
 
-/** The card strip is a picture to recognise a board by, not a scale model. */
+/**
+ * The card strip is a picture to recognise a board by, not a scale model.
+ *
+ * Three rows rather than two since the tiles became 4:3 (#36): at the strip's
+ * fixed height, two rows of the shorter tile left a band of empty wash under
+ * them that read as a board with nothing in it.
+ */
 private const val CARD_COLUMNS = 4
-private const val CARD_ROWS = 2
+private const val CARD_ROWS = 3

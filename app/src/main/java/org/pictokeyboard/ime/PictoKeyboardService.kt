@@ -1,15 +1,14 @@
 package org.pictokeyboard.ime
 
 import android.content.Context
-import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.TextView
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
@@ -21,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -34,7 +34,6 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.tts.TtsManager
-import org.pictokeyboard.ui.MainActivity
 import org.pictokeyboard.ui.theme.CategoryColors
 
 /**
@@ -61,9 +60,13 @@ class PictoKeyboardService : InputMethodService() {
 
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var pictoAdapter: PictoAdapter
+    private lateinit var boardTabAdapter: BoardTabAdapter
     private lateinit var pictoGrid: RecyclerView
+    private lateinit var boardStrip: RecyclerView
     private lateinit var keyboardBody: View
     private lateinit var emptyHint: TextView
+    private lateinit var sentenceView: TextView
+    private lateinit var sentenceScroll: HorizontalScrollView
 
     private lateinit var normalView: View
     private lateinit var blindView: BlindKeyboardView
@@ -100,6 +103,25 @@ class PictoKeyboardService : InputMethodService() {
     private val boardRows get() = board?.rows ?: BoardEntity.DEFAULT_ROWS
     private val boardShowLabels get() = board?.showLabels ?: true
 
+    /** Boards offered as tabs, and their pictos, kept as [categories] is. */
+    private var boards: List<BoardEntity> = emptyList()
+    private var boardIcons: Map<String, Any?> = emptyMap()
+
+    /**
+     * The strip earns its height only when there is a choice to make. One board
+     * is everyone on day one, and a tab strip with a single tab in it is 52dp
+     * spent saying nothing — taken from the grid, which is the whole product.
+     */
+    private val showBoardTabs get() = boards.size >= 2
+
+    /**
+     * The phrase written so far. A mirror of the field, never a buffer — see
+     * [Sentence]. Held by the service rather than by the view because the input
+     * view is rebuilt on every rotation and dark-mode switch, and a sentence that
+     * vanished when the user turned their phone would be worse than no bar.
+     */
+    private var sentence = Sentence()
+
     // --- Blind (eyes-free) mode state --------------------------------------
     private var blindMode = false
     private var blindLoaded = false
@@ -120,6 +142,7 @@ class PictoKeyboardService : InputMethodService() {
         // onDestroy: N redundant Room queries and N refreshPictos() per emission,
         // on the typing thread of a keyboard.
         observeCategories()
+        observeBoards()
     }
 
     override fun onCreateInputView(): View {
@@ -129,27 +152,8 @@ class PictoKeyboardService : InputMethodService() {
         normalView = layoutInflater.cloneInContext(uiContext)
             .inflate(R.layout.keyboard_view, null)
 
-        categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected)
-        pictoAdapter = PictoAdapter(onClick = ::onPictoTapped, onLongClick = ::sendPictoAsImage)
-
-        normalView.findViewById<RecyclerView>(R.id.list_categories).apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = categoryAdapter
-        }
-        pictoGrid = normalView.findViewById<RecyclerView>(R.id.grid_pictos).apply {
-            layoutManager = GridLayoutManager(context, boardColumns)
-            adapter = pictoAdapter
-        }
-        keyboardBody = normalView.findViewById(R.id.keyboard_body)
-        emptyHint = normalView.findViewById(R.id.empty_hint)
-        applyBodyHeight()
-
-        normalView.findViewById<Button>(R.id.key_settings).setOnClickListener { openSettings() }
-        // An ImageButton, not a Button -- the globe is a tinted vector now.
-        normalView.findViewById<View>(R.id.key_switch).setOnClickListener { switchKeyboard() }
-        normalView.findViewById<Button>(R.id.key_space).setOnClickListener { commit(" ") }
-        normalView.findViewById<Button>(R.id.key_backspace).setOnClickListener { backspace() }
-        normalView.findViewById<Button>(R.id.key_enter).setOnClickListener { onEnter() }
+        bindLists()
+        bindKeys()
 
         blindView = BlindKeyboardView(this).apply {
             onSwipeVertical = { down -> changeBlindCategory(if (down) 1 else -1) }
@@ -183,8 +187,11 @@ class PictoKeyboardService : InputMethodService() {
         // The collection lives in onCreate, so these adapters are new but the
         // data is not. Seed them from what is already held, or a rotation would
         // show an empty board until the next database emission -- which for a
-        // board nobody is editing may never come.
+        // board nobody is editing may never come. The sentence goes the same way:
+        // it belongs to the conversation, not to this instance of the view.
         categoryAdapter.submit(categories, selectedCategoryId, categoryIcons)
+        applyBoardTabs()
+        renderSentence()
         refreshPictos()
 
         viewLanguage = currentAppLanguage()
@@ -192,9 +199,75 @@ class PictoKeyboardService : InputMethodService() {
         return container
     }
 
+    /** The three lists the keyboard draws: boards across, categories down, pictos in the grid. */
+    private fun bindLists() {
+        categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected)
+        pictoAdapter = PictoAdapter(onClick = ::onPictoTapped, onLongClick = ::sendPictoAsImage)
+        boardTabAdapter = BoardTabAdapter(onClick = ::onBoardSelected)
+
+        normalView.findViewById<RecyclerView>(R.id.list_categories).apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = categoryAdapter
+        }
+        boardStrip = normalView.findViewById<RecyclerView>(R.id.list_boards).apply {
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+            adapter = boardTabAdapter
+        }
+        pictoGrid = normalView.findViewById<RecyclerView>(R.id.grid_pictos).apply {
+            layoutManager = GridLayoutManager(context, boardColumns)
+            adapter = pictoAdapter
+        }
+        keyboardBody = normalView.findViewById(R.id.keyboard_body)
+        emptyHint = normalView.findViewById(R.id.empty_hint)
+        sentenceView = normalView.findViewById(R.id.sentence_text)
+        sentenceScroll = normalView.findViewById(R.id.sentence_scroll)
+        applyBodyHeight()
+    }
+
+    /**
+     * The keys: three on the sentence bar, three in the action row.
+     *
+     * Looked up as [View] rather than as `Button`, because half of them are not
+     * buttons: the globe, the speaker and the ✕ are `AppCompatImageButton`s so
+     * their glyphs take the key's text colour instead of an emoji font's own
+     * palette. A `findViewById<Button>` on one of those is a ClassCastException
+     * thrown from `onCreateInputView` — which is to say, a keyboard that dies the
+     * moment it is opened, in every app.
+     */
+    private fun bindKeys() {
+        listOf(
+            R.id.key_switch to { switchKeyboard() },
+            R.id.key_space to { commit(" ") },
+            R.id.key_backspace to { backspace() },
+            R.id.key_enter to { onEnter() },
+            R.id.key_speak to { speakSentence() },
+            R.id.key_clear to { clearSentence() },
+        ).forEach { (id, action) ->
+            normalView.findViewById<View>(id).setOnClickListener { action() }
+        }
+    }
+
     /** Points [uiContext] at [language]. */
     private fun applyLanguage(language: String?) {
         uiContext = localizedFor(language)
+    }
+
+    /**
+     * A new field, so a new phrase.
+     *
+     * The bar must never carry a sentence across an app boundary: what was said
+     * in one conversation appearing above the next one is a privacy failure as
+     * much as a correctness one. `restarting` is the framework's own word for
+     * "same editor, same session", so only its absence clears — otherwise the
+     * phrase would vanish every time the host app rebuilt its field underneath
+     * the user mid-sentence.
+     */
+    override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInput(info, restarting)
+        if (!restarting) {
+            sentence = sentence.cleared()
+            renderSentence()
+        }
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -219,7 +292,9 @@ class PictoKeyboardService : InputMethodService() {
         // Re-read settings so config changes apply next time the keyboard opens.
         scope.launch {
             settings = locator.settings.current()
-            board = locator.pictoRepository.activeBoard()
+            // `board` is not re-read here: observeBoards keeps it current, and a
+            // one-shot read racing that collector is how the grid ends up drawn
+            // for one board and washed in another's colour.
             tts.setParams(settings.ttsRate, settings.ttsPitch)
             // onCreateInputView is gated on onEvaluateInputViewShown() and this
             // is gated on mShowInputRequested -- different conditions, so with a
@@ -250,19 +325,49 @@ class PictoKeyboardService : InputMethodService() {
      * resource regardless, so dragging it from 4 to 8 changed nothing. The
      * value moved from global settings onto the board in #31; what it drives
      * here is unchanged.
+     *
+     * The chrome above and below the board is subtracted from the *ceiling*,
+     * never from the grid: the keyboard grows to carry the tab strip and the
+     * sentence bar, and only the 60% cap stops it. Taking the space out of the
+     * board instead would spend the product on its own furniture.
      */
     private fun applyBodyHeight() {
         if (!::keyboardBody.isInitialized) return
         val metrics = resources.displayMetrics
         keyboardBody.updateLayoutParams {
             height = KeyboardMetrics.bodyHeightPx(
-                screenWidthPx = metrics.widthPixels,
-                screenHeightPx = metrics.heightPixels,
+                screen = KeyboardMetrics.Screen(metrics.widthPixels, metrics.heightPixels),
                 categoryStripPx = resources.getDimensionPixelSize(R.dimen.kb_category_width),
-                columns = boardColumns,
-                rows = boardRows,
+                chromePx = chromeHeightPx(),
+                grid = KeyboardMetrics.Grid(
+                    columns = boardColumns,
+                    rows = boardRows,
+                    // Captions live inside the row, so turning them on costs
+                    // height rather than picture -- and "visible rows" only
+                    // means what it says if the count includes them.
+                    captionPx = if (boardShowLabels) {
+                        resources.getDimensionPixelSize(R.dimen.kb_caption_height)
+                    } else {
+                        0
+                    },
+                ),
             )
         }
+    }
+
+    /**
+     * Everything stacked above and below the board, in pixels.
+     *
+     * Read from the same dimensions the layout is built from rather than
+     * hardcoded, so a change to the sentence bar's height cannot silently cost
+     * the grid a row.
+     */
+    private fun chromeHeightPx(): Int {
+        val tabs = if (showBoardTabs) resources.getDimensionPixelSize(R.dimen.kb_tab_height) else 0
+        return tabs +
+            resources.getDimensionPixelSize(R.dimen.kb_sentence_bar_height) +
+            resources.getDimensionPixelSize(R.dimen.kb_action_row_height) +
+            resources.getDimensionPixelSize(R.dimen.kb_hairline)
     }
 
     /** Shows the keyboard for the active mode and hides the other. */
@@ -294,6 +399,60 @@ class PictoKeyboardService : InputMethodService() {
                 refreshPictos()
             }
             .launchIn(scope)
+    }
+
+    /**
+     * The boards offered as tabs, and which one is in use.
+     *
+     * Two queries combined rather than one: the active board is already observed
+     * for its layout, and the strip needs to repaint whenever *either* the list
+     * or the selection changes.
+     */
+    private fun observeBoards() {
+        combine(
+            locator.pictoRepository.observeKeyboardBoards(),
+            locator.pictoRepository.observeActiveBoard(),
+        ) { visible, active -> visible to active }
+            // Same reason as the category strip: each board's picto costs a
+            // filesystem stat, which does not belong on the typing thread.
+            .map { (visible, active) ->
+                Triple(visible, active, visible.associate { it.id to it.keyboardIconModel() })
+            }
+            .flowOn(Dispatchers.IO)
+            .onEach { (visible, active, icons) ->
+                boards = visible
+                boardIcons = icons
+                board = active
+                applyBoardTabs()
+                // A board switch changes the grid's shape as well as its
+                // contents. Guarded because this collection starts in onCreate,
+                // which precedes the first onCreateInputView -- and with a
+                // hardware keyboard attached may precede it indefinitely.
+                if (::pictoGrid.isInitialized) {
+                    (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = boardColumns
+                }
+                applyBodyHeight()
+            }
+            .launchIn(scope)
+    }
+
+    /** Draws the strip, or removes it when there is no choice to make. */
+    private fun applyBoardTabs() {
+        if (!::boardStrip.isInitialized) return
+        boardStrip.visibility = if (showBoardTabs) View.VISIBLE else View.GONE
+        if (showBoardTabs) boardTabAdapter.submit(boards, board?.id, boardIcons)
+    }
+
+    /**
+     * Switching board is navigation, not configuration.
+     *
+     * It writes the active flag and nothing else: the category collection
+     * follows the active board, so the grid, the spine and the wash all change
+     * from that one write rather than from four coordinated ones.
+     */
+    private fun onBoardSelected(selected: BoardEntity) {
+        if (selected.id == board?.id) return
+        scope.launch { locator.pictoRepository.setActiveBoard(selected.id) }
     }
 
     private fun onCategorySelected(category: CategoryEntity) {
@@ -375,9 +534,49 @@ class PictoKeyboardService : InputMethodService() {
         val text = picto.spokenText.ifBlank { picto.label }
         if (text.isBlank()) return
         val toInsert = if (settings.addSpaceAfter) "$text " else text
+        // Committed first, and unconditionally. The bar is told afterwards
+        // because it is a mirror of what the field already has -- never a
+        // staging area that could hold a sentence back.
         commit(toInsert)
+        sentence = sentence.plus(text, picto.language)
+        renderSentence()
         if (settings.speakOnTap) tts.speak(text, picto.language)
         recordUsage(picto)
+    }
+
+    // --- The sentence bar ---------------------------------------------------
+
+    /** Speaks the whole phrase back, each word still in its own voice. */
+    private fun speakSentence() {
+        if (sentence.isEmpty) return
+        tts.speakSequence(sentence.parts())
+    }
+
+    /**
+     * Empties the bar and leaves the field alone.
+     *
+     * Deliberately asymmetric with backspace: ✕ means "I have finished with this
+     * phrase", not "undo what I said". Reaching into the host field to delete a
+     * sentence the user already sent would be the one destructive thing on this
+     * keyboard.
+     */
+    private fun clearSentence() {
+        sentence = sentence.cleared()
+        renderSentence()
+    }
+
+    private fun renderSentence() {
+        if (!::sentenceView.isInitialized) return
+        sentenceView.text = sentence.display()
+        // The middot is typography; a screen reader would pronounce it.
+        sentenceView.contentDescription = if (sentence.isEmpty) {
+            uiContext.getString(R.string.kb_sentence_empty)
+        } else {
+            uiContext.getString(R.string.kb_sentence_a11y, sentence.spokenDescription())
+        }
+        // Keep the newest word in view: the phrase grows to the end, and what
+        // was just written is what the user is checking.
+        sentenceScroll.post { sentenceScroll.fullScroll(View.FOCUS_RIGHT) }
     }
 
     private fun commit(text: String) {
@@ -449,11 +648,21 @@ class PictoKeyboardService : InputMethodService() {
         val selected = ic.getSelectedText(0)
         if (!selected.isNullOrEmpty()) {
             ic.commitText("", 1)
+            // An arbitrary span just left the field, and the bar has no way to
+            // know how much of its phrase went with it. Emptying it is the
+            // honest answer: a mirror that has lost track must say so rather
+            // than keep showing a phrase the field no longer holds.
+            sentence = sentence.cleared()
+            renderSentence()
             return
         }
         val before = ic.getTextBeforeCursor(WORD_LOOKBACK, 0) ?: return
         val count = trailingWordLength(before)
-        if (count > 0) ic.deleteSurroundingText(count, 0)
+        if (count > 0) {
+            ic.deleteSurroundingText(count, 0)
+            sentence = sentence.dropLast()
+            renderSentence()
+        }
     }
 
     private fun backspace() = deleteLastWord()
@@ -479,16 +688,11 @@ class PictoKeyboardService : InputMethodService() {
         if (!switched) imm.showInputMethodPicker()
     }
 
-    private fun openSettings() {
-        // A direct class reference, not Class.forName: the reflective form only
-        // worked because isMinifyEnabled = false. The first release build with
-        // R8 on would rename MainActivity and turn the gear key into a
-        // ClassNotFoundException thrown from a click handler.
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        startActivity(intent)
-    }
+    // The keyboard no longer opens the caregiver app. The ⚙ key that did it sat
+    // permanently under the thumb of the person least able to find their way
+    // back out of a full settings app opened mid-conversation, and there was no
+    // route back to what they were saying (#16, #36). Configuration is the app's
+    // job; the keyboard's job is to talk.
 
     // --- Blind (eyes-free) mode --------------------------------------------
 

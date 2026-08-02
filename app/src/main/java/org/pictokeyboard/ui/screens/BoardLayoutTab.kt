@@ -15,7 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.repo.BoardSummary
@@ -39,6 +41,7 @@ import org.pictokeyboard.ui.theme.Spacing
 @Composable
 internal fun BoardLayoutTab(
     summary: BoardSummary,
+    keyboardBoardCount: Int,
     onSaveBoard: (BoardEntity) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -62,6 +65,7 @@ internal fun BoardLayoutTab(
             columns = columns,
             rows = rows,
             showLabels = board.showLabels,
+            chromeDp = keyboardChromeDp(hasBoardTabs = keyboardBoardCount >= 2),
         )
 
         SettingsGroup(stringResource(R.string.board_layout_group_grid)) {
@@ -162,6 +166,24 @@ private fun FrameDefaultsGroup(summary: BoardSummary, onSaveBoard: (BoardEntity)
     }
 }
 
+/**
+ * What the keyboard stacks above and below the board, in dp.
+ *
+ * Read from the same dimensions the keyboard's own layout is built from, so the
+ * preview cannot promise the grid space the furniture has already taken. The
+ * board strip is conditional for exactly the reason it is on the keyboard: a
+ * caregiver with one board never sees it, so their preview must not budget for
+ * it and show them a shorter grid than they will get.
+ */
+@Composable
+private fun keyboardChromeDp(hasBoardTabs: Boolean): Int {
+    val tabs = if (hasBoardTabs) dimensionResource(R.dimen.kb_tab_height) else 0.dp
+    val bar = dimensionResource(R.dimen.kb_sentence_bar_height)
+    val actions = dimensionResource(R.dimen.kb_action_row_height)
+    val hairline = dimensionResource(R.dimen.kb_hairline)
+    return (tabs + bar + actions + hairline).value.toInt()
+}
+
 /** The explanatory line under a control, in the settings screen's voice. */
 @Composable
 private fun Hint(text: String) {
@@ -183,17 +205,21 @@ private fun stepsBetween(range: IntRange): Int = (range.last - range.first - 1).
 @Composable
 private fun BoardLayoutTabPreview() {
     PictoKeyboardTheme {
-        BoardLayoutTab(summary = previewBoardSummary(), onSaveBoard = {})
+        BoardLayoutTab(summary = previewBoardSummary(), keyboardBoardCount = 1, onSaveBoard = {})
     }
 }
 
-/** A wide, shallow board with captions off — the doctor's-appointment shape. */
+/**
+ * A wide, shallow board with captions off — the doctor's-appointment shape — on
+ * a keyboard that also carries a board strip, so the preview is the shorter one.
+ */
 @ScreenPreviews
 @Composable
 private fun BoardLayoutTabWideTilesPreview() {
     PictoKeyboardTheme {
         BoardLayoutTab(
             summary = previewBoardSummary(columns = 2, rows = 3, showLabels = false),
+            keyboardBoardCount = 2,
             onSaveBoard = {},
         )
     }
