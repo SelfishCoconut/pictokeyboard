@@ -24,6 +24,7 @@
         row, which scrolls anyway.
     -->
     <LinearLayout
+        android:id="@+id/keyboard_body"
         android:layout_width="match_parent"
         android:layout_height="@dimen/kb_body_height"
         android:layout_weight="1"

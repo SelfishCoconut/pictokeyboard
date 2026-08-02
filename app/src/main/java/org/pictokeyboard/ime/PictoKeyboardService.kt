@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -59,6 +60,7 @@ class PictoKeyboardService : InputMethodService() {
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var pictoAdapter: PictoAdapter
     private lateinit var pictoGrid: RecyclerView
+    private lateinit var keyboardBody: View
     private lateinit var emptyHint: TextView
 
     private lateinit var normalView: View
@@ -108,7 +110,9 @@ class PictoKeyboardService : InputMethodService() {
             layoutManager = GridLayoutManager(context, settings.gridColumns)
             adapter = pictoAdapter
         }
+        keyboardBody = normalView.findViewById(R.id.keyboard_body)
         emptyHint = normalView.findViewById(R.id.empty_hint)
+        applyBodyHeight()
 
         normalView.findViewById<Button>(R.id.key_settings).setOnClickListener { openSettings() }
         // An ImageButton, not a Button -- the globe is a tinted vector now.
@@ -170,6 +174,9 @@ class PictoKeyboardService : InputMethodService() {
             if (::pictoGrid.isInitialized) {
                 (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = settings.gridColumns
             }
+            // Height follows the same settings read, so the slider takes effect
+            // the next time the keyboard opens rather than only after a restart.
+            applyBodyHeight()
             blindMode = settings.blindMode
             applyMode()
             refreshPictos()
@@ -178,6 +185,26 @@ class PictoKeyboardService : InputMethodService() {
                 blindLoaded = true
                 loadBlindCategory()
             }
+        }
+    }
+
+    /**
+     * Sizes the picto body from `gridRows`, which nothing read before this.
+     *
+     * The slider persisted a value and the body took 280dp from a dimension
+     * resource regardless, so dragging it from 4 to 8 changed nothing.
+     */
+    private fun applyBodyHeight() {
+        if (!::keyboardBody.isInitialized) return
+        val metrics = resources.displayMetrics
+        keyboardBody.updateLayoutParams {
+            height = KeyboardMetrics.bodyHeightPx(
+                screenWidthPx = metrics.widthPixels,
+                screenHeightPx = metrics.heightPixels,
+                categoryStripPx = resources.getDimensionPixelSize(R.dimen.kb_category_width),
+                columns = settings.gridColumns,
+                rows = settings.gridRows,
+            )
         }
     }
 
