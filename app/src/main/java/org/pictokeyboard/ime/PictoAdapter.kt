@@ -11,10 +11,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
-import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
-import java.io.File
 
 class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLongClick: (PictoEntity) -> Unit = {}) :
     ListAdapter<PictoAdapter.Tile, PictoAdapter.VH>(DIFF) {
@@ -33,28 +31,46 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
      */
     data class Tile(
         val picto: PictoEntity,
+        /**
+         * What Coil should load, already resolved off the main thread by
+         * [keyboardImageModel]. A [java.io.File], an ARASAAC URL, or null for the
+         * placeholder -- `bind` only draws it, and never asks the filesystem.
+         */
+        val imageModel: Any?,
         val frameColor: Int,
         val borderStyle: String,
         val borderWidthDp: Int,
         val showLabel: Boolean,
     )
 
-    fun submit(
-        pictos: List<PictoEntity>,
-        categoryColor: Int,
-        showLabels: Boolean,
-        borderStyle: String = BorderStyles.SOLID,
-        borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
-    ) {
+    /**
+     * How the selected category wants its keys drawn. Bundled rather than passed
+     * loose because these four always travel together and always come from the
+     * same category -- the same reason [ViewStyles.ChipMetrics] exists.
+     */
+    data class Style(
+        val categoryColor: Int,
+        val showLabels: Boolean,
+        val borderStyle: String = BorderStyles.SOLID,
+        val borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
+    )
+
+    /**
+     * [imageModels] maps picto id to its resolved Coil model. A picto missing
+     * from the map draws the placeholder, which is the same outcome as an
+     * explicit null, so a partial map degrades rather than crashing.
+     */
+    fun submit(pictos: List<PictoEntity>, imageModels: Map<String, Any?>, style: Style) {
         submitList(
             pictos.map { picto ->
                 Tile(
                     picto = picto,
+                    imageModel = imageModels[picto.id],
                     // Borrowed pictos keep their original category's colour.
-                    frameColor = picto.colorArgbOverride ?: categoryColor,
-                    borderStyle = borderStyle,
-                    borderWidthDp = borderWidthDp,
-                    showLabel = showLabels && picto.label.isNotBlank(),
+                    frameColor = picto.colorArgbOverride ?: style.categoryColor,
+                    borderStyle = style.borderStyle,
+                    borderWidthDp = style.borderWidthDp,
+                    showLabel = style.showLabels && picto.label.isNotBlank(),
                 )
             },
         )
@@ -87,21 +103,25 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
                 borderStyle = item.borderStyle,
             )
 
-            val path = picto.imagePath
-            if (path != null && File(path).exists()) {
-                image.load(File(path)) {
+            val model = item.imageModel
+            if (model == null) {
+                image.setImageResource(R.drawable.ic_picto_placeholder)
+            } else {
+                image.load(model) {
                     crossfade(false)
                     placeholder(R.drawable.ic_picto_placeholder)
                     error(R.drawable.ic_picto_placeholder)
                 }
-            } else if (picto.arasaacId != null) {
-                image.load(ArasaacUrls.image(picto.arasaacId))
-            } else {
-                image.setImageResource(R.drawable.ic_picto_placeholder)
             }
 
             label.text = picto.label
             label.visibility = if (item.showLabel) View.VISIBLE else View.GONE
+
+            // The name comes from the data, not from whether the caption happens
+            // to be drawn. "Show captions under pictos" is a supported setting,
+            // and with it off every key on an AAC board -- the vocabulary itself
+            // -- was an anonymous button to TalkBack.
+            itemView.contentDescription = picto.spokenText.ifBlank { picto.label }
 
             itemView.setOnClickListener { onClick(picto) }
             itemView.setOnLongClickListener {

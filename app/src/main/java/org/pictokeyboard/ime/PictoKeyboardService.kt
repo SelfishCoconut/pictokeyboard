@@ -2,6 +2,7 @@ package org.pictokeyboard.ime
 
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -12,20 +13,25 @@ import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.pictokeyboard.App
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.tts.TtsManager
+import org.pictokeyboard.ui.MainActivity
 import org.pictokeyboard.ui.theme.CategoryColors
 
 /**
@@ -35,7 +41,17 @@ import org.pictokeyboard.ui.theme.CategoryColors
  */
 class PictoKeyboardService : InputMethodService() {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    /**
+     * An uncaught exception in a `launch` here reaches the thread's default
+     * handler and kills the process -- and for an IME that reads to the user as
+     * "my keyboard crashed in every app", mid-sentence, with no way to finish
+     * what they were saying. A communication aid failing closed is worse than
+     * one failing quietly, so the handler logs and lets the keyboard stand.
+     */
+    private val crashGuard = CoroutineExceptionHandler { _, error ->
+        Log.e(TAG, "Uncaught exception in keyboard scope; keeping the keyboard up", error)
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + crashGuard)
     private val locator by lazy { App.locator() }
     private lateinit var tts: TtsManager
     private lateinit var imageSharer: PictoImageSharer
@@ -49,6 +65,10 @@ class PictoKeyboardService : InputMethodService() {
     private lateinit var blindView: BlindKeyboardView
 
     private var categories: List<CategoryEntity> = emptyList()
+
+    /** Category id -> resolved Coil model, kept so a rebuilt chip strip can be
+     * repopulated without going back to disk. See [keyboardIconModel]. */
+    private var categoryIcons: Map<String, Any?> = emptyMap()
     private var selectedCategoryId: String? = null
     private var pictoJob: Job? = null
     private var settings: Settings = Settings()
@@ -64,6 +84,14 @@ class PictoKeyboardService : InputMethodService() {
         super.onCreate()
         tts = TtsManager(this)
         imageSharer = PictoImageSharer(this)
+        // Deliberately here and not in onCreateInputView. This feeds *service*
+        // state -- `categories`, `selectedCategoryId` -- which outlives any one
+        // input view, and onCreateInputView runs again on every rotation, dark
+        // mode switch and font scale change. Started there, each recreation
+        // stacked another permanent collector on a scope that lives until
+        // onDestroy: N redundant Room queries and N refreshPictos() per emission,
+        // on the typing thread of a keyboard.
+        observeCategories()
     }
 
     override fun onCreateInputView(): View {
@@ -118,7 +146,13 @@ class PictoKeyboardService : InputMethodService() {
             )
         }
 
-        observeCategories()
+        // The collection lives in onCreate, so these adapters are new but the
+        // data is not. Seed them from what is already held, or a rotation would
+        // show an empty board until the next database emission -- which for a
+        // board nobody is editing may never come.
+        categoryAdapter.submit(categories, selectedCategoryId, categoryIcons)
+        refreshPictos()
+
         applyMode()
         return container
     }
@@ -129,7 +163,13 @@ class PictoKeyboardService : InputMethodService() {
         scope.launch {
             settings = locator.settings.current()
             tts.setParams(settings.ttsRate, settings.ttsPitch)
-            (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = settings.gridColumns
+            // onCreateInputView is gated on onEvaluateInputViewShown() and this
+            // is gated on mShowInputRequested -- different conditions, so with a
+            // hardware keyboard attached you can reach onStartInputView with no
+            // onCreateInputView in between and no pictoGrid to touch.
+            if (::pictoGrid.isInitialized) {
+                (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = settings.gridColumns
+            }
             blindMode = settings.blindMode
             applyMode()
             refreshPictos()
@@ -150,12 +190,23 @@ class PictoKeyboardService : InputMethodService() {
 
     private fun observeCategories() {
         locator.pictoRepository.observeCategories()
-            .onEach { list ->
+            // Icons resolve upstream of the collector, so the filesystem stat
+            // each one needs happens on IO once per emission rather than on the
+            // main thread once per bind.
+            .map { list -> list to list.associate { it.id to it.keyboardIconModel() } }
+            .flowOn(Dispatchers.IO)
+            .onEach { (list, icons) ->
                 categories = list
+                categoryIcons = icons
                 if (selectedCategoryId == null || categories.none { it.id == selectedCategoryId }) {
                     selectedCategoryId = list.firstOrNull()?.id
                 }
-                categoryAdapter.submit(list, selectedCategoryId)
+                // Guarded because this now runs from onCreate, which precedes the
+                // first onCreateInputView -- and with a hardware keyboard attached
+                // may precede it indefinitely.
+                if (::categoryAdapter.isInitialized) {
+                    categoryAdapter.submit(list, selectedCategoryId, icons)
+                }
                 refreshPictos()
             }
             .launchIn(scope)
@@ -164,29 +215,43 @@ class PictoKeyboardService : InputMethodService() {
     private fun onCategorySelected(category: CategoryEntity) {
         if (category.id == selectedCategoryId) return
         selectedCategoryId = category.id
-        categoryAdapter.submit(categories, selectedCategoryId)
+        categoryAdapter.submit(categories, selectedCategoryId, categoryIcons)
         refreshPictos()
     }
 
     private fun refreshPictos() {
         val categoryId = selectedCategoryId
         pictoJob?.cancel()
+        // Reachable before the first onCreateInputView now that the category
+        // collection starts in onCreate.
+        if (!::pictoAdapter.isInitialized) return
         if (categoryId == null) {
-            pictoAdapter.submit(emptyList(), 0, settings.showLabels)
+            pictoAdapter.submit(
+                pictos = emptyList(),
+                imageModels = emptyMap(),
+                style = PictoAdapter.Style(categoryColor = 0, showLabels = settings.showLabels),
+            )
             applyCategoryWash(null)
             updateEmptyHint(true)
             return
         }
         val category = categories.firstOrNull { it.id == categoryId }
-        val color = category?.colorArgb ?: 0
         // Pass the nullable through: applyCategoryWash maps null to transparent,
         // whereas 0 is opaque black and washes the grid 6% grey.
         applyCategoryWash(category?.colorArgb)
-        val borderStyle = category?.borderStyle ?: org.pictokeyboard.data.db.BorderStyles.SOLID
-        val borderWidthDp = category?.borderWidthDp ?: org.pictokeyboard.data.db.BorderStyles.DEFAULT_WIDTH_DP
+        val style = PictoAdapter.Style(
+            categoryColor = category?.colorArgb ?: 0,
+            showLabels = settings.showLabels,
+            borderStyle = category?.borderStyle ?: BorderStyles.SOLID,
+            borderWidthDp = category?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
+        )
         pictoJob = locator.pictoRepository.observePictos(categoryId)
-            .onEach { pictos ->
-                pictoAdapter.submit(pictos, color, settings.showLabels, borderStyle, borderWidthDp)
+            // Same reason as the category strip: the per-picto filesystem stat
+            // belongs off the scrolling path.
+            .map { pictos -> pictos to pictos.associate { it.id to it.keyboardImageModel() } }
+            .flowOn(Dispatchers.IO)
+            .onEach { (pictos, models) ->
+                pictoAdapter.submit(pictos, models, style)
                 updateEmptyHint(pictos.isEmpty())
             }
             .launchIn(scope)
@@ -331,7 +396,11 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     private fun openSettings() {
-        val intent = Intent(this, Class.forName("org.pictokeyboard.ui.MainActivity")).apply {
+        // A direct class reference, not Class.forName: the reflective form only
+        // worked because isMinifyEnabled = false. The first release build with
+        // R8 on would rename MainActivity and turn the gear key into a
+        // ClassNotFoundException thrown from a click handler.
+        val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
@@ -372,13 +441,26 @@ class PictoKeyboardService : InputMethodService() {
         speakBlindCurrent()
     }
 
+    /**
+     * The blind surface, or null before the first `onCreateInputView`.
+     *
+     * Blind mode is audio-first by design, so every caller here writes to the
+     * view through this and speaks unconditionally: with no surface to draw on
+     * the announcement is the entire interface, and suppressing it would be the
+     * one failure mode a blind user could not work around.
+     */
+    private fun blindSurface(): BlindKeyboardView? =
+        if (::blindView.isInitialized) blindView else null
+
     /** Loads the pictos for the current category and announces it + its first picto. */
     private fun loadBlindCategory(extra: String? = null) {
         val cat = categories.getOrNull(blindCatIndex)
         if (cat == null) {
-            blindView.setCaption("")
-            blindView.setSurfaceColor(null)
-            blindView.setHint(getString(R.string.blind_no_board))
+            blindSurface()?.apply {
+                setCaption("")
+                setSurfaceColor(null)
+                setHint(getString(R.string.blind_no_board))
+            }
             tts.speak(getString(R.string.blind_no_board), settings.defaultLanguage)
             return
         }
@@ -397,19 +479,20 @@ class PictoKeyboardService : InputMethodService() {
      */
     private fun speakBlindCurrent(announcements: List<String> = emptyList()) {
         val cat = categories.getOrNull(blindCatIndex)
-        blindView.setHint(cat?.name ?: "")
+        val surface = blindSurface()
+        surface?.setHint(cat?.name ?: "")
         // The whole surface takes the category's hue, so the cue is unmissable
         // even to someone who can only make out large blocks of colour.
-        blindView.setSurfaceColor(cat?.colorArgb)
+        surface?.setSurfaceColor(cat?.colorArgb)
         val parts = announcements.map { TtsManager.Part(it, settings.defaultLanguage) }.toMutableList()
         val picto = blindPictos.getOrNull(blindPictoIndex)
         if (picto == null) {
             val msg = getString(R.string.blind_empty_category)
-            blindView.setCaption(msg)
+            surface?.setCaption(msg)
             parts += TtsManager.Part(msg, settings.defaultLanguage)
         } else {
             val label = picto.spokenText.ifBlank { picto.label }
-            blindView.setCaption(label)
+            surface?.setCaption(label)
             parts += TtsManager.Part(label, picto.language)
         }
         tts.speakSequence(parts)
@@ -431,6 +514,7 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     companion object {
+        private const val TAG = "PictoKeyboard"
         private const val WORD_LOOKBACK = 128
 
         /**

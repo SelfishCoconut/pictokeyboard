@@ -23,6 +23,7 @@ class PictoDiffTest {
     private fun tile(id: String, label: String = "pan", position: Int = 0) =
         PictoAdapter.Tile(
             picto = picto(id, label, position),
+            imageModel = "https://static.arasaac.org/pictograms/1/1_500.png",
             frameColor = 0xFFF57C00.toInt(),
             borderStyle = BorderStyles.SOLID,
             borderWidthDp = BorderStyles.DEFAULT_WIDTH_DP,
@@ -82,11 +83,25 @@ class PictoDiffTest {
     }
 
     @Test
+    fun `a changed image model is a content change`() {
+        assertFalse(diff.areContentsTheSame(tile("1"), tile("1").copy(imageModel = null)))
+    }
+
+    @Test
     fun `selection is a content change for a category row`() {
         val category = CategoryEntity(id = "food", name = "Comida", colorArgb = 0, position = 0)
-        val unselected = CategoryAdapter.Row(category, selected = false)
-        val selected = CategoryAdapter.Row(category, selected = true)
+        val unselected = CategoryAdapter.Row(category, selected = false, iconModel = null)
+        val selected = CategoryAdapter.Row(category, selected = true, iconModel = null)
         assertTrue(CategoryAdapter.DIFF.areItemsTheSame(unselected, selected))
         assertFalse(CategoryAdapter.DIFF.areContentsTheSame(unselected, selected))
+    }
+
+    @Test
+    fun `a chip that gains an icon is a content change`() {
+        val category = CategoryEntity(id = "food", name = "Comida", colorArgb = 0, position = 0)
+        val plain = CategoryAdapter.Row(category, selected = false, iconModel = null)
+        val withIcon = plain.copy(iconModel = "https://static.arasaac.org/pictograms/2/2_500.png")
+        assertTrue(CategoryAdapter.DIFF.areItemsTheSame(plain, withIcon))
+        assertFalse(CategoryAdapter.DIFF.areContentsTheSame(plain, withIcon))
     }
 }
