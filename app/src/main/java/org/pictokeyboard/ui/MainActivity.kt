@@ -44,8 +44,8 @@ import kotlinx.coroutines.launch
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.screens.AboutScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
+import org.pictokeyboard.ui.screens.BoardDetailScreen
 import org.pictokeyboard.ui.screens.BoardsScreen
-import org.pictokeyboard.ui.screens.CategoriesScreen
 import org.pictokeyboard.ui.screens.DiscoverScreen
 import org.pictokeyboard.ui.screens.PictosScreen
 import org.pictokeyboard.ui.screens.SettingsScreen
@@ -58,11 +58,12 @@ import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 object Routes {
     const val BOARDS = "boards"
     const val DISCOVER = "discover"
-    const val CATEGORIES = "categories"
+    const val BOARD = "board"
     const val PICTOS = "pictos"
     const val ADD_PICTOS = "addpictos"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
+    fun board(boardId: String) = "$BOARD/$boardId"
     fun pictos(categoryId: String) = "$PICTOS/$categoryId"
     fun addPictos(categoryId: String) = "$ADD_PICTOS/$categoryId"
 }
@@ -181,6 +182,9 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
         }
         pendingExportJson = null
     }
+    // Read once here rather than per screen: the Boards tab and the board's own
+    // Try it sheet both need it, and it is a system-settings read, not state.
+    val keyboardStatus = rememberKeyboardStatus()
     val backStack by nav.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val showBottomBar = currentRoute in NavItems.map { it.route }
@@ -221,10 +225,13 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                 val summaries by viewModel.boardSummaries.collectAsStateWithLifecycle()
                 BoardsScreen(
                     summaries = summaries,
-                    status = rememberKeyboardStatus(),
+                    status = keyboardStatus,
+                    // Opening a board hands it the keyboard, so that everything
+                    // done to it from here on -- Try it included -- is done to
+                    // the board the communicator is actually looking at.
                     onOpenBoard = { summary ->
                         viewModel.useBoard(summary.board.id)
-                        nav.navigate(Routes.CATEGORIES)
+                        nav.navigate(Routes.board(summary.board.id))
                     },
                     onUseBoard = { board -> viewModel.useBoard(board.id) },
                     onDuplicateBoard = viewModel::duplicateBoard,
@@ -255,11 +262,15 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
             composable(Routes.DISCOVER) {
                 DiscoverScreen()
             }
-            composable(Routes.CATEGORIES) {
-                CategoriesScreen(
+            composable("${Routes.BOARD}/{boardId}") { entry ->
+                BoardDetailScreen(
                     viewModel = viewModel,
-                    onBack = null,
+                    boardId = entry.arguments?.getString("boardId").orEmpty(),
+                    status = keyboardStatus,
+                    onBack = { nav.popBackStack() },
                     onOpenCategory = { id -> nav.navigate(Routes.pictos(id)) },
+                    onEnableKeyboard = { openInputMethodSettings(context) },
+                    onSelectKeyboard = { showKeyboardPicker(context) },
                 )
             }
             composable("${Routes.PICTOS}/{categoryId}") { entry ->

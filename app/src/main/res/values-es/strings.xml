@@ -97,7 +97,6 @@
     <string name="home_about_desc">Licencia y atribución de los pictogramas.</string>
     <string name="home_open_keyboard">Configuración del teclado</string>
 
-    <string name="categories_title">Categorías</string>
     <string name="category_add">Nueva categoría</string>
     <string name="category_edit">Editar categoría</string>
     <string name="category_name">Nombre de la categoría</string>
@@ -117,7 +116,15 @@
     <string name="category_frame_color">Color del marco</string>
     <string name="category_frame_style">Estilo del marco</string>
     <string name="category_frame_thickness">Grosor del marco</string>
-    <string name="category_builtin">Predeterminada</string>
+    <plurals name="category_symbol_count">
+        <item quantity="one">%1$d símbolo</item>
+        <!-- CLDR gives Spanish a "many" form (1.000.000 and up). No category
+             will ever hold that many symbols, but a plural missing a form its
+             locale declares falls back unpredictably. -->
+        <item quantity="many">%1$d símbolos</item>
+        <item quantity="other">%1$d símbolos</item>
+    </plurals>
+    <string name="category_builtin_with_count">%1$s · Predeterminada</string>
     <string name="category_more">Más opciones</string>
     <string name="picto_color_inherit">Usar el color de la categoría</string>
     <string name="category_delete_confirm">¿Eliminar esta categoría y todos sus pictos?</string>
@@ -182,10 +189,8 @@
     <string name="settings_group_backup">Copia de seguridad</string>
 
     <string name="settings_language">Idioma predeterminado</string>
-    <string name="settings_grid_columns">Columnas de la cuadrícula</string>
-    <string name="settings_grid_rows">Filas visibles (altura)</string>
-    <string name="settings_show_labels">Mostrar texto bajo los pictos</string>
     <string name="settings_add_space">Añadir un espacio tras cada palabra</string>
+    <string name="settings_layout_moved">Las columnas, las filas, el texto y los marcos son de cada tablero, no del teléfono: se ajustan en el propio tablero, en Diseño.</string>
     <string name="settings_speak">Pronunciar cada picto en voz alta</string>
     <string name="settings_tts_rate">Velocidad de voz</string>
     <string name="settings_tts_pitch">Tono de voz</string>
@@ -298,4 +303,25 @@
     <string name="about_help_heading">Ayuda</string>
     <string name="settings_group_about">Acerca de</string>
     <string name="settings_about_row">Acerca de y créditos</string>
+
+    <!-- Detalle del tablero: Categorías, Diseño y Pruébalo (#33) -->
+    <string name="board_tab_categories">Categorías</string>
+    <string name="board_tab_layout">Diseño</string>
+    <string name="board_layout_group_grid">Cuadrícula</string>
+    <string name="board_layout_columns">Columnas</string>
+    <string name="board_layout_rows">Filas</string>
+    <string name="board_layout_captions">Mostrar texto bajo los símbolos</string>
+    <string name="board_layout_group_frames">Marcos</string>
+    <string name="board_layout_frames_hint">Las categorías nuevas de este tablero empiezan con este marco. Las que ya has creado conservan el suyo.</string>
+    <string name="board_layout_group_language">Las palabras de este tablero</string>
+    <string name="board_layout_language_hint">El idioma en que se escriben y se dicen las palabras de este tablero. El idioma de la aplicación está en Ajustes.</string>
+    <string name="board_layout_group_keyboard">En el teclado</string>
+    <string name="board_layout_show_in_keyboard">Mostrar este tablero en el teclado</string>
+    <string name="board_layout_show_in_keyboard_hint">Desactívalo mientras el tablero esté a medias, para que no aparezca delante de quien lo usa.</string>
+    <string name="try_it">Pruébalo</string>
+    <string name="try_it_title">Prueba %1$s</string>
+    <string name="try_it_field">Escribe aquí</string>
+    <string name="try_it_placeholder">Toca un símbolo para escribirlo</string>
+    <string name="try_it_not_ready">PictoKeyboard todavía no es el teclado en uso, así que esta casilla abriría otro.</string>
+    <string name="try_it_done">Listo</string>
 </resources>

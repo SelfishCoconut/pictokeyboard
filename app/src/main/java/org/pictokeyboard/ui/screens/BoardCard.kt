@@ -51,6 +51,7 @@ internal fun BoardCard(
     summary: BoardSummary,
     onOpen: () -> Unit,
     onUse: () -> Unit,
+    onTryIt: () -> Unit,
     onDuplicate: () -> Unit,
     onExport: () -> Unit,
     onDelete: () -> Unit,
@@ -75,6 +76,7 @@ internal fun BoardCard(
                     BoardCardCaption(
                         summary = summary,
                         onUse = onUse,
+                        onTryIt = onTryIt,
                         onDuplicate = onDuplicate,
                         onExport = onExport,
                         onDelete = onDelete,
@@ -89,6 +91,7 @@ internal fun BoardCard(
 private fun BoardCardCaption(
     summary: BoardSummary,
     onUse: () -> Unit,
+    onTryIt: () -> Unit,
     onDuplicate: () -> Unit,
     onExport: () -> Unit,
     onDelete: () -> Unit,
@@ -121,6 +124,7 @@ private fun BoardCardCaption(
         BoardOverflow(
             board = board,
             onUse = onUse,
+            onTryIt = onTryIt,
             onDuplicate = onDuplicate,
             onExport = onExport,
             onDelete = onDelete,
@@ -154,12 +158,31 @@ private fun InUseBadge(colorArgb: Int) {
 private fun BoardOverflow(
     board: BoardEntity,
     onUse: () -> Unit,
+    onTryIt: () -> Unit,
     onDuplicate: () -> Unit,
     onExport: () -> Unit,
     onDelete: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
     var confirmingDelete by remember { mutableStateOf(false) }
+
+    // The menu as data: label, and what it does. A list rather than five
+    // near-identical DropdownMenuItem blocks, so that closing the menu is stated
+    // once — five copies of `open = false` is five chances for the next action
+    // added here to leave the menu hanging open over the dialog it just opened.
+    //
+    // Order is deliberate. Try it sits above the housekeeping actions because it
+    // is what a caregiver does after every edit, and until now doing it meant
+    // leaving for another app.
+    val actions: List<Pair<Int, () -> Unit>> = buildList {
+        // Absent on the board already in use: an action that cannot change
+        // anything is noise, and here it would read as "did that not work?"
+        if (!board.active) add(R.string.boards_use_this to onUse)
+        add(R.string.try_it to onTryIt)
+        add(R.string.boards_duplicate to onDuplicate)
+        add(R.string.boards_export to onExport)
+        add(R.string.boards_delete to { confirmingDelete = true })
+    }
 
     Box {
         IconButton(onClick = { open = true }) {
@@ -169,38 +192,15 @@ private fun BoardOverflow(
             )
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            // Absent on the board already in use: an action that cannot change
-            // anything is noise, and here it would read as "did that not work?"
-            if (!board.active) {
+            actions.forEach { (label, action) ->
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.boards_use_this)) },
+                    text = { Text(stringResource(label)) },
                     onClick = {
                         open = false
-                        onUse()
+                        action()
                     },
                 )
             }
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.boards_duplicate)) },
-                onClick = {
-                    open = false
-                    onDuplicate()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.boards_export)) },
-                onClick = {
-                    open = false
-                    onExport()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.boards_delete)) },
-                onClick = {
-                    open = false
-                    confirmingDelete = true
-                },
-            )
         }
     }
 

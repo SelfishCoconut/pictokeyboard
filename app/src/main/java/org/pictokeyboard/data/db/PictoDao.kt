@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 /** One row of [PictoDao.observeCountsByBoard]. */
 data class BoardPictoCount(val boardId: String, val pictoCount: Int)
 
+/** One row of [PictoDao.observeCountsByCategory]. */
+data class CategoryPictoCount(val categoryId: String, val pictoCount: Int)
+
 @Dao
 interface PictoDao {
 
@@ -36,6 +39,21 @@ interface PictoDao {
             "GROUP BY c.boardId",
     )
     fun observeCountsByBoard(): Flow<List<BoardPictoCount>>
+
+    /**
+     * How many pictograms each category holds, for the count on its row of the
+     * board's Categories list.
+     *
+     * A LEFT JOIN from categories for the same reason as [observeCountsByBoard]:
+     * an empty category is exactly the one a caregiver is looking for, so it has
+     * to report 0 rather than drop out of the result.
+     */
+    @Query(
+        "SELECT c.id AS categoryId, COUNT(p.id) AS pictoCount " +
+            "FROM categories c LEFT JOIN pictos p ON p.categoryId = c.id " +
+            "GROUP BY c.id",
+    )
+    fun observeCountsByCategory(): Flow<List<CategoryPictoCount>>
 
     /**
      * Pictos of several categories at once, for the miniatures on the boards

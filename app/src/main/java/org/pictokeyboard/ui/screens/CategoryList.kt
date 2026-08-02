@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -71,6 +72,7 @@ import java.io.File
 @Composable
 internal fun ReorderableCategoryList(
     categories: List<CategoryEntity>,
+    pictoCounts: Map<String, Int>,
     reordering: Boolean,
     modifier: Modifier = Modifier,
     onReorder: (List<CategoryEntity>) -> Unit,
@@ -100,6 +102,7 @@ internal fun ReorderableCategoryList(
         itemsIndexed(items, key = { _, c -> c.id }) { index, category ->
             CategoryRow(
                 category = category,
+                pictoCount = pictoCounts[category.id] ?: 0,
                 reordering = reordering,
                 dragging = category.id == drag.draggedId,
                 dragOffsetY = drag.offsetY,
@@ -206,10 +209,15 @@ private fun rowUnderFinger(visible: List<RowBounds>, draggedId: String?, dragOff
  *
  * The colour becomes a full-height bar down the leading edge rather than a ring
  * around the icon, so scanning the list reads as the AAC colour code itself.
+ *
+ * The symbol count is the second line, because "which of these is still empty"
+ * is the question a caregiver building a board asks most often, and answering it
+ * used to mean opening every category in turn.
  */
 @Composable
 private fun CategoryRow(
     category: CategoryEntity,
+    pictoCount: Int,
     reordering: Boolean,
     dragging: Boolean,
     dragOffsetY: Float,
@@ -261,13 +269,7 @@ private fun CategoryRow(
                 CategoryIcon(category)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(category.name, style = MaterialTheme.typography.titleMedium)
-                    if (category.builtin) {
-                        Text(
-                            stringResource(R.string.category_builtin),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    CategorySubtitle(builtin = category.builtin, pictoCount = pictoCount)
                 }
                 if (reordering) {
                     ReorderControls(
@@ -282,6 +284,22 @@ private fun CategoryRow(
             }
         }
     }
+}
+
+/**
+ * How much is in this category, and whether it came with the app.
+ *
+ * One line rather than two: the count is the useful half and the default marker
+ * is a footnote to it, so they share a line and the row keeps its height.
+ */
+@Composable
+private fun CategorySubtitle(builtin: Boolean, pictoCount: Int) {
+    val count = pluralStringResource(R.plurals.category_symbol_count, pictoCount, pictoCount)
+    Text(
+        if (builtin) stringResource(R.string.category_builtin_with_count, count) else count,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /**

@@ -111,7 +111,6 @@
     <string name="home_open_keyboard">Keyboard setup</string>
 
     <!-- Categories -->
-    <string name="categories_title">Categories</string>
     <string name="category_add">New category</string>
     <string name="category_edit">Edit category</string>
     <string name="category_name">Category name</string>
@@ -133,7 +132,12 @@
     <string name="category_frame_color">Frame colour</string>
     <string name="category_frame_style">Frame style</string>
     <string name="category_frame_thickness">Frame thickness</string>
-    <string name="category_builtin">Default</string>
+    <!-- Second line of a category row on the board: how much is in it. -->
+    <plurals name="category_symbol_count">
+        <item quantity="one">%1$d symbol</item>
+        <item quantity="other">%1$d symbols</item>
+    </plurals>
+    <string name="category_builtin_with_count">%1$s · Default</string>
     <string name="category_more">More options</string>
     <string name="picto_color_inherit">Use the category colour</string>
     <string name="category_delete_confirm">Delete this category and all its pictos?</string>
@@ -200,10 +204,8 @@
     <string name="settings_group_backup">Backup</string>
 
     <string name="settings_language">Default language</string>
-    <string name="settings_grid_columns">Grid columns</string>
-    <string name="settings_grid_rows">Visible rows (height)</string>
-    <string name="settings_show_labels">Show captions under pictos</string>
     <string name="settings_add_space">Add a space after each word</string>
+    <string name="settings_layout_moved">Columns, rows, captions and frames belong to a board, not to the phone — set them on the board itself, under Layout.</string>
     <string name="settings_speak">Speak each picto aloud</string>
     <string name="settings_tts_rate">Speech rate</string>
     <string name="settings_tts_pitch">Speech pitch</string>
@@ -318,4 +320,25 @@
     <string name="about_help_heading">Help</string>
     <string name="settings_group_about">About</string>
     <string name="settings_about_row">About and credits</string>
+
+    <!-- Board detail: Categories, Layout and Try it (#33) -->
+    <string name="board_tab_categories">Categories</string>
+    <string name="board_tab_layout">Layout</string>
+    <string name="board_layout_group_grid">Grid</string>
+    <string name="board_layout_columns">Columns</string>
+    <string name="board_layout_rows">Rows</string>
+    <string name="board_layout_captions">Show captions under symbols</string>
+    <string name="board_layout_group_frames">Frames</string>
+    <string name="board_layout_frames_hint">New categories on this board start with this frame. Categories you already made keep theirs.</string>
+    <string name="board_layout_group_language">Words on this board</string>
+    <string name="board_layout_language_hint">The language this board\'s words are written and spoken in. The app\'s own language is in Settings.</string>
+    <string name="board_layout_group_keyboard">On the keyboard</string>
+    <string name="board_layout_show_in_keyboard">Show this board in the keyboard</string>
+    <string name="board_layout_show_in_keyboard_hint">Turn this off while a board is half-built, so it does not appear in front of the person using it.</string>
+    <string name="try_it">Try it</string>
+    <string name="try_it_title">Try %1$s</string>
+    <string name="try_it_field">Type here</string>
+    <string name="try_it_placeholder">Tap a symbol to write it</string>
+    <string name="try_it_not_ready">PictoKeyboard is not the keyboard in use yet, so this box would open a different one.</string>
+    <string name="try_it_done">Done</string>
 </resources>

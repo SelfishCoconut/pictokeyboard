@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
-import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
@@ -57,7 +56,6 @@ fun SettingsScreen(
     onBack: (() -> Unit)? = null,
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val board by viewModel.activeBoard.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
@@ -89,13 +87,9 @@ fun SettingsScreen(
 
     SettingsScreenContent(
         settings = settings,
-        board = board,
         onBack = onBack,
         onOpenAbout = onOpenAbout,
         onLanguage = viewModel::setLanguage,
-        onColumns = viewModel::setColumns,
-        onRows = viewModel::setRows,
-        onShowLabels = viewModel::setShowLabels,
         onAddSpace = viewModel::setAddSpace,
         onSpeak = viewModel::setSpeak,
         onTtsRate = viewModel::setTtsRate,
@@ -118,13 +112,9 @@ fun SettingsScreen(
 @Composable
 fun SettingsScreenContent(
     settings: Settings,
-    board: BoardEntity?,
     onBack: (() -> Unit)?,
     onOpenAbout: () -> Unit,
     onLanguage: (String) -> Unit,
-    onColumns: (Int) -> Unit,
-    onRows: (Int) -> Unit,
-    onShowLabels: (Boolean) -> Unit,
     onAddSpace: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
@@ -148,11 +138,7 @@ fun SettingsScreenContent(
         ) {
             SettingsGroups(
                 settings = settings,
-                board = board,
                 onLanguage = onLanguage,
-                onColumns = onColumns,
-                onRows = onRows,
-                onShowLabels = onShowLabels,
                 onAddSpace = onAddSpace,
                 onSpeak = onSpeak,
                 onTtsRate = onTtsRate,
@@ -187,13 +173,9 @@ private fun SettingsScreenPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(),
-            board = null,
             onBack = {},
             onOpenAbout = {},
             onLanguage = {},
-            onColumns = {},
-            onRows = {},
-            onShowLabels = {},
             onAddSpace = {},
             onSpeak = {},
             onTtsRate = {},
@@ -213,13 +195,9 @@ private fun SettingsScreenWithPinPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(hasPin = true, blindMode = true, defaultLanguage = "en"),
-            board = null,
             onBack = {},
             onOpenAbout = {},
             onLanguage = {},
-            onColumns = {},
-            onRows = {},
-            onShowLabels = {},
             onAddSpace = {},
             onSpeak = {},
             onTtsRate = {},
@@ -287,11 +265,7 @@ private fun SetPinDialog(onDismiss: () -> Unit, onSet: (String) -> Unit) {
 @Composable
 private fun ColumnScope.SettingsGroups(
     settings: Settings,
-    board: BoardEntity?,
     onLanguage: (String) -> Unit,
-    onColumns: (Int) -> Unit,
-    onRows: (Int) -> Unit,
-    onShowLabels: (Boolean) -> Unit,
     onAddSpace: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
@@ -303,7 +277,7 @@ private fun ColumnScope.SettingsGroups(
         LanguageSection(settings.defaultLanguage, onLanguage)
     }
     SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
-        GridSection(board, settings, onColumns, onRows, onShowLabels, onAddSpace)
+        KeyboardSection(settings, onAddSpace)
     }
     SettingsGroup(stringResource(R.string.settings_group_voice)) {
         SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)

@@ -68,6 +68,11 @@ class ConfigViewModel : ViewModel() {
         repo.observeBoardSummaries()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Pictogram count per category id, for the board's Categories list. */
+    val categoryPictoCounts: StateFlow<Map<String, Int>> =
+        repo.observeCategoryPictoCounts()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     private val _search = MutableStateFlow<SearchState>(SearchState.Idle)
     val search: StateFlow<SearchState> = _search
 
@@ -287,25 +292,27 @@ class ConfigViewModel : ViewModel() {
 
     // --- Board layout ------------------------------------------------------
     //
-    // Columns, rows and captions describe the situation rather than the person,
-    // so they write to the board in use rather than to Settings (#31). They are
-    // still reached from the Settings screen; #33 moves them onto the board's
-    // own detail screen, where they belong.
-
-    fun setColumns(value: Int) = updateBoard { it.copy(columns = value.coerceIn(BoardEntity.COLUMN_RANGE)) }
-    fun setRows(value: Int) = updateBoard { it.copy(rows = value.coerceIn(BoardEntity.ROW_RANGE)) }
-    fun setShowLabels(value: Boolean) = updateBoard { it.copy(showLabels = value) }
+    // Columns, rows, captions, frame defaults and the board's own language
+    // describe the situation rather than the person, so they write to the board
+    // rather than to Settings (#31) and are edited on the board's own detail
+    // screen rather than in Settings (#33).
 
     /**
-     * Applies [change] to the board in use.
+     * Saves an edited board — layout, language, visibility.
      *
-     * A no-op when there is no active board, which can only be the moment
-     * before seeding finishes — silently doing nothing beats writing the change
-     * onto a board that does not exist yet.
+     * The clamp is here rather than at each control, so no caller can persist a
+     * grid the keyboard cannot draw: the same guard has to hold for a slider,
+     * for an imported pack and for a value inherited from before boards existed.
      */
-    private fun updateBoard(change: (BoardEntity) -> BoardEntity) = viewModelScope.launch {
-        repo.activeBoard()?.let { repo.updateBoard(change(it)) }
+    fun saveBoard(board: BoardEntity) = viewModelScope.launch {
+        repo.updateBoard(
+            board.copy(
+                columns = BoardEntity.clampColumns(board.columns),
+                rows = BoardEntity.clampRows(board.rows),
+            ),
+        )
     }
+
     fun setAddSpace(value: Boolean) = viewModelScope.launch { settingsStore.setAddSpaceAfter(value) }
     fun setSpeak(value: Boolean) = viewModelScope.launch { settingsStore.setSpeakOnTap(value) }
     fun setTtsRate(value: Float) = viewModelScope.launch { settingsStore.setTtsRate(value) }
