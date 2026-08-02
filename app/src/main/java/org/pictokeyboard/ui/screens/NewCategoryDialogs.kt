@@ -41,7 +41,7 @@ import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
-import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.repo.currentIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
@@ -251,7 +251,7 @@ internal fun CategoryEditDialog(
  * test supplies an empty lambda.
  */
 typealias CategoryPickerSlot =
-    @Composable (categoryId: String?, onDismiss: () -> Unit, onPicked: (CategoryIcon) -> Unit) -> Unit
+    @Composable (categoryId: String?, onDismiss: () -> Unit, onPicked: (IconChoice) -> Unit) -> Unit
 
 /** Everything the category editor collects, saved in one write. */
 data class CategoryEdit(
@@ -259,7 +259,7 @@ data class CategoryEdit(
     val color: Int,
     val borderStyle: String,
     val borderWidthDp: Int,
-    val icon: CategoryIcon,
+    val icon: IconChoice,
 )
 
 /** The editor's starting values: an existing category's, or the defaults for a new one. */
@@ -268,7 +268,7 @@ private fun CategoryEntity?.toEdit() = CategoryEdit(
     color = this?.colorArgb ?: CategoryPalette.first().argb.toInt(),
     borderStyle = this?.borderStyle ?: BorderStyles.SOLID,
     borderWidthDp = this?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
-    icon = this?.currentIcon() ?: CategoryIcon.None,
+    icon = this?.currentIcon() ?: IconChoice.None,
 )
 
 /**
@@ -288,11 +288,11 @@ private fun CategoryEditForm(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.category_picto), style = MaterialTheme.typography.labelLarge)
-        CategoryIconField(
+        IconField(
             icon = edit.icon,
             accent = accent,
             onChoose = onChoosePicto,
-            onClear = { onChange(edit.copy(icon = CategoryIcon.None)) },
+            onClear = { onChange(edit.copy(icon = IconChoice.None)) },
         )
 
         OutlinedTextField(

@@ -292,7 +292,7 @@ class PictoRepository(
         colorArgb: Int,
         borderStyle: String = BorderStyles.SOLID,
         borderWidthDp: Int = BorderStyles.DEFAULT_WIDTH_DP,
-        icon: CategoryIcon = CategoryIcon.None,
+        icon: IconChoice = IconChoice.None,
     ): CategoryEntity {
         val (iconArasaacId, iconImagePath) = resolveIcon(icon)
         val board = activeBoardId()
@@ -355,7 +355,7 @@ class PictoRepository(
      * — and downloaded, if it is a fresh ARASAAC pick — before the single row
      * update, so the keyboard chip never flickers through a half-applied state.
      */
-    suspend fun updateCategory(category: CategoryEntity, icon: CategoryIcon) {
+    suspend fun updateCategory(category: CategoryEntity, icon: IconChoice) {
         val (iconArasaacId, iconImagePath) = resolveIcon(icon)
         categoryDao.update(category.copy(iconArasaacId = iconArasaacId, iconImagePath = iconImagePath))
     }
@@ -368,10 +368,10 @@ class PictoRepository(
      * the CDN, and [warmImageCache] retries on a later launch — a category that
      * shows a picto only when online beats one that shows nothing ever.
      */
-    private suspend fun resolveIcon(icon: CategoryIcon): Pair<Int?, String?> = when (icon) {
-        CategoryIcon.None -> null to null
-        is CategoryIcon.Arasaac -> icon.id to imageCache.downloadArasaac(icon.id)
-        is CategoryIcon.Local -> icon.arasaacId to icon.path
+    private suspend fun resolveIcon(icon: IconChoice): Pair<Int?, String?> = when (icon) {
+        IconChoice.None -> null to null
+        is IconChoice.Arasaac -> icon.id to imageCache.downloadArasaac(icon.id)
+        is IconChoice.Local -> icon.arasaacId to icon.path
     }
 
     /**

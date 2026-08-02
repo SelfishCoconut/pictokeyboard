@@ -13,7 +13,7 @@ import java.io.File
  * never happened, and whether the preview shows the same image the keyboard
  * will. Both render as a blank tile when wrong, with no exception to trace.
  */
-class CategoryIconTest {
+class IconChoiceTest {
 
     private fun category(arasaacId: Int? = null, imagePath: String? = null) = CategoryEntity(
         id = "cat-1",
@@ -42,13 +42,13 @@ class CategoryIconTest {
 
     @Test
     fun `a category with no picto starts on None`() {
-        assertEquals(CategoryIcon.None, category().currentIcon())
+        assertEquals(IconChoice.None, category().currentIcon())
     }
 
     @Test
     fun `a cached picto starts on the cached file`() {
         assertEquals(
-            CategoryIcon.Local("/data/pictos/arasaac_2309.png", 2309),
+            IconChoice.Local("/data/pictos/arasaac_2309.png", 2309),
             category(arasaacId = 2309, imagePath = "/data/pictos/arasaac_2309.png").currentIcon(),
         )
     }
@@ -56,7 +56,7 @@ class CategoryIconTest {
     @Test
     fun `an imported photo keeps no arasaac id`() {
         assertEquals(
-            CategoryIcon.Local("/data/pictos/custom_abc.png", null),
+            IconChoice.Local("/data/pictos/custom_abc.png", null),
             category(imagePath = "/data/pictos/custom_abc.png").currentIcon(),
         )
     }
@@ -66,33 +66,33 @@ class CategoryIconTest {
         // The regression this guards: reading it back as Local(null-path) would
         // store a path that was never written, leaving the category permanently
         // blank offline. Happens on any install seeded without a connection.
-        assertEquals(CategoryIcon.Arasaac(2309), category(arasaacId = 2309).currentIcon())
+        assertEquals(IconChoice.Arasaac(2309), category(arasaacId = 2309).currentIcon())
     }
 
     @Test
     fun `None has nothing to draw`() {
-        assertNull(CategoryIcon.None.previewModel())
+        assertNull(IconChoice.None.previewModel())
     }
 
     @Test
     fun `an uncached pick previews from the CDN`() {
         assertEquals(
             "https://static.arasaac.org/pictograms/2309/2309_500.png",
-            CategoryIcon.Arasaac(2309).previewModel(),
+            IconChoice.Arasaac(2309).previewModel(),
         )
     }
 
     @Test
     fun `a promoted picto keeps its arasaac id for the CDN fallback`() {
         assertEquals(
-            CategoryIcon.Local("/data/pictos/arasaac_2309.png", 2309, "apple"),
-            picto(arasaacId = 2309, imagePath = "/data/pictos/arasaac_2309.png").asCategoryIcon(),
+            IconChoice.Local("/data/pictos/arasaac_2309.png", 2309, "apple"),
+            picto(arasaacId = 2309, imagePath = "/data/pictos/arasaac_2309.png").asIconChoice(),
         )
     }
 
     @Test
     fun `a picto with nothing cached yet is promoted by id`() {
-        assertEquals(CategoryIcon.Arasaac(2309, "apple"), picto(arasaacId = 2309).asCategoryIcon())
+        assertEquals(IconChoice.Arasaac(2309, "apple"), picto(arasaacId = 2309).asIconChoice())
     }
 
     @Test
@@ -100,7 +100,7 @@ class CategoryIconTest {
         // Without this the tile announces "Current category picto" for every
         // choice, and a caregiver who cannot see it has no way to tell a mis-tap
         // from the symbol they meant.
-        assertEquals("apple", picto(arasaacId = 2309).asCategoryIcon()?.label)
+        assertEquals("apple", picto(arasaacId = 2309).asIconChoice()?.label)
     }
 
     @Test
@@ -109,7 +109,7 @@ class CategoryIconTest {
         // rename it halfway through the gesture.
         assertEquals(
             "manzana",
-            picto(arasaacId = 2309, label = "  ", spokenText = "manzana").asCategoryIcon()?.label,
+            picto(arasaacId = 2309, label = "  ", spokenText = "manzana").asIconChoice()?.label,
         )
     }
 
@@ -124,7 +124,7 @@ class CategoryIconTest {
     @Test
     fun `a picto with no image at all cannot be promoted`() {
         // The picker skips these rather than offering a tile that draws nothing.
-        assertNull(picto().asCategoryIcon())
+        assertNull(picto().asIconChoice())
     }
 
     @Test
@@ -132,7 +132,7 @@ class CategoryIconTest {
         // Offline is the normal case for this app, not the exceptional one.
         assertEquals(
             File("/data/pictos/arasaac_2309.png"),
-            CategoryIcon.Local("/data/pictos/arasaac_2309.png", 2309).previewModel(),
+            IconChoice.Local("/data/pictos/arasaac_2309.png", 2309).previewModel(),
         )
     }
 }

@@ -63,8 +63,8 @@ import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
-import org.pictokeyboard.data.repo.CategoryIcon
-import org.pictokeyboard.data.repo.asCategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
+import org.pictokeyboard.data.repo.asIconChoice
 import org.pictokeyboard.data.repo.previewModel
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.SearchState
@@ -75,13 +75,13 @@ import org.pictokeyboard.ui.SearchState
  * read, the category strip is the primary control and a label-only entry in it
  * carries no meaning.
  *
- * Tapping the tile opens [CategoryIconPickerDialog]. Removing is deliberately
+ * Tapping the tile opens [IconPickerDialog]. Removing is deliberately
  * kept as a separate, labelled action rather than an option buried in the
  * picker, since it is the one choice that undoes a picture.
  */
 @Composable
-fun CategoryIconField(
-    icon: CategoryIcon,
+fun IconField(
+    icon: IconChoice,
     accent: Color,
     onChoose: () -> Unit,
     onClear: () -> Unit,
@@ -100,7 +100,7 @@ fun CategoryIconField(
             // Kept mounted and disabled rather than removed when there is nothing
             // to clear: unmounting it drops accessibility focus mid-gesture, which
             // silently throws a screen-reader user back to the top of the editor.
-            TextButton(onClick = onClear, enabled = icon != CategoryIcon.None) {
+            TextButton(onClick = onClear, enabled = icon != IconChoice.None) {
                 Text(stringResource(R.string.category_picto_remove))
             }
         }
@@ -113,7 +113,7 @@ fun CategoryIconField(
  * further down the editor.
  */
 @Composable
-private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Unit) {
+private fun IconPreviewTile(icon: IconChoice, accent: Color, onClick: () -> Unit) {
     val model = icon.previewModel()
     // Pictos are drawn for a white background, so the plate stays white under one.
     // The empty state is text, not a picto, and needs the themed pair instead --
@@ -166,12 +166,12 @@ private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Un
  * rather than showing an empty row.
  */
 @Composable
-fun CategoryIconPickerDialog(
+fun IconPickerDialog(
     viewModel: ConfigViewModel,
     categoryId: String?,
     language: String,
     onDismiss: () -> Unit,
-    onPicked: (CategoryIcon) -> Unit,
+    onPicked: (IconChoice) -> Unit,
 ) {
     val context = LocalContext.current
     var searching by remember { mutableStateOf(false) }
@@ -227,7 +227,7 @@ fun CategoryIconPickerDialog(
             onDismiss = { searching = false },
             onPicked = { id, keyword ->
                 searching = false
-                onPicked(CategoryIcon.Arasaac(id, keyword))
+                onPicked(IconChoice.Arasaac(id, keyword))
             },
         )
     }
@@ -250,14 +250,14 @@ private fun CropToIcon(
     uri: Uri,
     viewModel: ConfigViewModel,
     onDismiss: () -> Unit,
-    onResult: (CategoryIcon?) -> Unit,
+    onResult: (IconChoice?) -> Unit,
 ) {
     CropImageDialog(
         imageUri = uri,
         viewModel = viewModel,
         onDismiss = onDismiss,
         onCropped = { bitmap ->
-            viewModel.saveIconImage(bitmap) { path -> onResult(path?.let(CategoryIcon::Local)) }
+            viewModel.saveIconImage(bitmap) { path -> onResult(path?.let(IconChoice::Local)) }
         },
     )
 }
@@ -267,7 +267,7 @@ private fun CropToIcon(
  * on the device can take a picture, and that source is then simply not offered.
  */
 private class IconSources(
-    val onPick: (CategoryIcon) -> Unit,
+    val onPick: (IconChoice) -> Unit,
     val onSearch: () -> Unit,
     val onPhoto: () -> Unit,
     val onCamera: (() -> Unit)?,
@@ -302,7 +302,7 @@ private fun SourceList(
         // Gated on what can actually be offered, not on the raw list: a picto
         // still waiting on its first download has nothing to promote, and
         // filtering inside the row would leave this header standing over nothing.
-        val offerable = own.mapNotNull { picto -> picto.asCategoryIcon()?.let { picto to it } }
+        val offerable = own.mapNotNull { picto -> picto.asIconChoice()?.let { picto to it } }
         if (offerable.isNotEmpty()) {
             Text(
                 stringResource(R.string.category_picto_from_own),
@@ -333,8 +333,8 @@ private fun SourceList(
 /** The category's own symbols, offered first — usually the right picture already. */
 @Composable
 private fun OwnPictoRow(
-    pictos: List<Pair<PictoEntity, CategoryIcon>>,
-    onPick: (CategoryIcon) -> Unit,
+    pictos: List<Pair<PictoEntity, IconChoice>>,
+    onPick: (IconChoice) -> Unit,
 ) {
     val choose = stringResource(R.string.category_picto_choose)
     Row(

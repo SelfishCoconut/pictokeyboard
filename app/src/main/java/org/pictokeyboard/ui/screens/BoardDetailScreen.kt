@@ -31,7 +31,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.repo.BoardSummary
-import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
 import org.pictokeyboard.ui.ConfigViewModel
@@ -99,7 +99,7 @@ fun BoardDetailScreen(
         // The only place the picker meets the view model. Everything below this
         // call stays previewable without one -- see CategoryPickerSlot.
         pickerDialog = { categoryId, onDismissPicker, onPicked ->
-            CategoryIconPickerDialog(
+            IconPickerDialog(
                 viewModel = viewModel,
                 categoryId = categoryId,
                 language = summary.board.language,
@@ -133,7 +133,7 @@ internal fun BoardDetailContent(
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
     onAddBlank: (CategoryEdit) -> Unit,
-    onUpdateCategory: (CategoryEntity, CategoryIcon) -> Unit,
+    onUpdateCategory: (CategoryEntity, IconChoice) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit,
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
@@ -210,7 +210,7 @@ private fun BoardDetailOverlays(
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
     onAddBlank: (CategoryEdit) -> Unit,
-    onUpdateCategory: (CategoryEntity, CategoryIcon) -> Unit,
+    onUpdateCategory: (CategoryEntity, IconChoice) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit,
     pickerDialog: CategoryPickerSlot,
     trying: Boolean,

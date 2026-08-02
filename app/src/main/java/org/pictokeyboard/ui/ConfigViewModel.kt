@@ -20,7 +20,7 @@ import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.data.repo.BoardSummary
-import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
 
 /** Search panel UI state for the ARASAAC picker. */
@@ -103,12 +103,12 @@ class ConfigViewModel : ViewModel() {
         colorArgb: Int,
         borderStyle: String,
         borderWidthDp: Int,
-        icon: CategoryIcon = CategoryIcon.None,
+        icon: IconChoice = IconChoice.None,
     ) = viewModelScope.launch {
         repo.addCategory(name, colorArgb, borderStyle, borderWidthDp, icon)
     }
 
-    fun updateCategory(category: CategoryEntity, icon: CategoryIcon) = viewModelScope.launch {
+    fun updateCategory(category: CategoryEntity, icon: IconChoice) = viewModelScope.launch {
         repo.updateCategory(category, icon)
     }
 
