@@ -5,6 +5,8 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.compose.auth.ComposeAuth
+import io.github.jan.supabase.compose.auth.googleNativeLogin
 import io.github.jan.supabase.createSupabaseClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.pictokeyboard.BuildConfig
 
 /**
  * Every call into Supabase Auth, in one place.
@@ -28,11 +31,24 @@ import kotlinx.coroutines.flow.stateIn
  */
 class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
 
+    /**
+     * Null when this build has no Google OAuth client, which hides the button
+     * rather than disabling it — a disabled control asks the caregiver to work
+     * out what is wrong with their phone.
+     */
+    val googleServerClientId: String? = BuildConfig.GOOGLE_SERVER_CLIENT_ID.takeIf { it.isNotBlank() }
+
     val client: SupabaseClient? = if (!config.isConfigured) {
         null
     } else {
         createSupabaseClient(config.url, config.anonKey) {
             install(Auth)
+            // Only with an id to give it. Installing it blank fails at the
+            // caregiver's first tap rather than at construction, which surfaces
+            // as an unexplained failure instead of a missing button.
+            googleServerClientId?.let { id ->
+                install(ComposeAuth) { googleNativeLogin(serverClientId = id) }
+            }
         }
     }
 

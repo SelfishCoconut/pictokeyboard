@@ -43,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.screens.AboutScreen
+import org.pictokeyboard.ui.screens.AccountScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
 import org.pictokeyboard.ui.screens.BoardDetailScreen
 import org.pictokeyboard.ui.screens.BoardsScreen
@@ -63,6 +64,7 @@ object Routes {
     const val ADD_PICTOS = "addpictos"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
+    const val ACCOUNT = "account"
     fun board(boardId: String) = "$BOARD/$boardId"
     fun pictos(categoryId: String) = "$PICTOS/$categoryId"
     fun addPictos(categoryId: String) = "$ADD_PICTOS/$categoryId"
@@ -296,8 +298,12 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                 SettingsScreen(
                     viewModel = viewModel,
                     onOpenAbout = { nav.navigate(Routes.ABOUT) },
+                    onOpenAccount = { nav.navigate(Routes.ACCOUNT) },
                     onBack = null,
                 )
+            }
+            composable(Routes.ACCOUNT) {
+                AccountScreen(onBack = { nav.popBackStack() })
             }
             composable(Routes.ABOUT) {
                 // Pushed from Settings now, so it gets a back arrow.

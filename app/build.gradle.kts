@@ -78,6 +78,14 @@ android {
         // without a backend is a supported build and not a broken one.
         buildConfigField("String", "SUPABASE_URL", "\"${supabaseSecret("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseSecret("SUPABASE_ANON_KEY")}\"")
+        // The OAuth *web* client id, not the Android one -- Credential Manager
+        // wants the server client id. Empty hides the Google button rather than
+        // offering one that can only fail.
+        buildConfigField(
+            "String",
+            "GOOGLE_SERVER_CLIENT_ID",
+            "\"${supabaseSecret("GOOGLE_SERVER_CLIENT_ID")}\"",
+        )
     }
 
     signingConfigs {
