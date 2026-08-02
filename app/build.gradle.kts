@@ -207,4 +207,16 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
+
+    // The instrumented suite. Its whole point is to exercise what a JVM test
+    // cannot: a real Activity, a real InputMethodService, and the accessibility
+    // tree the platform actually builds. See #67 -- before this, the two
+    // required emulator checks ran zero tests and reported success.
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
