@@ -209,6 +209,9 @@ class ConfigViewModel : ViewModel() {
     /** All pictos of [categoryId], one-shot (used by the cross-category picker). */
     suspend fun pictosOnce(categoryId: String): List<PictoEntity> = repo.pictos(categoryId)
 
+    /** Every picto on [boardId], one-shot, for the board's own picto picker. */
+    suspend fun boardPictosOnce(boardId: String): List<PictoEntity> = repo.boardPictos(boardId)
+
     /**
      * Copies [sources] into [categoryId]. Each keeps [sourceColor] — the colour
      * of the category it came from — as its frame colour.
@@ -304,6 +307,17 @@ class ConfigViewModel : ViewModel() {
      * grid the keyboard cannot draw: the same guard has to hold for a slider,
      * for an imported pack and for a value inherited from before boards existed.
      */
+    /**
+     * Saves the board's picto, separately from [saveBoard].
+     *
+     * Its own call because choosing a picto can mean a download, and folding
+     * that into the entity write would make every layout slider drag wait on a
+     * suspend function that has nothing to do with it.
+     */
+    fun saveBoardIcon(board: BoardEntity, icon: IconChoice) = viewModelScope.launch {
+        repo.updateBoardIcon(board, icon)
+    }
+
     fun saveBoard(board: BoardEntity) = viewModelScope.launch {
         repo.updateBoard(
             board.copy(

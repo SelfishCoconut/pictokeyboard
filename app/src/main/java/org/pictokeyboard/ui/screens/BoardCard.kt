@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -31,12 +32,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.repo.BoardSummary
+import org.pictokeyboard.data.repo.currentIcon
+import org.pictokeyboard.data.repo.previewModel
 import org.pictokeyboard.ui.theme.CategoryColors
 import org.pictokeyboard.ui.theme.PictoTheme
 import org.pictokeyboard.ui.theme.Spacing
+
+/** The board picto beside its name on the card, matching the keyboard tab's scale. */
+private const val BOARD_ICON_DP = 40
 
 /**
  * One board.
@@ -103,6 +110,22 @@ private fun BoardCardCaption(
             .padding(start = Spacing.lg, end = Spacing.xs, top = Spacing.md, bottom = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // The board's own picto, drawn where its name is — the same picture the
+        // keyboard's tab strip shows, so a caregiver can confirm their choice
+        // without opening the board (#54). Absent, not a placeholder, when the
+        // board has none: an empty frame reads as a failed image.
+        board.currentIcon().previewModel()?.let { model ->
+            AsyncImage(
+                model = model,
+                // The card is already one merged node carrying the board's name
+                // and counts; naming the picture again would say the board's
+                // name twice to a screen reader and add nothing.
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = Spacing.sm)
+                    .size(BOARD_ICON_DP.dp),
+            )
+        }
         Column(Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

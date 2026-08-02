@@ -3,6 +3,7 @@ package org.pictokeyboard.data.repo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import java.io.File
@@ -40,9 +41,56 @@ class IconChoiceTest {
         position = 0,
     )
 
+    private fun board(arasaacId: Int? = null, imagePath: String? = null) = BoardEntity(
+        id = "board-1",
+        name = "Doctor",
+        colorArgb = 0,
+        position = 0,
+        iconArasaacId = arasaacId,
+        iconImagePath = imagePath,
+    )
+
     @Test
     fun `a category with no picto starts on None`() {
         assertEquals(IconChoice.None, category().currentIcon())
+    }
+
+    // --- Boards ------------------------------------------------------------
+    //
+    // A board reaches the picker through the same type as a category (#54), so
+    // these prove the two entities really do resolve alike rather than merely
+    // sharing a name. A board that resolved differently would show the caregiver
+    // a picto the keyboard tab does not draw.
+
+    @Test
+    fun `a board with no picto starts on None`() {
+        assertEquals(IconChoice.None, board().currentIcon())
+    }
+
+    @Test
+    fun `a board with a cached picto starts on the cached file`() {
+        assertEquals(
+            IconChoice.Local("/data/pictos/arasaac_2309.png", 2309),
+            board(arasaacId = 2309, imagePath = "/data/pictos/arasaac_2309.png").currentIcon(),
+        )
+    }
+
+    @Test
+    fun `a board whose download never landed starts on the id, so saving retries it`() {
+        // The whole reason boards and categories share this function: storing a
+        // path that was never written leaves a tab permanently blank on a device
+        // that is perfectly able to fetch the image.
+        assertEquals(IconChoice.Arasaac(2309), board(arasaacId = 2309).currentIcon())
+    }
+
+    @Test
+    fun `a board and a category with the same columns resolve identically`() {
+        assertEquals(
+            category(arasaacId = 2309, imagePath = "/p.png").currentIcon(),
+            board(arasaacId = 2309, imagePath = "/p.png").currentIcon(),
+        )
+        assertEquals(category(arasaacId = 7).currentIcon(), board(arasaacId = 7).currentIcon())
+        assertEquals(category().currentIcon(), board().currentIcon())
     }
 
     @Test

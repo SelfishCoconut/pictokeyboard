@@ -361,7 +361,24 @@ class PictoRepository(
     }
 
     /**
-     * Turns a picker choice into the (id, path) pair a category stores.
+     * Saves the board's picto — the one its keyboard tab is drawn with.
+     *
+     * Resolved through the same [resolveIcon] a category goes through, so an
+     * ARASAAC pick made here is cached on the way in and the tab keeps drawing
+     * it offline. That sharing is the point: a board and a category store the
+     * same two columns, and a second copy of this would be a second place for
+     * the caching to be forgotten.
+     */
+    suspend fun updateBoardIcon(board: BoardEntity, icon: IconChoice) {
+        val (iconArasaacId, iconImagePath) = resolveIcon(icon)
+        boardDao.update(board.copy(iconArasaacId = iconArasaacId, iconImagePath = iconImagePath))
+    }
+
+    /** Every picto on [boardId], for the board picker's "a symbol already on this board". */
+    suspend fun boardPictos(boardId: String): List<PictoEntity> = pictoDao.getByBoard(boardId)
+
+    /**
+     * Turns a picker choice into the (id, path) pair a category or board stores.
      *
      * A fresh ARASAAC pick is cached here so the keyboard keeps showing it
      * offline. A failed download still stores the id: the chip then renders from

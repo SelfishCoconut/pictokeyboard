@@ -95,7 +95,7 @@ internal fun CategoryDialogs(
     onAddBlank: (CategoryEdit) -> Unit,
     onUpdate: (CategoryEntity, IconChoice) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
 ) {
     when (dialog) {
         null -> Unit

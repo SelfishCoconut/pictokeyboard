@@ -205,7 +205,7 @@ internal fun CategoryEditDialog(
     initial: CategoryEntity?,
     onDismiss: () -> Unit,
     onSave: (CategoryEdit) -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
 ) {
     var edit by remember { mutableStateOf(initial.toEdit()) }
     var picking by remember { mutableStateOf(false) }
@@ -231,7 +231,7 @@ internal fun CategoryEditDialog(
 
     if (picking) {
         pickerDialog(
-            initial?.id,
+            IconOwner.Category(initial?.id),
             { picking = false },
             {
                 edit = edit.copy(icon = it)
@@ -242,16 +242,19 @@ internal fun CategoryEditDialog(
 }
 
 /**
- * How the editor reaches the picto picker.
+ * How an editor reaches the picto picker.
  *
- * The picker needs the ConfigViewModel (ARASAAC search, the category's own
+ * The picker needs the ConfigViewModel (ARASAAC search, the owner's own
  * symbols, saving a cropped photo), and this file is deliberately free of it so
  * the screen stays previewable and testable without one. So it arrives as a
  * slot: the viewModel-aware caller supplies the real dialog, and a preview or a
  * test supplies an empty lambda.
+ *
+ * One slot for both the category editor and the board editor, since [IconOwner]
+ * already carries everything that differs between them.
  */
-typealias CategoryPickerSlot =
-    @Composable (categoryId: String?, onDismiss: () -> Unit, onPicked: (IconChoice) -> Unit) -> Unit
+typealias IconPickerSlot =
+    @Composable (owner: IconOwner, onDismiss: () -> Unit, onPicked: (IconChoice) -> Unit) -> Unit
 
 /** Everything the category editor collects, saved in one write. */
 data class CategoryEdit(
@@ -291,6 +294,10 @@ private fun CategoryEditForm(
         IconField(
             icon = edit.icon,
             accent = accent,
+            // Id-less: the form does not know whether it is editing or creating,
+            // and the owner is only used here for wording, which is the same
+            // either way.
+            owner = IconOwner.Category(null),
             onChoose = onChoosePicto,
             onClear = { onChange(edit.copy(icon = IconChoice.None)) },
         )

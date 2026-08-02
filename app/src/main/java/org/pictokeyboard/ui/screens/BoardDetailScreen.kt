@@ -96,12 +96,15 @@ fun BoardDetailScreen(
         onDeleteCategory = viewModel::deleteCategory,
         onEnableKeyboard = onEnableKeyboard,
         onSelectKeyboard = onSelectKeyboard,
+        onSaveBoardIcon = viewModel::saveBoardIcon,
         // The only place the picker meets the view model. Everything below this
-        // call stays previewable without one -- see CategoryPickerSlot.
-        pickerDialog = { categoryId, onDismissPicker, onPicked ->
+        // call stays previewable without one -- see IconPickerSlot. One slot
+        // serves the category editor and the board editor alike, since IconOwner
+        // already carries everything that differs between them.
+        pickerDialog = { owner, onDismissPicker, onPicked ->
             IconPickerDialog(
                 viewModel = viewModel,
-                categoryId = categoryId,
+                owner = owner,
                 language = summary.board.language,
                 onDismiss = onDismissPicker,
                 onPicked = onPicked,
@@ -127,6 +130,7 @@ internal fun BoardDetailContent(
     onBack: () -> Unit,
     onOpenCategory: (String) -> Unit,
     onSaveBoard: (BoardEntity) -> Unit,
+    onSaveBoardIcon: (BoardEntity, IconChoice) -> Unit,
     onReorder: (List<CategoryEntity>) -> Unit,
     onMove: (CategoryEntity, Boolean) -> Unit,
     loadSuggested: suspend () -> List<UsageEntity>,
@@ -137,7 +141,7 @@ internal fun BoardDetailContent(
     onDeleteCategory: (CategoryEntity) -> Unit,
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
 ) {
     var tab by rememberSaveable { mutableStateOf(BoardTab.Categories) }
     var dialog by remember { mutableStateOf<CategoryDialog?>(null) }
@@ -153,12 +157,10 @@ internal fun BoardDetailContent(
             )
         },
         floatingActionButton = {
-            if (tab == BoardTab.Categories && !reordering) {
-                AddFab(
-                    contentDescription = stringResource(R.string.category_add),
-                    onClick = { dialog = CategoryDialog.Chooser },
-                )
-            }
+            AddCategoryFab(
+                visible = tab == BoardTab.Categories && !reordering,
+                onClick = { dialog = CategoryDialog.Chooser },
+            )
         },
     ) { padding ->
         BoardDetailBody(
@@ -171,8 +173,10 @@ internal fun BoardDetailContent(
             onToggleReorder = { reordering = !reordering },
             onOpenCategory = onOpenCategory,
             onSaveBoard = onSaveBoard,
+            onSaveBoardIcon = onSaveBoardIcon,
             onReorder = onReorder,
             onMove = onMove,
+            pickerDialog = pickerDialog,
             onEditCategory = { dialog = CategoryDialog.Edit(it) },
             onDeleteCategory = { dialog = CategoryDialog.Delete(it) },
             modifier = Modifier
@@ -200,6 +204,17 @@ internal fun BoardDetailContent(
     )
 }
 
+/**
+ * Adding a category, offered only on the tab that holds categories and never
+ * while the list is being reordered — a FAB over a drag is a target the
+ * caregiver hits by accident mid-gesture.
+ */
+@Composable
+private fun AddCategoryFab(visible: Boolean, onClick: () -> Unit) {
+    if (!visible) return
+    AddFab(contentDescription = stringResource(R.string.category_add), onClick = onClick)
+}
+
 /** Everything the board detail draws over itself: the category dialogs, and Try it. */
 @Composable
 private fun BoardDetailOverlays(
@@ -212,7 +227,7 @@ private fun BoardDetailOverlays(
     onAddBlank: (CategoryEdit) -> Unit,
     onUpdateCategory: (CategoryEntity, IconChoice) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
     trying: Boolean,
     status: KeyboardStatus,
     onEnableKeyboard: () -> Unit,
@@ -256,8 +271,10 @@ private fun BoardDetailBody(
     onToggleReorder: () -> Unit,
     onOpenCategory: (String) -> Unit,
     onSaveBoard: (BoardEntity) -> Unit,
+    onSaveBoardIcon: (BoardEntity, IconChoice) -> Unit,
     onReorder: (List<CategoryEntity>) -> Unit,
     onMove: (CategoryEntity, Boolean) -> Unit,
+    pickerDialog: IconPickerSlot,
     onEditCategory: (CategoryEntity) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit,
     modifier: Modifier = Modifier,
@@ -289,6 +306,8 @@ private fun BoardDetailBody(
                 summary = summary,
                 keyboardBoardCount = keyboardBoardCount,
                 onSaveBoard = onSaveBoard,
+                onSaveBoardIcon = onSaveBoardIcon,
+                pickerDialog = pickerDialog,
             )
         }
     }
@@ -354,6 +373,7 @@ internal fun previewBoardSummary(
     columns: Int = BoardEntity.DEFAULT_COLUMNS,
     rows: Int = BoardEntity.DEFAULT_ROWS,
     showLabels: Boolean = true,
+    iconArasaacId: Int? = null,
 ): BoardSummary {
     // Built from the real templates, so the preview shows the actual palette.
     val categories = CategoryTemplates.all.take(PREVIEW_CATEGORIES).mapIndexed { i, template ->
@@ -377,6 +397,7 @@ internal fun previewBoardSummary(
             columns = columns,
             rows = rows,
             showLabels = showLabels,
+            iconArasaacId = iconArasaacId,
         ),
         categories = categories,
         heroPictos = List(PREVIEW_PICTOS) { index ->
@@ -406,6 +427,7 @@ private fun BoardDetailPreview(summary: BoardSummary) {
             onBack = {},
             onOpenCategory = {},
             onSaveBoard = {},
+            onSaveBoardIcon = { _, _ -> },
             onReorder = {},
             onMove = { _, _ -> },
             loadSuggested = { emptyList() },

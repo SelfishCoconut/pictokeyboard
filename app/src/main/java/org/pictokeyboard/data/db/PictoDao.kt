@@ -65,6 +65,21 @@ interface PictoDao {
     @Query("SELECT * FROM pictos WHERE categoryId = :categoryId ORDER BY position ASC")
     suspend fun getByCategory(categoryId: String): List<PictoEntity>
 
+    /**
+     * Every picto on a board, in the board's own reading order — category
+     * position first, then the picto's position inside it.
+     *
+     * For the board picto picker, which offers "a symbol already on this board".
+     * The join is what makes that one query rather than one per category, and
+     * the ordering is what makes the first few offered symbols the ones a
+     * caregiver would think of first.
+     */
+    @Query(
+        "SELECT p.* FROM pictos p JOIN categories c ON p.categoryId = c.id " +
+            "WHERE c.boardId = :boardId ORDER BY c.position ASC, p.position ASC",
+    )
+    suspend fun getByBoard(boardId: String): List<PictoEntity>
+
     @Query("SELECT COALESCE(MAX(position), -1) FROM pictos WHERE categoryId = :categoryId")
     suspend fun maxPosition(categoryId: String): Int
 
