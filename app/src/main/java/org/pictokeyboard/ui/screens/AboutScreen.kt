@@ -73,6 +73,14 @@ fun AboutScreenContent(onBack: (() -> Unit)?, onOpenUrl: (String) -> Unit) {
         ) {
             Text(stringResource(R.string.about_app), style = MaterialTheme.typography.bodyMedium)
 
+            // Settings -> About -> Help. Both cards used to sit permanently on
+            // the dashboard, above the board the caregiver came to look at.
+            // They are worth reading once, which makes them reference material
+            // rather than a home screen (#32).
+            Text(stringResource(R.string.about_help_heading), style = MaterialTheme.typography.titleMedium)
+            TipsCard()
+            BlindControlsCard()
+
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.about_pictos_heading), style = MaterialTheme.typography.titleMedium)
