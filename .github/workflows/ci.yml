@@ -71,3 +71,29 @@ jobs:
           name: unit-test-report
           path: "app/build/reports/tests/testDebugUnitTest"
           if-no-files-found: ignore
+
+  # The catalogue's row-level security, proved against a real Postgres.
+  #
+  # This one is not optional and it is not path-filtered. The publishable key
+  # ships inside the APK, so these policies are the only thing standing between
+  # a stranger and every community board -- and a policy that is never exercised
+  # is a policy nobody has read carefully. It runs on every pull request because
+  # required checks and path filters cannot coexist here (see automerge.yml).
+  #
+  # Only the database container starts: pgTAP connects to Postgres directly, so
+  # PostgREST, Auth and the rest are dead weight. That is the difference between
+  # a fifteen-second job and a four-minute one.
+  database:
+    name: database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Postgres and apply migrations
+        run: >-
+          supabase start
+          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Row-level security tests
+        run: supabase test db
