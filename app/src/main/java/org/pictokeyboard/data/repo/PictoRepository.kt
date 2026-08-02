@@ -2,13 +2,18 @@ package org.pictokeyboard.data.repo
 
 import android.graphics.Bitmap
 import android.net.Uri
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
 import org.pictokeyboard.data.arasaac.ImageCache
+import org.pictokeyboard.data.db.BoardDao
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryDao
 import org.pictokeyboard.data.db.CategoryEntity
@@ -16,6 +21,7 @@ import org.pictokeyboard.data.db.PictoDao
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageDao
 import org.pictokeyboard.data.db.UsageEntity
+import org.pictokeyboard.data.prefs.LegacyBoardLayout
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.DefaultData
 import java.util.UUID
@@ -25,13 +31,80 @@ import java.util.UUID
  * categories on first launch and downloading ARASAAC images into the cache so
  * the keyboard works offline.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PictoRepository(
+    private val boardDao: BoardDao,
     private val categoryDao: CategoryDao,
     private val pictoDao: PictoDao,
     private val usageDao: UsageDao,
     private val imageCache: ImageCache,
 ) {
-    fun observeCategories(): Flow<List<CategoryEntity>> = categoryDao.observeAll()
+    // --- Boards --------------------------------------------------------------
+
+    fun observeBoards(): Flow<List<BoardEntity>> = boardDao.observeAll()
+
+    fun observeActiveBoard(): Flow<BoardEntity?> = boardDao.observeActive()
+
+    suspend fun activeBoard(): BoardEntity? = boardDao.getActive()
+
+    suspend fun board(id: String): BoardEntity? = boardDao.getById(id)
+
+    suspend fun addBoard(
+        name: String,
+        colorArgb: Int = BoardEntity.DEFAULT_COLOR_ARGB,
+        language: String = "es",
+    ): BoardEntity {
+        val board = BoardEntity(
+            id = "board-" + UUID.randomUUID(),
+            name = name,
+            colorArgb = colorArgb,
+            position = boardDao.maxPosition() + 1,
+            language = language,
+        )
+        boardDao.upsert(board)
+        return board
+    }
+
+    suspend fun updateBoard(board: BoardEntity) = boardDao.update(board)
+
+    suspend fun deleteBoard(board: BoardEntity) = boardDao.delete(board)
+
+    suspend fun reorderBoards(ordered: List<BoardEntity>) {
+        // In-place UPDATE, never an upsert with REPLACE: replacing a board row
+        // deletes it, and every category on it cascades away with its pictos.
+        boardDao.updateAll(ordered.mapIndexed { i, b -> b.copy(position = i) })
+    }
+
+    suspend fun setActiveBoard(id: String) = boardDao.setActive(id)
+
+    /**
+     * Copies the layout a pre-board install kept globally onto the board the
+     * migration created, then drops the old keys.
+     *
+     * Called once on start. The Room migration cannot do this itself — the
+     * values live in DataStore, which a `SupportSQLiteDatabase` cannot read —
+     * so without this step someone who had chosen 6 columns would silently get
+     * 4 back after upgrading. Each field is applied only if it was actually
+     * set, so a value the user never touched keeps the board's own default.
+     */
+    suspend fun adoptLegacyBoardLayout(legacy: LegacyBoardLayout) {
+        val board = boardDao.getById(BoardEntity.DEFAULT_ID) ?: boardDao.getActive() ?: return
+        boardDao.update(board.withLegacyLayout(legacy))
+    }
+
+    // --- Categories and pictos ----------------------------------------------
+
+    fun observeCategories(boardId: String): Flow<List<CategoryEntity>> =
+        categoryDao.observeByBoard(boardId)
+
+    /**
+     * Categories of whichever board is in use, following a board switch without
+     * the caller having to re-subscribe.
+     */
+    fun observeActiveBoardCategories(): Flow<List<CategoryEntity>> =
+        boardDao.observeActive().flatMapLatest { board ->
+            if (board == null) flowOf(emptyList()) else categoryDao.observeByBoard(board.id)
+        }
 
     fun observePictos(categoryId: String): Flow<List<PictoEntity>> =
         pictoDao.observeByCategory(categoryId)
@@ -55,8 +128,23 @@ class PictoRepository(
      * pictos. Both ids are stable, so this is idempotent. Image caching then runs
      * separately and resumes across launches.
      */
-    suspend fun seedIfEmpty(language: String) {
-        // Categories must exist before pictos (foreign key).
+    suspend fun seedIfEmpty(language: String, boardName: String) {
+        // A board must exist before categories, and categories before pictos:
+        // both are foreign keys. On an upgraded install the migration has
+        // already created the board, and `INSERT OR IGNORE` semantics come from
+        // the count check rather than from the DAO.
+        if (boardDao.count() == 0) {
+            boardDao.upsert(
+                BoardEntity(
+                    id = BoardEntity.DEFAULT_ID,
+                    name = boardName,
+                    colorArgb = BoardEntity.DEFAULT_COLOR_ARGB,
+                    position = 0,
+                    active = true,
+                    language = language,
+                ),
+            )
+        }
         if (categoryDao.count() == 0) {
             categoryDao.upsertAll(DefaultData.categories(language))
         }
@@ -97,6 +185,18 @@ class PictoRepository(
 
     // --- Categories --------------------------------------------------------
 
+    /**
+     * The board a new category belongs to: whichever one is in use.
+     *
+     * Not a parameter, because nothing can name a different board until there
+     * is a UI that shows more than one — #32 and #33. Falls back to the
+     * migrated board's id so a category can still be created in the window
+     * before the first board is marked active, rather than failing the foreign
+     * key and losing the caregiver's work.
+     */
+    private suspend fun activeBoardId(): String =
+        boardDao.getActive()?.id ?: BoardEntity.DEFAULT_ID
+
     suspend fun addCategory(
         name: String,
         colorArgb: Int,
@@ -105,11 +205,13 @@ class PictoRepository(
         icon: CategoryIcon = CategoryIcon.None,
     ): CategoryEntity {
         val (iconArasaacId, iconImagePath) = resolveIcon(icon)
+        val board = activeBoardId()
         val cat = CategoryEntity(
             id = "cat-" + UUID.randomUUID(),
             name = name,
+            boardId = board,
             colorArgb = colorArgb,
-            position = categoryDao.maxPosition() + 1,
+            position = categoryDao.maxPosition(board) + 1,
             builtin = false,
             iconArasaacId = iconArasaacId,
             iconImagePath = iconImagePath,
@@ -127,11 +229,13 @@ class PictoRepository(
      */
     suspend fun addCategoryFromTemplate(template: CategoryTemplate, language: String): CategoryEntity =
         coroutineScope {
+            val board = activeBoardId()
             val cat = CategoryEntity(
                 id = "cat-" + UUID.randomUUID(),
                 name = template.name(language),
+                boardId = board,
                 colorArgb = template.color.toInt(),
-                position = categoryDao.maxPosition() + 1,
+                position = categoryDao.maxPosition(board) + 1,
                 builtin = false,
                 iconArasaacId = template.iconArasaacId,
                 iconImagePath = imageCache.downloadArasaac(template.iconArasaacId),
@@ -336,11 +440,13 @@ class PictoRepository(
         colorArgb: Int,
         records: List<UsageEntity>,
     ): CategoryEntity = coroutineScope {
+        val board = activeBoardId()
         val cat = CategoryEntity(
             id = "cat-" + UUID.randomUUID(),
             name = name,
+            boardId = board,
             colorArgb = colorArgb,
-            position = categoryDao.maxPosition() + 1,
+            position = categoryDao.maxPosition(board) + 1,
             builtin = false,
         )
         categoryDao.upsert(cat)

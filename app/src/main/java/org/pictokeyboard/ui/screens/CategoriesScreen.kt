@@ -38,11 +38,15 @@ fun CategoriesScreen(
     onOpenCategory: (String) -> Unit,
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val board by viewModel.activeBoard.collectAsStateWithLifecycle()
+    // The board's language, not the app's. What language a category's words are
+    // in is a property of the vocabulary being built, and a caregiver may well
+    // run the app in Spanish while building an English board for school (#31).
+    val boardLanguage = board?.language ?: "es"
 
     CategoriesScreenContent(
         categories = categories,
-        language = settings.defaultLanguage,
+        language = boardLanguage,
         onBack = onBack,
         onOpenCategory = onOpenCategory,
         onReorder = viewModel::reorderCategories,
@@ -50,7 +54,7 @@ fun CategoriesScreen(
         // from nowhere; the drag gesture was the only route into reordering.
         onMove = viewModel::moveCategory,
         loadSuggested = { viewModel.topUsed() },
-        onAddFromTemplate = { template -> viewModel.addCategoryFromTemplate(template, settings.defaultLanguage) },
+        onAddFromTemplate = { template -> viewModel.addCategoryFromTemplate(template, boardLanguage) },
         onAddSuggested = { name, records -> viewModel.addSuggestedCategory(name, records) },
         onAddBlank = { edit ->
             viewModel.addCategory(edit.name, edit.color, edit.borderStyle, edit.borderWidthDp, edit.icon)
@@ -63,7 +67,7 @@ fun CategoriesScreen(
             CategoryIconPickerDialog(
                 viewModel = viewModel,
                 categoryId = categoryId,
-                language = settings.defaultLanguage,
+                language = boardLanguage,
                 onDismiss = onDismissPicker,
                 onPicked = onPicked,
             )

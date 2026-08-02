@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.pictokeyboard.App
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
@@ -86,6 +87,19 @@ class PictoKeyboardService : InputMethodService() {
     private var pictoJob: Job? = null
     private var settings: Settings = Settings()
 
+    /**
+     * The board in use, and the source of every layout value the grid needs.
+     *
+     * Null only in the window before the first database read lands — during
+     * which the accessors below stand in the schema defaults, which is what the
+     * grid would have drawn anyway. A keyboard must never wait on a query to
+     * put keys on screen.
+     */
+    private var board: BoardEntity? = null
+    private val boardColumns get() = board?.columns ?: BoardEntity.DEFAULT_COLUMNS
+    private val boardRows get() = board?.rows ?: BoardEntity.DEFAULT_ROWS
+    private val boardShowLabels get() = board?.showLabels ?: true
+
     // --- Blind (eyes-free) mode state --------------------------------------
     private var blindMode = false
     private var blindLoaded = false
@@ -123,7 +137,7 @@ class PictoKeyboardService : InputMethodService() {
             adapter = categoryAdapter
         }
         pictoGrid = normalView.findViewById<RecyclerView>(R.id.grid_pictos).apply {
-            layoutManager = GridLayoutManager(context, settings.gridColumns)
+            layoutManager = GridLayoutManager(context, boardColumns)
             adapter = pictoAdapter
         }
         keyboardBody = normalView.findViewById(R.id.keyboard_body)
@@ -205,13 +219,14 @@ class PictoKeyboardService : InputMethodService() {
         // Re-read settings so config changes apply next time the keyboard opens.
         scope.launch {
             settings = locator.settings.current()
+            board = locator.pictoRepository.activeBoard()
             tts.setParams(settings.ttsRate, settings.ttsPitch)
             // onCreateInputView is gated on onEvaluateInputViewShown() and this
             // is gated on mShowInputRequested -- different conditions, so with a
             // hardware keyboard attached you can reach onStartInputView with no
             // onCreateInputView in between and no pictoGrid to touch.
             if (::pictoGrid.isInitialized) {
-                (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = settings.gridColumns
+                (pictoGrid.layoutManager as? GridLayoutManager)?.spanCount = boardColumns
             }
             // Height follows the same settings read, so the slider takes effect
             // the next time the keyboard opens rather than only after a restart.
@@ -228,10 +243,13 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     /**
-     * Sizes the picto body from `gridRows`, which nothing read before this.
+     * Sizes the picto body from the board's `rows`, which nothing read before
+     * this.
      *
      * The slider persisted a value and the body took 280dp from a dimension
-     * resource regardless, so dragging it from 4 to 8 changed nothing.
+     * resource regardless, so dragging it from 4 to 8 changed nothing. The
+     * value moved from global settings onto the board in #31; what it drives
+     * here is unchanged.
      */
     private fun applyBodyHeight() {
         if (!::keyboardBody.isInitialized) return
@@ -241,8 +259,8 @@ class PictoKeyboardService : InputMethodService() {
                 screenWidthPx = metrics.widthPixels,
                 screenHeightPx = metrics.heightPixels,
                 categoryStripPx = resources.getDimensionPixelSize(R.dimen.kb_category_width),
-                columns = settings.gridColumns,
-                rows = settings.gridRows,
+                columns = boardColumns,
+                rows = boardRows,
             )
         }
     }
@@ -255,7 +273,7 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     private fun observeCategories() {
-        locator.pictoRepository.observeCategories()
+        locator.pictoRepository.observeActiveBoardCategories()
             // Icons resolve upstream of the collector, so the filesystem stat
             // each one needs happens on IO once per emission rather than on the
             // main thread once per bind.
@@ -295,7 +313,7 @@ class PictoKeyboardService : InputMethodService() {
             pictoAdapter.submit(
                 pictos = emptyList(),
                 imageModels = emptyMap(),
-                style = PictoAdapter.Style(categoryColor = 0, showLabels = settings.showLabels),
+                style = PictoAdapter.Style(categoryColor = 0, showLabels = boardShowLabels),
             )
             applyCategoryWash(null)
             updateEmptyHint(true)
@@ -307,7 +325,7 @@ class PictoKeyboardService : InputMethodService() {
         applyCategoryWash(category?.colorArgb)
         val style = PictoAdapter.Style(
             categoryColor = category?.colorArgb ?: 0,
-            showLabels = settings.showLabels,
+            showLabels = boardShowLabels,
             borderStyle = category?.borderStyle ?: BorderStyles.SOLID,
             borderWidthDp = category?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
         )

@@ -36,3 +36,14 @@ complexity:
     # hoisting state correctly *raises* the parameter count. Penalising that
     # would push screens back towards holding their own view model.
     ignoreAnnotated: ['Composable']
+
+  TooManyFunctions:
+    # A @Dao is a declarative list of queries with no bodies and no state. Its
+    # function count is the size of its query surface, which says nothing about
+    # the complexity the rule exists to catch -- splitting one in two to satisfy
+    # a threshold would leave the same queries in two files.
+    #
+    # The baseline already carried CategoryDao and PictoDao for this, which is
+    # the rule being wrong three times rather than three pieces of debt. Naming
+    # the blind spot here lets those entries come out.
+    ignoreAnnotated: ['Dao']

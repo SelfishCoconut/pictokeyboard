@@ -12,6 +12,16 @@ kotlin {
     }
 }
 
+// Room writes the schema of every version to `app/schemas`, and those files are
+// committed. They are what MigrationTestHelper opens to build a real database
+// at the old version before running a migration against it -- without them a
+// migration test can only assert what the migration says it does, not that the
+// resulting schema is the one the entities describe. Committing them also makes
+// a schema change visible in review as a diff rather than as a version bump.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 // Release signing material and the version code, by the names release.yml
 // already passes them under. An environment variable is how CI supplies them;
 // the Gradle property fallback is for signing a build by hand without putting
@@ -107,6 +117,12 @@ android {
             isReturnDefaultValues = true
         }
     }
+
+    // MigrationTestHelper reads the exported schemas from the test APK's assets,
+    // so the directory ksp writes them to has to be an androidTest asset source.
+    sourceSets.getByName("androidTest") {
+        assets.srcDir("$projectDir/schemas")
+    }
 }
 
 // Passed explicitly rather than relying on .editorconfig discovery, which
@@ -192,6 +208,21 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    androidTestImplementation(libs.androidx.room.testing)
+
+    // room-testing parses the exported schema JSON with kotlinx-serialization
+    // 1.8, whose `GeneratedSerializer` gained a method 1.7 does not have. AGP's
+    // consistent resolution forces the androidTest classpath to match the app's,
+    // and the app was on 1.7.3 transitively via lifecycle -- so the test APK got
+    // 1.7.3 and every migration test died on AbstractMethodError before running
+    // an assertion. A constraint rather than a dependency: nothing here wants
+    // serialization directly, this only raises the version of what already
+    // arrives on its own.
+    constraints {
+        implementation(libs.kotlinx.serialization.core) {
+            because("room-testing needs the kotlinx-serialization 1.8 ABI on the androidTest classpath")
+        }
+    }
 
     implementation(libs.androidx.datastore.preferences)
 

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
@@ -51,6 +52,7 @@ import org.pictokeyboard.ui.theme.Spacing
 @Composable
 fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val board by viewModel.activeBoard.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
@@ -82,6 +84,7 @@ fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
 
     SettingsScreenContent(
         settings = settings,
+        board = board,
         onBack = onBack,
         onLanguage = viewModel::setLanguage,
         onColumns = viewModel::setColumns,
@@ -109,6 +112,7 @@ fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
 @Composable
 fun SettingsScreenContent(
     settings: Settings,
+    board: BoardEntity?,
     onBack: (() -> Unit)?,
     onLanguage: (String) -> Unit,
     onColumns: (Int) -> Unit,
@@ -155,7 +159,7 @@ fun SettingsScreenContent(
                 LanguageSection(settings.defaultLanguage, onLanguage)
             }
             SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
-                GridSection(settings, onColumns, onRows, onShowLabels, onAddSpace)
+                GridSection(board, settings, onColumns, onRows, onShowLabels, onAddSpace)
             }
             SettingsGroup(stringResource(R.string.settings_group_voice)) {
                 SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
@@ -190,6 +194,7 @@ private fun SettingsScreenPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(),
+            board = null,
             onBack = {},
             onLanguage = {},
             onColumns = {},
@@ -214,6 +219,7 @@ private fun SettingsScreenWithPinPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(hasPin = true, blindMode = true, defaultLanguage = "en"),
+            board = null,
             onBack = {},
             onLanguage = {},
             onColumns = {},

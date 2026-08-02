@@ -325,10 +325,8 @@
     <ID>ReturnCount:PictoImageSharer.kt$PictoImageSharer$suspend fun send( picto: PictoEntity, frameColor: Int, attribution: String?, currentTarget: () -&gt; Target?, onError: (Int) -&gt; Unit, )</ID>
     <ID>ReturnCount:PictoKeyboardService.kt$PictoKeyboardService$private fun deleteLastWord()</ID>
     <ID>ReturnCount:SettingsStore.kt$SettingsStore$suspend fun verifyPin(pin: String): Boolean</ID>
-    <ID>TooManyFunctions:CategoryDao.kt$CategoryDao</ID>
     <ID>TooManyFunctions:ConfigViewModel.kt$ConfigViewModel : ViewModel</ID>
     <ID>TooManyFunctions:DashboardScreen.kt$org.pictokeyboard.ui.screens.DashboardScreen.kt</ID>
-    <ID>TooManyFunctions:PictoDao.kt$PictoDao</ID>
     <ID>TooManyFunctions:PictoKeyboardService.kt$PictoKeyboardService : InputMethodService</ID>
     <ID>TooManyFunctions:PictoRepository.kt$PictoRepository</ID>
     <ID>TooManyFunctions:SettingsStore.kt$SettingsStore</ID>

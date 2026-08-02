@@ -21,7 +21,13 @@ import java.util.concurrent.TimeUnit
  */
 class ServiceLocator(context: Context) {
 
-    private val appContext = context.applicationContext
+    /**
+     * Application context. Exposed because the first board is named after the
+     * app, so seeding needs to resolve a string resource — the same name the
+     * v3→v4 migration writes, read from the same place rather than duplicated
+     * as a literal.
+     */
+    val appContext: Context = context.applicationContext
 
     private val moshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -48,6 +54,7 @@ class ServiceLocator(context: Context) {
     val arasaacRepository = ArasaacRepository(arasaacApi)
 
     val pictoRepository = PictoRepository(
+        boardDao = db.boardDao(),
         categoryDao = db.categoryDao(),
         pictoDao = db.pictoDao(),
         usageDao = db.usageDao(),
