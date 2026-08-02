@@ -1,7 +1,13 @@
 # PictoKeyboard — accounts and board sync
 
 **Date:** 2026-08-02
-**Status:** filed — milestone **Accounts and sync** (#79–#83)
+**Status:** **SUPERSEDED on 2026-08-03** by
+`2026-08-03-marketplace-and-local-backup-design.md`. Cloud sync of personal
+boards was dropped: boards now never leave the device except in an export file
+the caregiver controls, and the server holds only accounts and the marketplace
+catalogue. #79 (accounts) survives and shipped; #80, #81 and #82 are superseded.
+Kept for the reasoning behind the decisions that carried over — tombstones,
+photo privacy, and why the keyboard must never link the auth stack.
 **Scope:** Supabase-backed caregiver accounts, cloud backup of boards and voice
 settings, restore onto a new device, and self-service deletion.
 
