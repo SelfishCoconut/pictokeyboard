@@ -1,0 +1,98 @@
+name: Close linked issues
+
+# Closes the issues that merged PRs said they would close, because GitHub will
+# not do it here.
+#
+# Auto-merge is enabled with GITHUB_TOKEN, so every merge is attributed to
+# github-actions[bot], and GitHub does not run its downstream automation for
+# actions taken with GITHUB_TOKEN -- the anti-recursion rule. The `Closes #n` is
+# parsed and recorded (closingIssuesReferences is populated) and then simply not
+# acted on. See #64, which also records the `issues: write` hypothesis that this
+# was first blamed on and that the evidence disproved.
+#
+# This is a SWEEPER, not an event handler, and that is deliberate: the same rule
+# means the merge raises no `push` and no `pull_request: closed` event either, so
+# there is nothing to hang a handler on. `schedule` is not suppressed, so a cron
+# is the only trigger that reliably fires. #71 is the wider damage from the same
+# cause -- no push-triggered workflow has run on `main` since auto-merge went
+# live -- and this file does not address that.
+#
+# The real fix for both is to enable auto-merge with a PAT or a GitHub App token
+# instead of GITHUB_TOKEN, at which point the merging actor is a real identity
+# and everything resumes on its own. This file becomes redundant then, and is
+# harmless: it only ever closes issues that a merged PR already declared.
+on:
+  schedule:
+    # Hourly. An hour's delay before a fixed issue closes is tolerable; the
+    # failure this replaces was silent and permanent.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: close-linked-issues
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: sweep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issues linked to merged PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          owner="${REPO%/*}"
+          name="${REPO#*/}"
+
+          # The last 50 merged PRs is far more history than an hourly sweep
+          # needs, and makes the job self-healing after an outage or a run of
+          # failures rather than leaving a permanent gap.
+          pairs=$(gh api graphql -f owner="$owner" -f name="$name" -f query='
+            query($owner:String!, $name:String!) {
+              repository(owner:$owner, name:$name) {
+                pullRequests(states:MERGED, first:50, orderBy:{field:UPDATED_AT, direction:DESC}) {
+                  nodes {
+                    number
+                    closingIssuesReferences(first:20) { nodes { number state } }
+                  }
+                }
+              }
+            }' --jq '
+              .data.repository.pullRequests.nodes[]
+              | . as $pr
+              | $pr.closingIssuesReferences.nodes[]
+              | select(.state == "OPEN")
+              | "\(.number) \($pr.number)"
+            ' | sort -u)
+
+          if [ -z "$pairs" ]; then
+            echo "Nothing to close."
+            exit 0
+          fi
+
+          echo "$pairs" | while read -r issue pr; do
+            # Both come from the API as integers, and this job has no
+            # attacker-controlled event payload to draw from at all -- it is
+            # cron-triggered, so there is no `github.event.*`. Checked anyway,
+            # because these are the only values that reach a shell command.
+            case "$issue$pr" in
+              *[!0-9]* | "") echo "::warning::skipping non-numeric pair '$issue' '$pr'"; continue ;;
+            esac
+            echo "Closing #$issue (declared by #$pr)"
+            # `|| true` per issue: one failure -- a transferred issue, a lost
+            # race with a human closing it first -- must not strand the rest.
+            gh issue close "$issue" \
+              --repo "$REPO" \
+              --reason completed \
+              --comment "Closed by #$pr, which merged with a \`Closes #$issue\`.
+
+          Closed by the sweeper rather than by GitHub: auto-merge runs as \`github-actions[bot]\`, and GitHub does not fire its issue-closing automation for actions taken with \`GITHUB_TOKEN\`. See #64." || true
+          done
