@@ -24,36 +24,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.ui.theme.Spacing
 
-/** ARASAAC-style frame colour palette offered when creating categories. */
-val CategoryPalette: List<Long> = listOf(
-    0xFFFFC107, // amber / people
-    0xFF4CAF50, // green / actions
-    0xFFFF9800, // orange / food
-    0xFFF44336, // red / feelings
-    0xFF2196F3, // blue / places
-    0xFF9C27B0, // purple / objects
-    0xFF9E9E9E, // grey / time
-    0xFF00BCD4, // cyan
-    0xFF8BC34A, // light green
-    0xFFE91E63, // pink
-    0xFF3F51B5, // indigo
-    0xFF795548, // brown
-    0xFF009688, // teal
-    0xFFFF5722, // deep orange
-    0xFF607D8B, // blue grey
-    0xFFFFEB3B, // yellow
-    0xFFCDDC39, // lime
-    0xFF673AB7, // deep purple
-    0xFF03A9F4, // light blue
-    0xFFFF4081, // hot pink
-    0xFFB71C1C, // dark red
-    0xFF1B5E20, // dark green
-    0xFF4E342E, // dark brown
-    0xFF455A64, // slate
-    0xFFFFFFFF, // white
-    0xFF000000, // black
-)
-
 /**
  * The "add" button, shared by the category and picto screens.
  *

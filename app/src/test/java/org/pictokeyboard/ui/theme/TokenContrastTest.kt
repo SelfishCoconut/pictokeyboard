@@ -104,7 +104,8 @@ class TokenContrastTest {
      */
     @Test
     fun `auto-contrast text is readable on every palette colour`() {
-        CategoryPalette.forEach { argb ->
+        CategoryPalette.forEach { swatch ->
+            val argb = swatch.argb
             val background = argb.toInt()
             val actual = Wcag.contrastRatio(CategoryColors.contrastText(background), background)
             assertTrue(
@@ -164,7 +165,8 @@ class TokenContrastTest {
     fun `every palette hue is visible as an outline in both schemes`() {
         listOf("light" to LightTokens, "dark" to DarkTokens).forEach { (scheme, c) ->
             val paper = c.paper.toArgb()
-            CategoryPalette.forEach { argb ->
+            CategoryPalette.forEach { swatch ->
+                val argb = swatch.argb
                 val outline = CategoryColors.outlineOn(argb.toInt(), paper)
                 val actual = Wcag.contrastRatio(outline, paper)
                 assertTrue(

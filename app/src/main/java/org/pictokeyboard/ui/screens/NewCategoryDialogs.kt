@@ -265,7 +265,7 @@ data class CategoryEdit(
 /** The editor's starting values: an existing category's, or the defaults for a new one. */
 private fun CategoryEntity?.toEdit() = CategoryEdit(
     name = this?.name ?: "",
-    color = this?.colorArgb ?: CategoryPalette.first().toInt(),
+    color = this?.colorArgb ?: CategoryPalette.first().argb.toInt(),
     borderStyle = this?.borderStyle ?: BorderStyles.SOLID,
     borderWidthDp = this?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
     icon = this?.currentIcon() ?: CategoryIcon.None,

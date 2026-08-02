@@ -43,6 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -185,7 +191,6 @@ internal fun SearchResults(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ResultsGrid(
     items: List<ArasaacResult>,
@@ -199,49 +204,87 @@ internal fun ResultsGrid(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(items, key = { it.id }) { item ->
-            val isSelected = item.id in selectedIds
-            // outline, not a black wash: a picto tile is always white, so its
-            // edge has to be a token that holds 3:1 in both schemes.
-            val ring = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.combinedClickable(
-                    onClick = { onToggle(item) },
-                    onLongClick = { onLongPick(item) },
-                ),
-            ) {
+            ResultTile(
+                item = item,
+                isSelected = item.id in selectedIds,
+                onToggle = { onToggle(item) },
+                onLongPick = { onLongPick(item) },
+            )
+        }
+    }
+}
+
+/**
+ * One search result, tickable.
+ *
+ * Selection used to be carried by a border width and a check mark whose
+ * `contentDescription` was null -- nothing a screen reader could observe. Tapping
+ * through 40 results, a TalkBack user could not tell what was already chosen.
+ *
+ * `combinedClickable` rather than `toggleable`, because the long press is a real
+ * second action (customise before adding) and not a shortcut. That is also why
+ * both click labels are set: TalkBack owns touch, so an unlabelled long press is
+ * one the user it matters to can never perform.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ResultTile(
+    item: ArasaacResult,
+    isSelected: Boolean,
+    onToggle: () -> Unit,
+    onLongPick: () -> Unit,
+) {
+    // outline, not a black wash: a picto tile is always white, so its edge has to
+    // be a token that holds 3:1 in both schemes.
+    val ring = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+    // Hoisted: stringResource cannot be called inside a semantics lambda.
+    val keyword = item.keyword
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .combinedClickable(
+                onClickLabel = stringResource(R.string.a11y_toggle_selection),
+                onClick = onToggle,
+                onLongClickLabel = stringResource(R.string.picto_customize),
+                onLongClick = onLongPick,
+            )
+            .semantics(mergeDescendants = true) {
+                role = Role.Checkbox
+                contentDescription = keyword
+                toggleableState = if (isSelected) ToggleableState.On else ToggleableState.Off
+            },
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .border(if (isSelected) 3.dp else 1.dp, ring, RoundedCornerShape(12.dp))
+                .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
+                .padding(6.dp),
+        ) {
+            AsyncImage(
+                model = item.imageUrl,
+                // Named by the merged parent above, so the image would only repeat it.
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .border(if (isSelected) 3.dp else 1.dp, ring, RoundedCornerShape(12.dp))
-                        .background(PictoTheme.colors.tile, RoundedCornerShape(12.dp))
-                        .padding(6.dp),
+                        .align(Alignment.TopEnd)
+                        .size(24.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    AsyncImage(
-                        model = item.imageUrl,
-                        contentDescription = item.keyword,
-                        modifier = Modifier.fillMaxSize(),
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(16.dp),
                     )
-                    if (isSelected) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(24.dp)
-                                .background(MaterialTheme.colorScheme.primary, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Filled.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
                 }
-                Text(item.keyword, style = MaterialTheme.typography.labelMedium, maxLines = 1)
             }
         }
+        Text(item.keyword, style = MaterialTheme.typography.labelMedium, maxLines = 1)
     }
 }

@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -72,6 +74,7 @@ internal fun ReorderableCategoryList(
     reordering: Boolean,
     modifier: Modifier = Modifier,
     onReorder: (List<CategoryEntity>) -> Unit,
+    onMove: (CategoryEntity, Boolean) -> Unit,
     onEdit: (CategoryEntity) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
     onOpen: (String) -> Unit,
@@ -94,7 +97,7 @@ internal fun ReorderableCategoryList(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        itemsIndexed(items, key = { _, c -> c.id }) { _, category ->
+        itemsIndexed(items, key = { _, c -> c.id }) { index, category ->
             CategoryRow(
                 category = category,
                 reordering = reordering,
@@ -105,6 +108,10 @@ internal fun ReorderableCategoryList(
                 } else {
                     Modifier
                 },
+                canMoveUp = index > 0,
+                canMoveDown = index < items.lastIndex,
+                onMoveUp = { onMove(category, true) },
+                onMoveDown = { onMove(category, false) },
                 onEdit = { onEdit(category) },
                 onDelete = { onDelete(category) },
                 onOpen = { onOpen(category.id) },
@@ -207,6 +214,10 @@ private fun CategoryRow(
     dragging: Boolean,
     dragOffsetY: Float,
     modifier: Modifier = Modifier,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onOpen: () -> Unit,
@@ -259,16 +270,58 @@ private fun CategoryRow(
                     }
                 }
                 if (reordering) {
-                    Icon(
-                        Icons.Filled.DragHandle,
-                        contentDescription = stringResource(R.string.reorder_drag),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ReorderControls(
+                        canMoveUp = canMoveUp,
+                        canMoveDown = canMoveDown,
+                        onMoveUp = onMoveUp,
+                        onMoveDown = onMoveDown,
                     )
                 } else {
                     CategoryOverflow(onEdit = onEdit, onDelete = onDelete)
                 }
             }
         }
+    }
+}
+
+/**
+ * Reorder without dragging.
+ *
+ * Drag stays as the fast path, but it cannot be the only one. TalkBack owns
+ * touch, so a `detectDragGesturesAfterLongPress` gesture can never reach the
+ * pointer-input node -- and the drag handle that read "Drag to reorder" was
+ * naming a gesture the user it was speaking to could not perform. Switch Access
+ * and D-pad had no route either. WCAG 2.1.1 Keyboard (A) and 2.5.7 Dragging
+ * Movements (AA).
+ *
+ * Worse than unreachable: entering reorder mode *removed* edit, delete and open,
+ * so a screen-reader user who reached this state could do nothing at all.
+ *
+ * The handle keeps its icon as a visual affordance but drops its description,
+ * now that it is no longer the only route and would otherwise announce an
+ * instruction that competes with the two working buttons beside it.
+ * [PictoScreen][PictosScreen] already does exactly this; this is that pattern,
+ * moved across.
+ */
+@Composable
+private fun ReorderControls(
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.move_up))
+        }
+        IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.move_down))
+        }
+        Icon(
+            Icons.Filled.DragHandle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

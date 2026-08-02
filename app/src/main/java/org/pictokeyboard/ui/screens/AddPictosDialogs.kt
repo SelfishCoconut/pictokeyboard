@@ -3,8 +3,6 @@ package org.pictokeyboard.ui.screens
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,6 +42,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -156,34 +158,6 @@ private fun PictoPreview(arasaacId: Int, options: ArasaacOptions, modifier: Modi
     )
 }
 
-/** The three ARASAAC render parameters: skin tone, hair colour, and colour on/off. */
-@Composable
-private fun ArasaacCustomization(
-    skin: String?,
-    hair: String?,
-    color: Boolean,
-    onSkin: (String?) -> Unit,
-    onHair: (String?) -> Unit,
-    onColor: (Boolean) -> Unit,
-) {
-    Text(stringResource(R.string.picto_customize), style = MaterialTheme.typography.labelLarge)
-    SwatchRow(
-        label = stringResource(R.string.picto_skin),
-        values = ArasaacOptions.SKIN_TONES,
-        selected = skin,
-        colorFor = ::skinSwatch,
-        onSelect = onSkin,
-    )
-    SwatchRow(
-        label = stringResource(R.string.picto_hair),
-        values = ArasaacOptions.HAIR_COLORS,
-        selected = hair,
-        colorFor = ::hairSwatch,
-        onSelect = onHair,
-    )
-    SwitchRow(stringResource(R.string.picto_color), color, onColor)
-}
-
 /**
  * Cancel and confirm at the foot of a sheet.
  *
@@ -210,56 +184,6 @@ private fun SheetActions(
             enabled = confirmEnabled,
             modifier = Modifier.weight(1f),
         ) { Text(confirmLabel) }
-    }
-}
-
-@Composable
-private fun SwatchRow(
-    label: String,
-    values: List<String>,
-    selected: String?,
-    colorFor: (String) -> Color,
-    onSelect: (String?) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Swatch(fill = MaterialTheme.colorScheme.surfaceVariant, isSelected = selected == null, isNone = true) {
-                onSelect(null)
-            }
-            values.forEach { value ->
-                Swatch(fill = colorFor(value), isSelected = selected == value, isNone = false) {
-                    onSelect(value)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Swatch(fill: Color, isSelected: Boolean, isNone: Boolean, onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(36.dp)
-            .background(fill, CircleShape)
-            .border(
-                width = if (isSelected) 3.dp else 1.dp,
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.outline
-                },
-                shape = CircleShape,
-            )
-            .clickable(onClick = onClick),
-    ) {
-        if (isNone) {
-            Text("—", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
     }
 }
 
@@ -356,12 +280,7 @@ internal fun ImportFromCategoriesDialog(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     groups.forEach { (category, pictos) ->
-                        val accent = Color(category.colorArgb)
-                        Text(
-                            category.name,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = accent,
-                        )
+                        CategoryGroupHeading(category)
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -369,6 +288,7 @@ internal fun ImportFromCategoriesDialog(
                             pictos.forEach { picto ->
                                 val isSelected = picto.id in selectedIds
                                 val pictoColor = Color(picto.colorArgbOverride ?: category.colorArgb)
+                                val name = picto.label.ifBlank { picto.spokenText }
                                 Box(
                                     modifier = Modifier
                                         .size(72.dp)
@@ -379,9 +299,18 @@ internal fun ImportFromCategoriesDialog(
                                             category.borderStyle,
                                             12.dp,
                                         )
-                                        .clickable {
-                                            if (!selectedIds.remove(picto.id)) selectedIds.add(picto.id)
-                                        }
+                                        .toggleable(
+                                            value = isSelected,
+                                            role = Role.Checkbox,
+                                            onValueChange = {
+                                                if (!selectedIds.remove(picto.id)) selectedIds.add(picto.id)
+                                            },
+                                        )
+                                        // Same defect as the search grid: the tick
+                                        // is decorative and the border width is
+                                        // not observable, so without this the
+                                        // selection is invisible to TalkBack.
+                                        .semantics(mergeDescendants = true) { contentDescription = name }
                                         .padding(6.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
@@ -390,7 +319,7 @@ internal fun ImportFromCategoriesDialog(
                                         ?: R.drawable.ic_picto_placeholder
                                     AsyncImage(
                                         model = model,
-                                        contentDescription = picto.label,
+                                        contentDescription = null,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                                     if (isSelected) {
@@ -433,43 +362,43 @@ internal fun ImportFromCategoriesDialog(
     )
 }
 
-private fun skinSwatch(value: String): Color = SKIN_SWATCHES[value] ?: SWATCH_UNKNOWN
-
-private fun hairSwatch(value: String): Color = HAIR_SWATCHES[value] ?: SWATCH_UNKNOWN
-
 /**
- * Approximations of ARASAAC's skin and hair option values, used only to tint the
- * picker swatches -- the pictogram itself is recoloured by ARASAAC's own API, so
- * these need to be recognisable rather than exact. The keys are ARASAAC's
- * spellings, including "assian", and must match them to keep the API happy.
+ * A category's name in this dialog, with its colour beside the text rather than
+ * in it.
+ *
+ * The name used to be drawn in `Color(category.colorArgb)` -- the raw
+ * user-chosen hue as foreground on the dialog surface. At 15sp bold the
+ * threshold is 3:1, and ten of the 26 palette hues failed in light mode; white
+ * came out at 1.00:1, which is to say the heading was invisible. A different
+ * nine fail in dark mode.
+ *
+ * `CategoryColors.contrastText` cannot rescue this: it solves the opposite
+ * direction, picking black or white to sit *on* a hue. Here the hue is the
+ * foreground, and no adjustment keeps both its identity and its legibility. So
+ * the colour moves into a leading bar and the name goes to `onSurface` -- the
+ * same move the redesign already made on the categories list.
  */
-private val SKIN_SWATCHES = mapOf(
-    // These are the only legitimate colour literals in the UI layer: they are not
-    // theme, they are *data* -- an approximation of what ARASAAC's own skin and
-    // hair parameters produce, so the swatch shows the caregiver what they are
-    // choosing. They must not follow the light/dark scheme, because the pictogram
-    // they describe does not either.
-    "white" to Color(0xFFF1C9A5),
-    "mulatto" to Color(0xFFD49E7A),
-    "aztec" to Color(0xFFB87A4B),
-    "black" to Color(0xFF6B4423),
-    "assian" to Color(0xFFF0C27B),
-)
-
-private val HAIR_SWATCHES = mapOf(
-    "blonde" to Color(0xFFE6C76E),
-    "brown" to Color(0xFF8B5A2B),
-    "darkBrown" to Color(0xFF4B2E1E),
-    "gray" to Color(0xFFBDBDBD),
-    "darkGray" to Color(0xFF616161),
-    "red" to Color(0xFFB5482E),
-    "black" to Color(0xFF1A1A1A),
-)
-
-/**
- * Stand-in for an ARASAAC skin or hair value we have no swatch for. A literal for
- * the same reason the swatches above are: it stands in for a colour the remote
- * renderer will produce, so it must not shift with the light/dark scheme. Only
- * the ring around it is themed.
- */
-private val SWATCH_UNKNOWN = Color(0xFFBDBDBD)
+@Composable
+private fun CategoryGroupHeading(category: CategoryEntity) {
+    val named = paletteNameFor(category.colorArgb)?.let { stringResource(it) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        // The bar is decoration once the colour has a name, and noise when it
+        // does not, so the whole heading announces as one node either way.
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            if (named != null) contentDescription = "${category.name}, $named"
+        },
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 18.dp)
+                .background(Color(category.colorArgb), RoundedCornerShape(2.dp)),
+        )
+        Text(
+            category.name,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
