@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.pictokeyboard.App
+import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
@@ -42,7 +44,15 @@ class ConfigViewModel : ViewModel() {
     private val arasaac = locator.arasaacRepository
 
     val categories: StateFlow<List<CategoryEntity>> =
-        repo.observeCategories().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        repo.observeActiveBoardCategories()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * The board in use. Null only until the first read lands; every layout
+     * control reads from it and writes back through [updateBoard].
+     */
+    val activeBoard: StateFlow<BoardEntity?> =
+        repo.observeActiveBoard().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /** Live total pictogram count, shown on the dashboard. */
     val pictoCount: StateFlow<Int> =
@@ -56,7 +66,19 @@ class ConfigViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            repo.seedIfEmpty(settingsStore.current().defaultLanguage)
+            val interfaceLanguage = settingsStore.current().defaultLanguage
+            repo.seedIfEmpty(
+                language = interfaceLanguage,
+                boardName = locator.appContext.getString(R.string.app_name),
+            )
+            // Layout the user chose before boards existed lives in DataStore,
+            // which the Room migration that created the board could not read.
+            // Applying it here is what keeps the promise that the keyboard
+            // behaves identically after upgrading.
+            settingsStore.legacyBoardLayout()?.let { legacy ->
+                repo.adoptLegacyBoardLayout(legacy)
+                settingsStore.clearLegacyBoardLayout()
+            }
         }
     }
 
@@ -213,9 +235,27 @@ class ConfigViewModel : ViewModel() {
     // --- Settings ----------------------------------------------------------
 
     fun setLanguage(value: String) = viewModelScope.launch { settingsStore.setDefaultLanguage(value) }
-    fun setColumns(value: Int) = viewModelScope.launch { settingsStore.setGridColumns(value) }
-    fun setRows(value: Int) = viewModelScope.launch { settingsStore.setGridRows(value) }
-    fun setShowLabels(value: Boolean) = viewModelScope.launch { settingsStore.setShowLabels(value) }
+    // --- Board layout ------------------------------------------------------
+    //
+    // Columns, rows and captions describe the situation rather than the person,
+    // so they write to the board in use rather than to Settings (#31). They are
+    // still reached from the Settings screen; #33 moves them onto the board's
+    // own detail screen, where they belong.
+
+    fun setColumns(value: Int) = updateBoard { it.copy(columns = value.coerceIn(BoardEntity.COLUMN_RANGE)) }
+    fun setRows(value: Int) = updateBoard { it.copy(rows = value.coerceIn(BoardEntity.ROW_RANGE)) }
+    fun setShowLabels(value: Boolean) = updateBoard { it.copy(showLabels = value) }
+
+    /**
+     * Applies [change] to the board in use.
+     *
+     * A no-op when there is no active board, which can only be the moment
+     * before seeding finishes — silently doing nothing beats writing the change
+     * onto a board that does not exist yet.
+     */
+    private fun updateBoard(change: (BoardEntity) -> BoardEntity) = viewModelScope.launch {
+        repo.activeBoard()?.let { repo.updateBoard(change(it)) }
+    }
     fun setAddSpace(value: Boolean) = viewModelScope.launch { settingsStore.setAddSpaceAfter(value) }
     fun setSpeak(value: Boolean) = viewModelScope.launch { settingsStore.setSpeakOnTap(value) }
     fun setTtsRate(value: Float) = viewModelScope.launch { settingsStore.setTtsRate(value) }
@@ -235,7 +275,9 @@ class ConfigViewModel : ViewModel() {
 
     // --- Backup ------------------------------------------------------------
 
-    suspend fun exportJson(): String = backup.export(settingsStore.current().defaultLanguage)
+    suspend fun exportJson(): String = backup.export(
+        repo.activeBoard()?.language ?: settingsStore.current().defaultLanguage,
+    )
 
     fun importJson(json: String, onResult: (Boolean) -> Unit) = viewModelScope.launch {
         val result = backup.import(json)

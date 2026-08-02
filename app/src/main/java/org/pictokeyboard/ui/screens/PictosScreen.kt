@@ -65,13 +65,13 @@ fun PictosScreen(
     onAddPictos: () -> Unit,
 ) {
     val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val board by viewModel.activeBoard.collectAsStateWithLifecycle()
     val pictos by remember(categoryId) { viewModel.pictos(categoryId) }.collectAsState(initial = emptyList())
 
     PictosScreenContent(
         category = categories.firstOrNull { it.id == categoryId },
         pictos = pictos,
-        showLabels = settings.showLabels,
+        showLabels = board?.showLabels ?: true,
         onBack = onBack,
         onAddPictos = onAddPictos,
         onMove = { picto, up -> viewModel.movePicto(pictos, picto, up) },

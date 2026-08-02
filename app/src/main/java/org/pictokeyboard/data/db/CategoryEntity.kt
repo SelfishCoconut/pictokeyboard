@@ -2,6 +2,7 @@ package org.pictokeyboard.data.db
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -9,14 +10,28 @@ import androidx.room.PrimaryKey
  * A category groups pictograms and carries the frame [colorArgb] that is drawn
  * around every pictogram belonging to it, so the end user can associate pictos
  * with their category by colour.
+ *
+ * Every category belongs to exactly one [BoardEntity]. Deleting a board takes
+ * its categories with it, and their pictos in turn.
  */
 @Entity(
     tableName = "categories",
-    indices = [Index("position")],
+    indices = [Index("position"), Index("boardId")],
+    foreignKeys = [
+        ForeignKey(
+            entity = BoardEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["boardId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
 )
 data class CategoryEntity(
     @PrimaryKey val id: String,
     val name: String,
+    /** The board this category belongs to. */
+    @ColumnInfo(defaultValue = BoardEntity.DEFAULT_ID)
+    val boardId: String = BoardEntity.DEFAULT_ID,
     /** ARGB frame colour for this category and its pictos. */
     val colorArgb: Int,
     /** Sort order in the left category strip. */

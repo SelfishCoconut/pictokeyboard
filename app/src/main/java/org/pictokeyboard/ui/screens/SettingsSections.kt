@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
+import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.theme.Spacing
 
@@ -70,31 +71,46 @@ internal fun LanguageSection(language: String, onLanguage: (String) -> Unit) {
     LanguageChips(selected = language, onSelect = onLanguage)
 }
 
+/**
+ * Grid layout, read from and written to the board in use.
+ *
+ * Columns, rows and captions describe the *situation*, not the person, so #31
+ * moved them off `Settings` onto `BoardEntity`: a doctor board wants 3x3 huge
+ * tiles where a chat board wants 5x5, and one global value made every board
+ * compromise. They are still reached from here; #33 gives them their proper
+ * home on the board's own detail screen.
+ *
+ * [board] is null only in the moment before the first read lands, when the
+ * sliders show the same defaults the keyboard is drawing.
+ */
 @Composable
 internal fun GridSection(
+    board: BoardEntity?,
     settings: Settings,
     onColumns: (Int) -> Unit,
     onRows: (Int) -> Unit,
     onShowLabels: (Boolean) -> Unit,
     onAddSpace: (Boolean) -> Unit,
 ) {
+    val columns = board?.columns ?: BoardEntity.DEFAULT_COLUMNS
+    val rows = board?.rows ?: BoardEntity.DEFAULT_ROWS
     SliderRow(
         label = stringResource(R.string.settings_grid_columns),
-        value = settings.gridColumns.toFloat(),
+        value = columns.toFloat(),
         range = 2f..6f,
         steps = 3,
-        valueText = settings.gridColumns.toString(),
+        valueText = columns.toString(),
         onChange = { onColumns(it.toInt()) },
     )
     SliderRow(
         label = stringResource(R.string.settings_grid_rows),
-        value = settings.gridRows.toFloat(),
+        value = rows.toFloat(),
         range = 2f..8f,
         steps = 5,
-        valueText = settings.gridRows.toString(),
+        valueText = rows.toString(),
         onChange = { onRows(it.toInt()) },
     )
-    SwitchRow(stringResource(R.string.settings_show_labels), settings.showLabels, onShowLabels)
+    SwitchRow(stringResource(R.string.settings_show_labels), board?.showLabels ?: true, onShowLabels)
     SwitchRow(stringResource(R.string.settings_add_space), settings.addSpaceAfter, onAddSpace)
 }
 

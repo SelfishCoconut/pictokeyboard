@@ -136,6 +136,8 @@ private fun ApplyAppLocale(language: String) {
 
 @Composable
 private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings) {
+    val board by viewModel.activeBoard.collectAsStateWithLifecycle()
+    val boardLanguage = board?.language ?: "es"
     var unlocked by remember { mutableStateOf(false) }
 
     if (settings.hasPin && !unlocked) {
@@ -219,7 +221,8 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                 AddPictosScreen(
                     viewModel = viewModel,
                     categoryId = categoryId,
-                    defaultLanguage = settings.defaultLanguage,
+                    // The board's vocabulary language, not the interface's.
+                    defaultLanguage = boardLanguage,
                     onBack = { nav.popBackStack() },
                 )
             }
