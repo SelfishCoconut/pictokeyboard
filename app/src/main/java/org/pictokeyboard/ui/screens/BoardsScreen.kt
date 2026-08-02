@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,6 +91,10 @@ internal fun BoardsScreenContent(
     onSelectKeyboard: () -> Unit,
     onOpenDiscover: () -> Unit,
 ) {
+    // Which board's Try it sheet is open, if any. Held here rather than on the
+    // card so the sheet outlives the dropdown menu that asked for it.
+    var trying by remember { mutableStateOf<BoardEntity?>(null) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -128,6 +134,13 @@ internal fun BoardsScreenContent(
                         summary = summary,
                         onOpen = { onOpenBoard(summary) },
                         onUse = { onUseBoard(summary.board) },
+                        // The keyboard shows the board in use, so trying one
+                        // hands it over first. Same rule as opening a board to
+                        // edit it: you work on the board that is live.
+                        onTryIt = {
+                            onUseBoard(summary.board)
+                            trying = summary.board
+                        },
                         onDuplicate = { onDuplicateBoard(summary.board) },
                         onExport = { onExportBoard(summary.board) },
                         onDelete = { onDeleteBoard(summary.board) },
@@ -135,6 +148,16 @@ internal fun BoardsScreenContent(
                 }
             }
         }
+    }
+
+    trying?.let { board ->
+        TryItSheet(
+            boardName = board.name,
+            status = status,
+            onEnableKeyboard = onEnableKeyboard,
+            onSelectKeyboard = onSelectKeyboard,
+            onDismiss = { trying = null },
+        )
     }
 }
 

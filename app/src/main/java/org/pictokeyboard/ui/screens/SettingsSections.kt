@@ -32,7 +32,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
-import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.theme.Spacing
 
@@ -76,46 +75,25 @@ internal fun LanguageSection(language: String, onLanguage: (String) -> Unit) {
 }
 
 /**
- * Grid layout, read from and written to the board in use.
+ * What is left of the keyboard group once the board's own layout leaves it.
  *
- * Columns, rows and captions describe the *situation*, not the person, so #31
- * moved them off `Settings` onto `BoardEntity`: a doctor board wants 3x3 huge
- * tiles where a chat board wants 5x5, and one global value made every board
- * compromise. They are still reached from here; #33 gives them their proper
- * home on the board's own detail screen.
+ * Columns, rows, captions and frame defaults describe the *situation* rather
+ * than the person: a doctor board wants 3 huge tiles where a chat board wants 5
+ * small ones, and one global value made every board compromise. #31 moved them
+ * onto `BoardEntity` and #33 moved their controls onto the board's own detail
+ * screen, next to a preview of the board they change.
  *
- * [board] is null only in the moment before the first read lands, when the
- * sliders show the same defaults the keyboard is drawing.
+ * A space after each word is genuinely global — it is about how this person
+ * writes, in every board — so it stays.
  */
 @Composable
-internal fun GridSection(
-    board: BoardEntity?,
-    settings: Settings,
-    onColumns: (Int) -> Unit,
-    onRows: (Int) -> Unit,
-    onShowLabels: (Boolean) -> Unit,
-    onAddSpace: (Boolean) -> Unit,
-) {
-    val columns = board?.columns ?: BoardEntity.DEFAULT_COLUMNS
-    val rows = board?.rows ?: BoardEntity.DEFAULT_ROWS
-    SliderRow(
-        label = stringResource(R.string.settings_grid_columns),
-        value = columns.toFloat(),
-        range = 2f..6f,
-        steps = 3,
-        valueText = columns.toString(),
-        onChange = { onColumns(it.toInt()) },
-    )
-    SliderRow(
-        label = stringResource(R.string.settings_grid_rows),
-        value = rows.toFloat(),
-        range = 2f..8f,
-        steps = 5,
-        valueText = rows.toString(),
-        onChange = { onRows(it.toInt()) },
-    )
-    SwitchRow(stringResource(R.string.settings_show_labels), board?.showLabels ?: true, onShowLabels)
+internal fun KeyboardSection(settings: Settings, onAddSpace: (Boolean) -> Unit) {
     SwitchRow(stringResource(R.string.settings_add_space), settings.addSpaceAfter, onAddSpace)
+    Text(
+        stringResource(R.string.settings_layout_moved),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable
@@ -211,6 +189,11 @@ internal fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> U
     }
 }
 
+/**
+ * A labelled slider. [onChangeFinished] fires when the finger lifts, for values
+ * whose home is the database: dragging then writes to local state at the frame
+ * rate and to storage once.
+ */
 @Composable
 internal fun SliderRow(
     label: String,
@@ -219,6 +202,7 @@ internal fun SliderRow(
     steps: Int,
     valueText: String,
     onChange: (Float) -> Unit,
+    onChangeFinished: (() -> Unit)? = null,
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -234,6 +218,7 @@ internal fun SliderRow(
             },
             value = value,
             onValueChange = onChange,
+            onValueChangeFinished = onChangeFinished,
             valueRange = range,
             steps = steps,
             // Material takes the inactive track from `secondaryContainer`, which in

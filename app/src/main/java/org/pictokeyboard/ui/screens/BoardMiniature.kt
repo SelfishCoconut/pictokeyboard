@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,39 +21,49 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
+import org.pictokeyboard.ime.KeyboardMetrics
 import org.pictokeyboard.ui.theme.CategoryColors
 import org.pictokeyboard.ui.theme.PictoTheme
 import org.pictokeyboard.ui.theme.Spacing
 import java.io.File
 
 /**
- * The dashboard hero: a live miniature of the caregiver's actual board.
+ * A live miniature of the caregiver's actual board, in two sizes.
  *
- * It replaces a gradient panel with a stock illustration — the template answer,
- * and one that said nothing about this particular installation. The most
- * characteristic object in this product's world is the board, so the hero shows
- * the board, built from the real categories and pictos. That makes it setup
- * confirmation as well as decoration: *this is what they will see*. Tapping it
- * opens the editor, and the counts fold into its caption, which is what let the
- * two big-number stat cards below it be deleted outright.
+ * [BoardMiniature] is the strip on a board card: a fixed-height picture of the
+ * board, enough to recognise it by. [BoardLayoutPreview] is the scale model on
+ * the board's Layout tab, where the columns, rows and captions being edited have
+ * to be visible while they are being dragged.
  *
- * It shares the token layer with the keyboard — the same wash, frames and chip
+ * Both are built from the real categories and pictos rather than from an
+ * illustration, so a miniature doubles as setup confirmation: *this is what they
+ * will see*.
+ *
+ * They share the token layer with the keyboard — the same wash, frames and chip
  * treatment — but deliberately not a rendering path. The keyboard is a View
- * hierarchy; making a hero reuse it would be over-engineering.
+ * hierarchy; making these reuse it would be over-engineering. What they do share
+ * is [KeyboardMetrics], so the model and the thing modelled cannot disagree
+ * about how tall a board of *n* rows is.
  */
 @Composable
 internal fun BoardMiniature(
@@ -61,6 +72,77 @@ internal fun BoardMiniature(
     modifier: Modifier = Modifier,
     caption: @Composable (() -> Unit)? = null,
 ) {
+    MiniatureFrame(modifier = modifier) {
+        if (categories.isEmpty()) {
+            EmptyBoardHint()
+        } else {
+            MiniBoard(
+                categories = categories,
+                pictos = pictos,
+                spineWidth = SPINE_WIDTH,
+                bodyHeight = BOARD_HEIGHT,
+                columns = CARD_COLUMNS,
+                rows = CARD_ROWS,
+                showLabels = false,
+            )
+        }
+        caption?.invoke()
+    }
+}
+
+/**
+ * The board at the size and shape the keyboard will actually draw it: [columns]
+ * across, [rows] deep, captions on or off.
+ *
+ * Its height is not a design choice but the keyboard's own arithmetic, scaled
+ * down by however much narrower this is than the screen — so a caregiver who
+ * drags **rows** to 8 on a short phone sees the same clipped last row the
+ * keyboard gives them, rather than a promise the keyboard will not keep.
+ */
+@Composable
+internal fun BoardLayoutPreview(
+    categories: List<CategoryEntity>,
+    pictos: List<PictoEntity>,
+    columns: Int,
+    rows: Int,
+    showLabels: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    // The window's size rather than the display's: in split screen the keyboard
+    // is sized to the window it opens in, and so is its model.
+    val window = LocalWindowInfo.current.containerSize
+    val density = LocalDensity.current
+    MiniatureFrame(modifier = modifier) {
+        if (categories.isEmpty()) {
+            EmptyBoardHint()
+        } else {
+            BoxWithConstraints {
+                val geometry = with(density) {
+                    miniatureGeometry(
+                        previewWidthDp = maxWidth.value.toInt(),
+                        screenWidthDp = window.width.toDp().value.toInt(),
+                        screenHeightDp = window.height.toDp().value.toInt(),
+                        columns = columns,
+                        rows = rows,
+                    )
+                }
+                MiniBoard(
+                    categories = categories,
+                    pictos = pictos,
+                    spineWidth = geometry.spineWidthDp.dp,
+                    bodyHeight = geometry.bodyHeightDp.dp,
+                    columns = columns,
+                    rows = rows,
+                    showLabels = showLabels,
+                )
+            }
+        }
+    }
+}
+
+/** The bordered card every miniature sits in. */
+@Composable
+private fun MiniatureFrame(modifier: Modifier, content: @Composable () -> Unit) {
     val colors = PictoTheme.colors
     Column(
         modifier = modifier
@@ -69,22 +151,26 @@ internal fun BoardMiniature(
             .border(1.dp, colors.lineStrong, MaterialTheme.shapes.large)
             .background(colors.paper),
     ) {
-        if (categories.isEmpty()) {
-            EmptyBoardHint()
-        } else {
-            MiniBoard(categories = categories, pictos = pictos)
-        }
-        caption?.invoke()
+        content()
     }
 }
 
 @Composable
-private fun MiniBoard(categories: List<CategoryEntity>, pictos: List<PictoEntity>) {
+private fun MiniBoard(
+    categories: List<CategoryEntity>,
+    pictos: List<PictoEntity>,
+    spineWidth: Dp,
+    bodyHeight: Dp,
+    columns: Int,
+    rows: Int,
+    showLabels: Boolean,
+) {
     val selected = categories.first()
-    Row(modifier = Modifier.height(BOARD_HEIGHT)) {
+    val density = LocalDensity.current
+    Row(modifier = Modifier.height(bodyHeight)) {
         Column(
             modifier = Modifier
-                .width(SPINE_WIDTH)
+                .width(spineWidth)
                 .fillMaxHeight()
                 .padding(Spacing.xs),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -100,7 +186,20 @@ private fun MiniBoard(categories: List<CategoryEntity>, pictos: List<PictoEntity
                 .background(Color(CategoryColors.wash(selected.colorArgb)))
                 .padding(Spacing.xs),
         ) {
-            MiniGrid(pictos = pictos, categoryColor = selected.colorArgb)
+            // The miniature is a picture of a keyboard, not text to read: at a
+            // 200% font scale a caption inside a 20dp tile would shoulder the
+            // grid apart and stop the model being to scale, while the control it
+            // illustrates is named in full by the switch beside it. So type
+            // inside the model keeps its own scale.
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 1f)) {
+                MiniGrid(
+                    pictos = pictos,
+                    categoryColor = selected.colorArgb,
+                    columns = columns,
+                    rows = rows,
+                    showLabels = showLabels,
+                )
+            }
         }
     }
 }
@@ -147,9 +246,15 @@ private fun MiniChip(category: CategoryEntity, selected: Boolean) {
 }
 
 @Composable
-private fun MiniGrid(pictos: List<PictoEntity>, categoryColor: Int) {
+private fun MiniGrid(
+    pictos: List<PictoEntity>,
+    categoryColor: Int,
+    columns: Int,
+    rows: Int,
+    showLabels: Boolean,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        pictos.take(GRID_COLUMNS * GRID_ROWS).chunked(GRID_COLUMNS).forEach { row ->
+        pictos.take(columns * rows).chunked(columns).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -158,12 +263,13 @@ private fun MiniGrid(pictos: List<PictoEntity>, categoryColor: Int) {
                     MiniTile(
                         picto = picto,
                         frame = Color(picto.colorArgbOverride ?: categoryColor),
+                        showLabel = showLabels,
                         modifier = Modifier.weight(1f),
                     )
                 }
                 // Keep the last row's tiles the same width as the rest rather than
                 // letting three pictos stretch to fill four columns.
-                repeat(GRID_COLUMNS - row.size) {
+                repeat(columns - row.size) {
                     Box(modifier = Modifier.weight(1f))
                 }
             }
@@ -172,23 +278,44 @@ private fun MiniGrid(pictos: List<PictoEntity>, categoryColor: Int) {
 }
 
 @Composable
-private fun MiniTile(picto: PictoEntity, frame: Color, modifier: Modifier = Modifier) {
+private fun MiniTile(
+    picto: PictoEntity,
+    frame: Color,
+    showLabel: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val colors = PictoTheme.colors
-    Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            // `tile`, so the artwork stays legible in dark mode too.
-            .background(colors.tile, RoundedCornerShape(TILE_CORNER))
-            .border(2.dp, frame, RoundedCornerShape(TILE_CORNER))
-            .padding(2.dp),
-    ) {
-        val model = pictoModel(picto)
-        if (model != null) {
-            AsyncImage(
-                model = model,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(),
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                // `tile`, so the artwork stays legible in dark mode too.
+                .background(colors.tile, RoundedCornerShape(TILE_CORNER))
+                .border(2.dp, frame, RoundedCornerShape(TILE_CORNER))
+                .padding(2.dp),
+        ) {
+            val model = pictoModel(picto)
+            if (model != null) {
+                AsyncImage(
+                    model = model,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        // Below the tile rather than inside it, exactly as on the keyboard —
+        // which is why turning captions on costs height rather than picture.
+        if (showLabel) {
+            Text(
+                picto.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -196,7 +323,7 @@ private fun MiniTile(picto: PictoEntity, frame: Color, modifier: Modifier = Modi
 
 /** The category's own pictogram, on the white disc that keeps line art readable. */
 @Composable
-private fun CategoryGlyph(category: CategoryEntity, size: androidx.compose.ui.unit.Dp) {
+private fun CategoryGlyph(category: CategoryEntity, size: Dp) {
     val colors = PictoTheme.colors
     val model: Any? = category.iconImagePath?.let { File(it) }
         ?: category.iconArasaacId?.let { ArasaacUrls.image(it) }
@@ -249,5 +376,7 @@ private val CHIP_CORNER = 12.dp
 private val CHIP_GLYPH = 30.dp
 private val TILE_CORNER = 8.dp
 private const val SPINE_CHIPS = 3
-private const val GRID_COLUMNS = 4
-private const val GRID_ROWS = 2
+
+/** The card strip is a picture to recognise a board by, not a scale model. */
+private const val CARD_COLUMNS = 4
+private const val CARD_ROWS = 2

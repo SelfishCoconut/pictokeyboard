@@ -184,6 +184,18 @@ class PictoRepository(
     fun observePictos(categoryId: String): Flow<List<PictoEntity>> =
         pictoDao.observeByCategory(categoryId)
 
+    /**
+     * How many pictograms sit in each category, keyed by category id.
+     *
+     * One query for the whole list rather than a subscription per row: the
+     * board detail draws the count on every category at once, and a per-row
+     * flow would open as many cursors as the caregiver has categories.
+     */
+    fun observeCategoryPictoCounts(): Flow<Map<String, Int>> =
+        pictoDao.observeCountsByCategory().map { counts ->
+            counts.associate { it.categoryId to it.pictoCount }
+        }
+
     /** Live total number of pictograms across all categories (for the dashboard). */
     fun observePictoCount(): Flow<Int> = pictoDao.observeCount()
 

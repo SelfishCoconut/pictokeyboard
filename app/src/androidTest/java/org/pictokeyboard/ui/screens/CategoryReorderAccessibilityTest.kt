@@ -48,6 +48,7 @@ class CategoryReorderAccessibilityTest {
             PictoKeyboardTheme {
                 ReorderableCategoryList(
                     categories = categories,
+                    pictoCounts = categories.associate { it.id to 4 },
                     reordering = reordering,
                     onReorder = {},
                     onMove = onMove,
