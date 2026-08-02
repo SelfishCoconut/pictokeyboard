@@ -12,10 +12,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
-import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.ui.theme.CategoryColors
-import java.io.File
 
 class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
     ListAdapter<CategoryAdapter.Row, CategoryAdapter.VH>(DIFF) {
@@ -27,10 +25,23 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
      * completion callback, which AsyncListDiffer drops when a newer submit
      * supersedes the diff -- leaving the selected chip drawn as unselected.
      */
-    data class Row(val category: CategoryEntity, val selected: Boolean)
+    data class Row(
+        val category: CategoryEntity,
+        val selected: Boolean,
+        /**
+         * The chip's icon, already resolved off the main thread by
+         * [keyboardIconModel]. Null draws no icon at all -- a category with no
+         * picto is shown by its name alone, which is a supported state.
+         */
+        val iconModel: Any?,
+    )
 
-    fun submit(categories: List<CategoryEntity>, selectedId: String?) {
-        submitList(categories.map { Row(it, it.id == selectedId) })
+    /**
+     * [iconModels] maps category id to its resolved Coil model. A category
+     * missing from the map renders name-only, the same as an explicit null.
+     */
+    fun submit(categories: List<CategoryEntity>, selectedId: String?, iconModels: Map<String, Any?>) {
+        submitList(categories.map { Row(it, it.id == selectedId, iconModels[it.id]) })
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -81,12 +92,7 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
                 },
             )
 
-            val iconPath = category.iconImagePath
-            val iconModel: Any? = when {
-                iconPath != null && File(iconPath).exists() -> File(iconPath)
-                category.iconArasaacId != null -> ArasaacUrls.image(category.iconArasaacId)
-                else -> null
-            }
+            val iconModel = item.iconModel
             if (iconModel != null) {
                 icon.visibility = View.VISIBLE
                 icon.load(iconModel)
