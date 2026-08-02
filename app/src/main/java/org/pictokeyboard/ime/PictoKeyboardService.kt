@@ -1,5 +1,6 @@
 package org.pictokeyboard.ime
 
+import android.content.Context
 import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.util.Log
@@ -66,6 +67,16 @@ class PictoKeyboardService : InputMethodService() {
     private lateinit var normalView: View
     private lateinit var blindView: BlindKeyboardView
 
+    /**
+     * Resources in the app's chosen language. Rebuilt whenever the setting
+     * changes, because an InputMethodService gets no callback for it below
+     * API 33 -- see [localizedFor].
+     */
+    private var uiContext: Context = this
+
+    /** The language [uiContext] and the current input view were built for. */
+    private var viewLanguage: String? = null
+
     private var categories: List<CategoryEntity> = emptyList()
 
     /** Category id -> resolved Coil model, kept so a rebuilt chip strip can be
@@ -84,6 +95,7 @@ class PictoKeyboardService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
+        applyLanguage(currentAppLanguage())
         tts = TtsManager(this)
         imageSharer = PictoImageSharer(this)
         // Deliberately here and not in onCreateInputView. This feeds *service*
@@ -97,7 +109,11 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     override fun onCreateInputView(): View {
-        normalView = layoutInflater.inflate(R.layout.keyboard_view, null)
+        // cloneInContext, not LayoutInflater.from(uiContext): the clone keeps the
+        // service's theme while resolving strings against the chosen language.
+        // Building a fresh inflater would drop the keyboard's styling.
+        normalView = layoutInflater.cloneInContext(uiContext)
+            .inflate(R.layout.keyboard_view, null)
 
         categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected)
         pictoAdapter = PictoAdapter(onClick = ::onPictoTapped, onLongClick = ::sendPictoAsImage)
@@ -128,7 +144,7 @@ class PictoKeyboardService : InputMethodService() {
             onDoubleTap = { writeBlindCurrent() }
             onLongPress = {
                 deleteLastWord()
-                tts.speak(getString(R.string.blind_deleted), settings.defaultLanguage)
+                tts.speak(uiContext.getString(R.string.blind_deleted), settings.defaultLanguage)
             }
         }
 
@@ -157,12 +173,29 @@ class PictoKeyboardService : InputMethodService() {
         categoryAdapter.submit(categories, selectedCategoryId, categoryIcons)
         refreshPictos()
 
+        viewLanguage = currentAppLanguage()
         applyMode()
         return container
     }
 
+    /** Points [uiContext] at [language]. */
+    private fun applyLanguage(language: String?) {
+        uiContext = localizedFor(language)
+    }
+
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        // The one place the keyboard can notice a language change. Below API 33
+        // appcompat only applies the per-app locale to AppCompatActivity, so no
+        // configuration change reaches this service and nothing else would ever
+        // tell it. Rebuilding the whole input view is heavy-handed, but the key
+        // captions are inflated from a layout and there is no lighter way to
+        // re-resolve them -- and it happens only on a change the user just made.
+        val language = currentAppLanguage()
+        if (language != viewLanguage) {
+            applyLanguage(language)
+            setInputView(onCreateInputView())
+        }
         // Re-read settings so config changes apply next time the keyboard opens.
         scope.launch {
             settings = locator.settings.current()
@@ -370,7 +403,7 @@ class PictoKeyboardService : InputMethodService() {
             ?: categories.firstOrNull { it.id == picto.categoryId }?.colorArgb
             ?: android.graphics.Color.LTGRAY
         val attribution =
-            if (picto.arasaacId != null) getString(R.string.arasaac_share_attribution) else null
+            if (picto.arasaacId != null) uiContext.getString(R.string.arasaac_share_attribution) else null
         scope.launch {
             imageSharer.send(picto, frameColor, attribution, ::currentTarget) { resId ->
                 android.widget.Toast.makeText(
@@ -443,10 +476,10 @@ class PictoKeyboardService : InputMethodService() {
         if (enabled) {
             blindCatIndex = 0
             blindLoaded = true
-            loadBlindCategory(extra = getString(R.string.blind_on))
+            loadBlindCategory(extra = uiContext.getString(R.string.blind_on))
         } else {
             blindLoaded = false
-            tts.speak(getString(R.string.blind_off), settings.defaultLanguage)
+            tts.speak(uiContext.getString(R.string.blind_off), settings.defaultLanguage)
         }
     }
 
@@ -486,9 +519,9 @@ class PictoKeyboardService : InputMethodService() {
             blindSurface()?.apply {
                 setCaption("")
                 setSurfaceColor(null)
-                setHint(getString(R.string.blind_no_board))
+                setHint(uiContext.getString(R.string.blind_no_board))
             }
-            tts.speak(getString(R.string.blind_no_board), settings.defaultLanguage)
+            tts.speak(uiContext.getString(R.string.blind_no_board), settings.defaultLanguage)
             return
         }
         scope.launch {
@@ -514,7 +547,7 @@ class PictoKeyboardService : InputMethodService() {
         val parts = announcements.map { TtsManager.Part(it, settings.defaultLanguage) }.toMutableList()
         val picto = blindPictos.getOrNull(blindPictoIndex)
         if (picto == null) {
-            val msg = getString(R.string.blind_empty_category)
+            val msg = uiContext.getString(R.string.blind_empty_category)
             surface?.setCaption(msg)
             parts += TtsManager.Part(msg, settings.defaultLanguage)
         } else {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The languages this app ships. Required by the per-app language API: without
+    it the system has nothing to populate Settings > Apps > PictoKeyboard >
+    Language with, and AppCompatDelegate.setApplicationLocales has no contract
+    to honour on API 33+.
+
+    Keep in step with res/values-*/strings.xml. A locale listed here with no
+    translation falls back to the default, which is worse than not listing it:
+    the user picks a language and the app answers in English.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="es" />
+</locale-config>
