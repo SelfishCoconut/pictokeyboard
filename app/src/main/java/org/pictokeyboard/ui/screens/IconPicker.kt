@@ -63,26 +63,27 @@ import coil.compose.AsyncImage
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
-import org.pictokeyboard.data.repo.CategoryIcon
-import org.pictokeyboard.data.repo.asCategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
+import org.pictokeyboard.data.repo.asIconChoice
 import org.pictokeyboard.data.repo.previewModel
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.SearchState
 
 /**
- * The category's picto, shown first in the editor because it is what the
- * communicator actually navigates by — on a keyboard for someone who may not
- * read, the category strip is the primary control and a label-only entry in it
- * carries no meaning.
+ * The picto a category or a board is shown by, first in its editor because it
+ * is what the communicator actually navigates by — on a keyboard for someone
+ * who may not read, the category strip and the board tabs are the primary
+ * controls, and a label-only entry in either carries no meaning.
  *
- * Tapping the tile opens [CategoryIconPickerDialog]. Removing is deliberately
+ * Tapping the tile opens [IconPickerDialog]. Removing is deliberately
  * kept as a separate, labelled action rather than an option buried in the
  * picker, since it is the one choice that undoes a picture.
  */
 @Composable
-fun CategoryIconField(
-    icon: CategoryIcon,
+fun IconField(
+    icon: IconChoice,
     accent: Color,
+    owner: IconOwner,
     onChoose: () -> Unit,
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
@@ -92,16 +93,16 @@ fun CategoryIconField(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        IconPreviewTile(icon = icon, accent = accent, onClick = onChoose)
+        IconPreviewTile(icon = icon, accent = accent, owner = owner, onClick = onChoose)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OutlinedButton(onClick = onChoose) {
-                Text(stringResource(R.string.category_picto_choose))
+                Text(stringResource(R.string.picto_choose))
             }
             // Kept mounted and disabled rather than removed when there is nothing
             // to clear: unmounting it drops accessibility focus mid-gesture, which
             // silently throws a screen-reader user back to the top of the editor.
-            TextButton(onClick = onClear, enabled = icon != CategoryIcon.None) {
-                Text(stringResource(R.string.category_picto_remove))
+            TextButton(onClick = onClear, enabled = icon != IconChoice.None) {
+                Text(stringResource(R.string.picto_remove))
             }
         }
     }
@@ -113,15 +114,15 @@ fun CategoryIconField(
  * further down the editor.
  */
 @Composable
-private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Unit) {
+private fun IconPreviewTile(icon: IconChoice, accent: Color, owner: IconOwner, onClick: () -> Unit) {
     val model = icon.previewModel()
     // Pictos are drawn for a white background, so the plate stays white under one.
     // The empty state is text, not a picto, and needs the themed pair instead --
     // on white it would be near-invisible in dark mode.
     val plate = if (model == null) MaterialTheme.colorScheme.surfaceVariant else Color.White
     val spoken = icon.label
-        ?.let { stringResource(R.string.category_picto_chosen_named, it) }
-        ?: stringResource(R.string.category_picto_chosen)
+        ?.let { stringResource(owner.chosenNamedRes, it) }
+        ?: stringResource(owner.chosenRes)
     Box(
         contentAlignment = Alignment.Center,
         // A floor rather than a fixed size, so "No picto" can grow at a large font
@@ -131,7 +132,7 @@ private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Un
             .sizeIn(minWidth = 72.dp, minHeight = 72.dp)
             .background(plate, RoundedCornerShape(12.dp))
             .categoryFrame(accent, BorderStyles.DEFAULT_WIDTH_DP.dp, BorderStyles.SOLID, 12.dp)
-            .clickable(onClick = onClick, onClickLabel = stringResource(R.string.category_picto_choose))
+            .clickable(onClick = onClick, onClickLabel = stringResource(R.string.picto_choose))
             .padding(8.dp)
             // Polite, so closing the picker speaks the picto just chosen. Without
             // it the caregiver who cannot see the tile gets no confirmation at all
@@ -140,7 +141,7 @@ private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Un
     ) {
         if (model == null) {
             Text(
-                stringResource(R.string.category_picto_none),
+                stringResource(R.string.picto_none),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -158,59 +159,53 @@ private fun IconPreviewTile(icon: CategoryIcon, accent: Color, onClick: () -> Un
 }
 
 /**
- * Where a category's picto can come from: one of the category's own symbols
- * first, then ARASAAC, a photo, or the camera.
+ * Where a picto can come from, for a category or for a board: one of the
+ * owner's own symbols first, then ARASAAC, a photo, or the camera.
  *
- * [categoryId] is null while a category is still being created, which is exactly
- * when it has no symbols of its own to offer — that section then disappears
- * rather than showing an empty row.
+ * One dialog for both owners rather than two near-identical ones — the sources
+ * are the same, the caching is the same, and the only differences are the
+ * wording and which symbols can be promoted, both of which [owner] carries.
  */
 @Composable
-fun CategoryIconPickerDialog(
+fun IconPickerDialog(
     viewModel: ConfigViewModel,
-    categoryId: String?,
+    owner: IconOwner,
     language: String,
     onDismiss: () -> Unit,
-    onPicked: (CategoryIcon) -> Unit,
+    onPicked: (IconChoice) -> Unit,
 ) {
-    val context = LocalContext.current
     var searching by remember { mutableStateOf(false) }
     var cropping by remember { mutableStateOf<Uri?>(null) }
     var saveFailed by remember { mutableStateOf(false) }
 
-    val own by produceState(initialValue = emptyList<PictoEntity>(), categoryId) {
-        value = categoryId?.let { viewModel.pictosOnce(it) }.orEmpty()
+    val own by produceState(initialValue = emptyList<PictoEntity>(), owner) {
+        value = when (owner) {
+            // Null id: a category still being created, which has nothing of its
+            // own yet. The section then disappears rather than showing an empty row.
+            is IconOwner.Category -> owner.id?.let { viewModel.pictosOnce(it) }.orEmpty()
+            is IconOwner.Board -> viewModel.boardPictosOnce(owner.id)
+        }
     }
 
     val photoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri -> if (uri != null) cropping = uri }
 
-    // The camera writes into a file we own, so no CAMERA permission is needed:
-    // the picture is taken by whichever camera app the device already trusts.
-    var pendingShot by remember { mutableStateOf<Uri?>(null) }
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture(),
-    ) { saved -> if (saved) cropping = pendingShot }
-    val hasCamera = remember(context) { context.hasCameraApp() }
-    val takePicture = {
-        val uri = context.newCameraUri()
-        pendingShot = uri
-        cameraLauncher.launch(uri)
-    }
+    val takePicture = rememberCameraCapture { shot -> cropping = shot }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.category_picto_title)) },
+        title = { Text(stringResource(owner.titleRes)) },
         text = {
             SourceList(
                 own = own,
+                owner = owner,
                 saveFailed = saveFailed,
                 sources = IconSources(
                     onPick = onPicked,
                     onSearch = { searching = true },
                     onPhoto = { photoLauncher.launch("image/*") },
-                    onCamera = takePicture.takeIf { hasCamera },
+                    onCamera = takePicture,
                 ),
             )
         },
@@ -227,7 +222,7 @@ fun CategoryIconPickerDialog(
             onDismiss = { searching = false },
             onPicked = { id, keyword ->
                 searching = false
-                onPicked(CategoryIcon.Arasaac(id, keyword))
+                onPicked(IconChoice.Arasaac(id, keyword))
             },
         )
     }
@@ -241,6 +236,29 @@ fun CategoryIconPickerDialog(
 }
 
 /**
+ * Taking a photo, or null when no app on the device can — that source is then
+ * simply not offered rather than shown as a button that does nothing.
+ *
+ * No `CAMERA` permission is involved: the shot is taken by whichever camera app
+ * the device already trusts, writing into a file this app owns. Asking for the
+ * permission would be asking for something never used.
+ */
+@Composable
+private fun rememberCameraCapture(onShot: (Uri) -> Unit): (() -> Unit)? {
+    val context = LocalContext.current
+    var pending by remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture(),
+    ) { saved -> if (saved) pending?.let(onShot) }
+    if (!remember(context) { context.hasCameraApp() }) return null
+    return {
+        val uri = context.newCameraUri()
+        pending = uri
+        launcher.launch(uri)
+    }
+}
+
+/**
  * The crop step a photo or a camera shot goes through on its way to becoming a
  * category picto, reusing the same square cropper as the picto importer.
  * [onResult] gets null when the cropped image could not be written to the cache.
@@ -250,14 +268,14 @@ private fun CropToIcon(
     uri: Uri,
     viewModel: ConfigViewModel,
     onDismiss: () -> Unit,
-    onResult: (CategoryIcon?) -> Unit,
+    onResult: (IconChoice?) -> Unit,
 ) {
     CropImageDialog(
         imageUri = uri,
         viewModel = viewModel,
         onDismiss = onDismiss,
         onCropped = { bitmap ->
-            viewModel.saveIconImage(bitmap) { path -> onResult(path?.let(CategoryIcon::Local)) }
+            viewModel.saveIconImage(bitmap) { path -> onResult(path?.let(IconChoice::Local)) }
         },
     )
 }
@@ -267,20 +285,23 @@ private fun CropToIcon(
  * on the device can take a picture, and that source is then simply not offered.
  */
 private class IconSources(
-    val onPick: (CategoryIcon) -> Unit,
+    val onPick: (IconChoice) -> Unit,
     val onSearch: () -> Unit,
     val onPhoto: () -> Unit,
     val onCamera: (() -> Unit)?,
 )
 
 /**
- * The picker's body. The category's own symbols come first because that is
- * nearly always the right answer and the fastest one; the remaining sources are
- * plain labelled buttons so the whole list is usable without seeing the images.
+ * The picker's body. The owner's own symbols come first because that is nearly
+ * always the right answer and the fastest one — the picture for *Food* is
+ * already inside *Food*, and the picture for a *Doctor* board is somewhere on
+ * it. The remaining sources are plain labelled buttons so the whole list is
+ * usable without seeing the images.
  */
 @Composable
 private fun SourceList(
     own: List<PictoEntity>,
+    owner: IconOwner,
     saveFailed: Boolean,
     sources: IconSources,
 ) {
@@ -290,7 +311,7 @@ private fun SourceList(
     ) {
         if (saveFailed) {
             Text(
-                stringResource(R.string.category_picto_save_failed),
+                stringResource(R.string.picto_save_failed),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
                 // Assertive: a failed save looks exactly like a successful one to
@@ -302,28 +323,28 @@ private fun SourceList(
         // Gated on what can actually be offered, not on the raw list: a picto
         // still waiting on its first download has nothing to promote, and
         // filtering inside the row would leave this header standing over nothing.
-        val offerable = own.mapNotNull { picto -> picto.asCategoryIcon()?.let { picto to it } }
+        val offerable = own.mapNotNull { picto -> picto.asIconChoice()?.let { picto to it } }
         if (offerable.isNotEmpty()) {
             Text(
-                stringResource(R.string.category_picto_from_own),
+                stringResource(owner.fromOwnRes),
                 style = MaterialTheme.typography.labelLarge,
             )
             OwnPictoRow(pictos = offerable, onPick = sources.onPick)
         }
         SourceButton(
             icon = Icons.Filled.Search,
-            label = stringResource(R.string.category_picto_source_arasaac),
+            label = stringResource(R.string.picto_source_arasaac),
             onClick = sources.onSearch,
         )
         SourceButton(
             icon = Icons.Filled.Image,
-            label = stringResource(R.string.category_picto_source_photo),
+            label = stringResource(R.string.picto_source_photo),
             onClick = sources.onPhoto,
         )
         sources.onCamera?.let { onCamera ->
             SourceButton(
                 icon = Icons.Filled.PhotoCamera,
-                label = stringResource(R.string.category_picto_source_camera),
+                label = stringResource(R.string.picto_source_camera),
                 onClick = onCamera,
             )
         }
@@ -333,10 +354,10 @@ private fun SourceList(
 /** The category's own symbols, offered first — usually the right picture already. */
 @Composable
 private fun OwnPictoRow(
-    pictos: List<Pair<PictoEntity, CategoryIcon>>,
-    onPick: (CategoryIcon) -> Unit,
+    pictos: List<Pair<PictoEntity, IconChoice>>,
+    onPick: (IconChoice) -> Unit,
 ) {
-    val choose = stringResource(R.string.category_picto_choose)
+    val choose = stringResource(R.string.picto_choose)
     Row(
         modifier = Modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -408,7 +429,7 @@ private fun ArasaacIconSearchDialog(
             viewModel.clearSearch()
             onDismiss()
         },
-        title = { Text(stringResource(R.string.category_picto_source_arasaac)) },
+        title = { Text(stringResource(R.string.picto_source_arasaac)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -454,7 +475,7 @@ private fun ArasaacIconSearchDialog(
 @Composable
 private fun SearchResults(state: SearchState, onPick: (Int, String) -> Unit) {
     // Hoisted: stringResource cannot be called inside a semantics lambda.
-    val searchingLabel = stringResource(R.string.category_picto_searching)
+    val searchingLabel = stringResource(R.string.picto_searching_arasaac)
     Box(
         // A live region because every one of these states arrives with no other
         // signal: without it, searching offline is indistinguishable from silence
@@ -490,7 +511,7 @@ private fun SearchResults(state: SearchState, onPick: (Int, String) -> Unit) {
                             .background(Color.White, RoundedCornerShape(12.dp))
                             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                             .clickable(
-                                onClickLabel = stringResource(R.string.category_picto_choose),
+                                onClickLabel = stringResource(R.string.picto_choose),
                                 role = Role.Button,
                             ) { onPick(item.id, item.keyword) }
                             .padding(6.dp),

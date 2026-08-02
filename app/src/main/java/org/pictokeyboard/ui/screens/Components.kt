@@ -100,3 +100,18 @@ fun showKeyboardPicker(context: Context) {
     (context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
         .showInputMethodPicker()
 }
+
+/**
+ * The explanatory line under a control, in the settings screen's voice.
+ *
+ * Here rather than beside any one control: the layout tab, the board picto
+ * field and the settings groups all speak in it, and three copies would drift.
+ */
+@Composable
+internal fun Hint(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

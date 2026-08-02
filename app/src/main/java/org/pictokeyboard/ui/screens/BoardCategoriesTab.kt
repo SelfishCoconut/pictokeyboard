@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
-import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.ui.theme.Spacing
 
@@ -93,9 +93,9 @@ internal fun CategoryDialogs(
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
     onAddBlank: (CategoryEdit) -> Unit,
-    onUpdate: (CategoryEntity, CategoryIcon) -> Unit,
+    onUpdate: (CategoryEntity, IconChoice) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
 ) {
     when (dialog) {
         null -> Unit
