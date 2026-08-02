@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -36,6 +38,22 @@ fun releaseSecret(name: String): String? =
 // of the plain "built unsigned" that a developer actually wants.
 val upstreamKeystore = releaseSecret("KEYSTORE_FILE")?.let(::file)?.takeIf { it.isFile }
 
+// Supabase credentials. The anon key is public by design -- row-level security
+// is the boundary, not secrecy -- but it still arrives through local.properties
+// rather than the repository, so a fork does not inherit this project's backend.
+// The service_role key must NEVER appear here or anywhere else in the repo.
+//
+// A separate reader from releaseSecret because the fallbacks differ: signing
+// material comes from ~/.gradle/gradle.properties, while these are per-checkout
+// and belong in local.properties next to sdk.dir.
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun supabaseSecret(name: String): String =
+    System.getenv(name) ?: localProps.getProperty(name).orEmpty()
+
 android {
     namespace = "org.pictokeyboard"
     compileSdk = 37
@@ -52,6 +70,14 @@ android {
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+
+        // Empty on any machine that has not been given a project -- a fresh
+        // clone, CI, a fork. SupabaseConfig.isConfigured reads exactly this, and
+        // the app then hides accounts entirely rather than offering a dead
+        // button. An account is never required to use the keyboard, so a build
+        // without a backend is a supported build and not a broken one.
+        buildConfigField("String", "SUPABASE_URL", "\"${supabaseSecret("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseSecret("SUPABASE_ANON_KEY")}\"")
     }
 
     signingConfigs {
@@ -231,6 +257,11 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.moshi.kotlin)
+
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.compose.auth)
+    implementation(libs.ktor.client.okhttp)
 
     implementation(libs.coil.compose)
     implementation(libs.coil)
