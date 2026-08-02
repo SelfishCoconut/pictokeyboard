@@ -41,7 +41,7 @@ import org.pictokeyboard.data.arasaac.ArasaacUrls
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
-import org.pictokeyboard.data.repo.CategoryIcon
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.repo.currentIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.CategoryTemplates
@@ -205,7 +205,7 @@ internal fun CategoryEditDialog(
     initial: CategoryEntity?,
     onDismiss: () -> Unit,
     onSave: (CategoryEdit) -> Unit,
-    pickerDialog: CategoryPickerSlot,
+    pickerDialog: IconPickerSlot,
 ) {
     var edit by remember { mutableStateOf(initial.toEdit()) }
     var picking by remember { mutableStateOf(false) }
@@ -231,7 +231,7 @@ internal fun CategoryEditDialog(
 
     if (picking) {
         pickerDialog(
-            initial?.id,
+            IconOwner.Category(initial?.id),
             { picking = false },
             {
                 edit = edit.copy(icon = it)
@@ -242,16 +242,19 @@ internal fun CategoryEditDialog(
 }
 
 /**
- * How the editor reaches the picto picker.
+ * How an editor reaches the picto picker.
  *
- * The picker needs the ConfigViewModel (ARASAAC search, the category's own
+ * The picker needs the ConfigViewModel (ARASAAC search, the owner's own
  * symbols, saving a cropped photo), and this file is deliberately free of it so
  * the screen stays previewable and testable without one. So it arrives as a
  * slot: the viewModel-aware caller supplies the real dialog, and a preview or a
  * test supplies an empty lambda.
+ *
+ * One slot for both the category editor and the board editor, since [IconOwner]
+ * already carries everything that differs between them.
  */
-typealias CategoryPickerSlot =
-    @Composable (categoryId: String?, onDismiss: () -> Unit, onPicked: (CategoryIcon) -> Unit) -> Unit
+typealias IconPickerSlot =
+    @Composable (owner: IconOwner, onDismiss: () -> Unit, onPicked: (IconChoice) -> Unit) -> Unit
 
 /** Everything the category editor collects, saved in one write. */
 data class CategoryEdit(
@@ -259,7 +262,7 @@ data class CategoryEdit(
     val color: Int,
     val borderStyle: String,
     val borderWidthDp: Int,
-    val icon: CategoryIcon,
+    val icon: IconChoice,
 )
 
 /** The editor's starting values: an existing category's, or the defaults for a new one. */
@@ -268,7 +271,7 @@ private fun CategoryEntity?.toEdit() = CategoryEdit(
     color = this?.colorArgb ?: CategoryPalette.first().argb.toInt(),
     borderStyle = this?.borderStyle ?: BorderStyles.SOLID,
     borderWidthDp = this?.borderWidthDp ?: BorderStyles.DEFAULT_WIDTH_DP,
-    icon = this?.currentIcon() ?: CategoryIcon.None,
+    icon = this?.currentIcon() ?: IconChoice.None,
 )
 
 /**
@@ -288,11 +291,15 @@ private fun CategoryEditForm(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.category_picto), style = MaterialTheme.typography.labelLarge)
-        CategoryIconField(
+        IconField(
             icon = edit.icon,
             accent = accent,
+            // Id-less: the form does not know whether it is editing or creating,
+            // and the owner is only used here for wording, which is the same
+            // either way.
+            owner = IconOwner.Category(null),
             onChoose = onChoosePicto,
-            onClear = { onChange(edit.copy(icon = CategoryIcon.None)) },
+            onClear = { onChange(edit.copy(icon = IconChoice.None)) },
         )
 
         OutlinedTextField(

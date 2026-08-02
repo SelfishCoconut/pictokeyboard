@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -21,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.repo.BoardSummary
+import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.ScreenPreviews
 import org.pictokeyboard.ui.theme.Spacing
@@ -43,6 +42,8 @@ internal fun BoardLayoutTab(
     summary: BoardSummary,
     keyboardBoardCount: Int,
     onSaveBoard: (BoardEntity) -> Unit,
+    onSaveBoardIcon: (BoardEntity, IconChoice) -> Unit,
+    pickerDialog: IconPickerSlot,
     modifier: Modifier = Modifier,
 ) {
     val board = summary.board
@@ -94,6 +95,7 @@ internal fun BoardLayoutTab(
             )
         }
 
+        BoardPictoField(board = board, onSaveIcon = onSaveBoardIcon, pickerDialog = pickerDialog)
         FrameDefaultsGroup(summary = summary, onSaveBoard = onSaveBoard)
         BoardLanguageGroup(board = board, onSaveBoard = onSaveBoard)
         BoardVisibilityGroup(board = board, onSaveBoard = onSaveBoard)
@@ -184,16 +186,6 @@ private fun keyboardChromeDp(hasBoardTabs: Boolean): Int {
     return (tabs + bar + actions + hairline).value.toInt()
 }
 
-/** The explanatory line under a control, in the settings screen's voice. */
-@Composable
-private fun Hint(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
 /**
  * Slider stops between the ends of [range], so the control offers exactly the
  * values the board can hold. Derived rather than written out, so widening
@@ -205,7 +197,13 @@ private fun stepsBetween(range: IntRange): Int = (range.last - range.first - 1).
 @Composable
 private fun BoardLayoutTabPreview() {
     PictoKeyboardTheme {
-        BoardLayoutTab(summary = previewBoardSummary(), keyboardBoardCount = 1, onSaveBoard = {})
+        BoardLayoutTab(
+            summary = previewBoardSummary(),
+            keyboardBoardCount = 1,
+            onSaveBoard = {},
+            onSaveBoardIcon = { _, _ -> },
+            pickerDialog = { _, _, _ -> },
+        )
     }
 }
 
@@ -221,6 +219,28 @@ private fun BoardLayoutTabWideTilesPreview() {
             summary = previewBoardSummary(columns = 2, rows = 3, showLabels = false),
             keyboardBoardCount = 2,
             onSaveBoard = {},
+            onSaveBoardIcon = { _, _ -> },
+            pickerDialog = { _, _, _ -> },
+        )
+    }
+}
+
+/**
+ * A board that already has a picto, so the field shows the filled state rather
+ * than only the empty one — and so the dark preview catches a tile drawn white
+ * on white, which is exactly the class of defect a light-only screenshot passes.
+ */
+@ScreenPreviews
+@Composable
+private fun BoardLayoutTabWithPictoPreview() {
+    PictoKeyboardTheme {
+        BoardLayoutTab(
+            // 2483 is ARASAAC's "doctor" — the board this feature exists for.
+            summary = previewBoardSummary(iconArasaacId = 2483),
+            keyboardBoardCount = 2,
+            onSaveBoard = {},
+            onSaveBoardIcon = { _, _ -> },
+            pickerDialog = { _, _, _ -> },
         )
     }
 }
