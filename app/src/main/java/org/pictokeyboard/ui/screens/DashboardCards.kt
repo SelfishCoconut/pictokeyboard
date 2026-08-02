@@ -1,7 +1,6 @@
 package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -37,47 +33,16 @@ import org.pictokeyboard.ui.theme.Spacing
 // The dashboard's cards. Each is independent of the others and of the view
 // model, so each can be previewed and restyled on its own.
 
-@Composable
-internal fun SetupStatusCard(status: KeyboardStatus, onEnable: () -> Unit, onSelect: () -> Unit) {
-    if (status.ready) {
-        SetupReadyRow()
-    } else {
-        SetupStepsCard(status = status, onEnable = onEnable, onSelect = onSelect)
-    }
-}
-
 /**
- * Shown once the keyboard is both enabled and selected. The checklist is genuinely
- * useful while there is something to do, and dead weight afterwards — so when
- * there is nothing left to do it collapses from a card to a single quiet line,
- * still readable as confirmation but no longer competing with the board above it.
+ * The two-step walkthrough, shown only while the keyboard is not yet live.
+ *
+ * There is no done state any more. A checklist is useful while there is
+ * something to do and dead weight afterwards, and this one sat permanently at
+ * the top of the app long after it had been read -- so once both steps are
+ * done the Boards tab simply stops rendering it (#32).
  */
 @Composable
-private fun SetupReadyRow() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-    ) {
-        Icon(
-            Icons.Filled.CheckCircle,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
-        )
-        Text(
-            stringResource(R.string.dashboard_setup_ready_title),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** The two-step walkthrough shown until the keyboard is live. */
-@Composable
-private fun SetupStepsCard(status: KeyboardStatus, onEnable: () -> Unit, onSelect: () -> Unit) {
+internal fun SetupStepsCard(status: KeyboardStatus, onEnable: () -> Unit, onSelect: () -> Unit) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -187,7 +152,7 @@ private fun SetupStep(
 @Composable
 private fun SetupStepsNarrowSpanishPreview() {
     PictoKeyboardTheme {
-        SetupStatusCard(
+        SetupStepsCard(
             status = KeyboardStatus(enabled = false, selected = false),
             onEnable = {},
             onSelect = {},
@@ -199,46 +164,3 @@ private fun SetupStepsNarrowSpanishPreview() {
 // 34sp are the template answer to a dashboard: they filled space, restated what
 // the board itself shows, and neither number is one the caregiver acts on. The
 // counts now live in the hero's caption, beside the board they describe.
-
-@Composable
-internal fun BuildBoardCard(onClick: () -> Unit) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Filled.TouchApp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.dashboard_build), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.dashboard_build_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}

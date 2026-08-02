@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.pictokeyboard.App
@@ -18,6 +19,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.prefs.Settings
+import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.CategoryIcon
 import org.pictokeyboard.data.seed.CategoryTemplate
 
@@ -60,6 +62,11 @@ class ConfigViewModel : ViewModel() {
 
     val settings: StateFlow<Settings> =
         settingsStore.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Settings())
+
+    /** Every board with the counts and miniature its card needs. */
+    val boardSummaries: StateFlow<List<BoardSummary>> =
+        repo.observeBoardSummaries()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _search = MutableStateFlow<SearchState>(SearchState.Idle)
     val search: StateFlow<SearchState> = _search
@@ -235,6 +242,49 @@ class ConfigViewModel : ViewModel() {
     // --- Settings ----------------------------------------------------------
 
     fun setLanguage(value: String) = viewModelScope.launch { settingsStore.setDefaultLanguage(value) }
+    // --- Boards --------------------------------------------------------------
+
+    fun useBoard(id: String) = viewModelScope.launch { repo.setActiveBoard(id) }
+
+    /**
+     * Copies [board] under a "(copy)" name.
+     *
+     * The naming convention lives here rather than at the call site: it is a
+     * property of what duplicating means, not of the screen that offers it, and
+     * a composable reaching for a formatted resource has to go through the
+     * context to do it.
+     */
+    fun duplicateBoard(board: BoardEntity) = viewModelScope.launch {
+        repo.duplicateBoard(
+            board,
+            locator.appContext.getString(R.string.boards_copy_name, board.name),
+        )
+    }
+
+    /**
+     * Deletes [board] and everything on it.
+     *
+     * Refuses the last board rather than leaving the keyboard with nothing to
+     * show: an empty grid mid-conversation is the one failure this product
+     * cannot have. The caller is told, so it can say so rather than appearing
+     * to have ignored the tap.
+     */
+    fun deleteBoard(board: BoardEntity, onResult: (Boolean) -> Unit = {}) = viewModelScope.launch {
+        val boards = repo.observeBoards().first()
+        if (boards.size <= 1) {
+            onResult(false)
+            return@launch
+        }
+        repo.deleteBoard(board)
+        // Deleting the board in use would leave none active, so hand over
+        // first — to whichever board now sits where this one did.
+        if (board.active) {
+            boards.filter { it.id != board.id }.minByOrNull { it.position }
+                ?.let { repo.setActiveBoard(it.id) }
+        }
+        onResult(true)
+    }
+
     // --- Board layout ------------------------------------------------------
     //
     // Columns, rows and captions describe the situation rather than the person,
@@ -275,13 +325,24 @@ class ConfigViewModel : ViewModel() {
 
     // --- Backup ------------------------------------------------------------
 
-    suspend fun exportJson(): String = backup.export(
-        repo.activeBoard()?.language ?: settingsStore.current().defaultLanguage,
-    )
+    /** Exports [boardId], or the board in use when no board is named. */
+    suspend fun exportJson(boardId: String? = null): String {
+        val board = boardId?.let { repo.board(it) } ?: repo.activeBoard() ?: return ""
+        return backup.export(language = board.language, boardId = board.id)
+    }
 
     fun importJson(json: String, onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        val result = backup.import(json)
-        result.getOrNull()?.let { settingsStore.setDefaultLanguage(it) }
+        val board = repo.activeBoard()
+        if (board == null) {
+            onResult(false)
+            return@launch
+        }
+        val result = backup.import(json, board.id)
+        // The imported file's language describes the *vocabulary*, so it lands
+        // on the board rather than on the interface language it used to
+        // overwrite — importing an English board no longer flips the whole app
+        // to English behind the caregiver's back (#31).
+        result.getOrNull()?.let { repo.updateBoard(board.copy(language = it)) }
         onResult(result.isSuccess)
     }
 }

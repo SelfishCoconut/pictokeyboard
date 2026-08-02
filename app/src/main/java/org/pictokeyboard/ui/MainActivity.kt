@@ -1,9 +1,12 @@
 package org.pictokeyboard.ui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -11,9 +14,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -25,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,20 +40,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.screens.AboutScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
+import org.pictokeyboard.ui.screens.BoardsScreen
 import org.pictokeyboard.ui.screens.CategoriesScreen
-import org.pictokeyboard.ui.screens.DashboardScreen
+import org.pictokeyboard.ui.screens.DiscoverScreen
 import org.pictokeyboard.ui.screens.PictosScreen
 import org.pictokeyboard.ui.screens.SettingsScreen
 import org.pictokeyboard.ui.screens.UnlockScreen
 import org.pictokeyboard.ui.screens.openInputMethodSettings
+import org.pictokeyboard.ui.screens.rememberKeyboardStatus
 import org.pictokeyboard.ui.screens.showKeyboardPicker
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 
 object Routes {
-    const val HOME = "home"
+    const val BOARDS = "boards"
+    const val DISCOVER = "discover"
     const val CATEGORIES = "categories"
     const val PICTOS = "pictos"
     const val ADD_PICTOS = "addpictos"
@@ -63,11 +70,19 @@ object Routes {
 /** A top-level destination shown in the bottom navigation bar. */
 private data class NavItem(val route: String, val label: Int, val icon: ImageVector)
 
+/**
+ * Three destinations, not four.
+ *
+ * About was a quarter of the navigation bar for a screen read once, and is now
+ * a Settings row. The old Home tab was a dashboard *about the app* -- setup
+ * status, a build-your-board CTA, a tips card -- sitting above the caregiver's
+ * actual content; Boards makes the content the home. Discover is empty until
+ * #37, but the boards empty state has to be able to point somewhere. (#32)
+ */
 private val NavItems = listOf(
-    NavItem(Routes.HOME, R.string.nav_home, Icons.Filled.Home),
-    NavItem(Routes.CATEGORIES, R.string.nav_board, Icons.Filled.GridView),
+    NavItem(Routes.BOARDS, R.string.nav_boards, Icons.Filled.GridView),
+    NavItem(Routes.DISCOVER, R.string.nav_discover, Icons.Filled.Explore),
     NavItem(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings),
-    NavItem(Routes.ABOUT, R.string.nav_about, Icons.Filled.Info),
 )
 
 /**
@@ -149,7 +164,23 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
     }
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val nav = rememberNavController()
+
+    // Exporting a board writes the same JSON the settings screen has always
+    // written, scoped to one board (#31). The launcher lives here because both
+    // the Boards tab and Settings need it and neither owns the other.
+    var pendingExportJson by remember { mutableStateOf<String?>(null) }
+    val boardExportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        val json = pendingExportJson
+        if (uri != null && json != null) {
+            context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+            Toast.makeText(context, R.string.settings_export_done, Toast.LENGTH_SHORT).show()
+        }
+        pendingExportJson = null
+    }
     val backStack by nav.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val showBottomBar = currentRoute in NavItems.map { it.route }
@@ -181,24 +212,48 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
         val bottom = innerPadding.calculateBottomPadding()
         NavHost(
             navController = nav,
-            startDestination = Routes.HOME,
+            startDestination = Routes.BOARDS,
             modifier = Modifier
                 .padding(bottom = bottom)
                 .consumeWindowInsets(PaddingValues(bottom = bottom)),
         ) {
-            composable(Routes.HOME) {
-                DashboardScreen(
-                    viewModel = viewModel,
+            composable(Routes.BOARDS) {
+                val summaries by viewModel.boardSummaries.collectAsStateWithLifecycle()
+                BoardsScreen(
+                    summaries = summaries,
+                    status = rememberKeyboardStatus(),
+                    onOpenBoard = { summary ->
+                        viewModel.useBoard(summary.board.id)
+                        nav.navigate(Routes.CATEGORIES)
+                    },
+                    onUseBoard = { board -> viewModel.useBoard(board.id) },
+                    onDuplicateBoard = viewModel::duplicateBoard,
+                    onExportBoard = { board ->
+                        scope.launch {
+                            pendingExportJson = viewModel.exportJson(board.id)
+                            boardExportLauncher.launch("pictokeyboard-\${board.name}.json")
+                        }
+                    },
+                    onDeleteBoard = { board ->
+                        viewModel.deleteBoard(board) { deleted ->
+                            if (!deleted) {
+                                Toast.makeText(context, R.string.boards_delete_last, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    },
                     onEnableKeyboard = { openInputMethodSettings(context) },
                     onSelectKeyboard = { showKeyboardPicker(context) },
-                    onOpenBoard = {
-                        nav.navigate(Routes.CATEGORIES) {
+                    onOpenDiscover = {
+                        nav.navigate(Routes.DISCOVER) {
                             popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
                     },
                 )
+            }
+            composable(Routes.DISCOVER) {
+                DiscoverScreen()
             }
             composable(Routes.CATEGORIES) {
                 CategoriesScreen(
@@ -227,10 +282,15 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                 )
             }
             composable(Routes.SETTINGS) {
-                SettingsScreen(viewModel = viewModel, onBack = null)
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onOpenAbout = { nav.navigate(Routes.ABOUT) },
+                    onBack = null,
+                )
             }
             composable(Routes.ABOUT) {
-                AboutScreen(onBack = null)
+                // Pushed from Settings now, so it gets a back arrow.
+                AboutScreen(onBack = { nav.popBackStack() })
             }
         }
     }

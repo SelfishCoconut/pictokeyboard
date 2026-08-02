@@ -272,4 +272,30 @@
     <string name="a11y_toggle_selection">Seleccionar o quitar</string>
     <string name="a11y_category_color">Color de la categoría: %1$s</string>
 
+    <!-- Pestaña Tableros (#32) -->
+    <string name="nav_boards">Tableros</string>
+    <string name="nav_discover">Descubre</string>
+    <string name="boards_title">Tableros</string>
+    <string name="boards_in_use">En uso</string>
+    <string name="boards_use_this">Usar este tablero</string>
+    <string name="boards_duplicate">Duplicar</string>
+    <string name="boards_export">Exportar</string>
+    <string name="boards_delete">Eliminar</string>
+    <string name="boards_more">Más opciones de %1$s</string>
+    <string name="boards_copy_name">%1$s (copia)</string>
+    <string name="boards_delete_confirm_title">¿Eliminar %1$s?</string>
+    <string name="boards_delete_confirm_body">Se eliminan también sus categorías y pictogramas. No se puede deshacer.</string>
+    <string name="boards_delete_last">No se puede eliminar el último tablero: el teclado se quedaría sin nada que mostrar.</string>
+    <string name="boards_card_a11y">%1$s, %2$d categorías, %3$d pictogramas</string>
+    <string name="boards_card_a11y_in_use">%1$s, en uso, %2$d categorías, %3$d pictogramas</string>
+    <string name="boards_empty_title">Aún no hay tableros</string>
+    <string name="boards_empty_body">Un tablero es un conjunto de palabras para una situación: casa, colegio, una cita. Encuentra uno para empezar en Descubre.</string>
+    <string name="boards_empty_action">Ver Descubre</string>
+    <string name="boards_setup_banner">Termina de configurar el teclado</string>
+    <string name="discover_title">Descubre</string>
+    <string name="discover_coming_soon">Tableros y categorías listos para instalar.</string>
+    <string name="discover_coming_soon_body">La aplicación incluye un catálogo para tener por dónde empezar desde el primer día. Todavía no está hecho.</string>
+    <string name="about_help_heading">Ayuda</string>
+    <string name="settings_group_about">Acerca de</string>
+    <string name="settings_about_row">Acerca de y créditos</string>
 </resources>

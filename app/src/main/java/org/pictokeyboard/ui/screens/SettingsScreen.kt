@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -50,7 +51,11 @@ import org.pictokeyboard.ui.theme.Spacing
  * supply -- an activity result registry, in particular.
  */
 @Composable
-fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
+fun SettingsScreen(
+    viewModel: ConfigViewModel,
+    onOpenAbout: () -> Unit,
+    onBack: (() -> Unit)? = null,
+) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val board by viewModel.activeBoard.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -86,6 +91,7 @@ fun SettingsScreen(viewModel: ConfigViewModel, onBack: (() -> Unit)? = null) {
         settings = settings,
         board = board,
         onBack = onBack,
+        onOpenAbout = onOpenAbout,
         onLanguage = viewModel::setLanguage,
         onColumns = viewModel::setColumns,
         onRows = viewModel::setRows,
@@ -114,6 +120,7 @@ fun SettingsScreenContent(
     settings: Settings,
     board: BoardEntity?,
     onBack: (() -> Unit)?,
+    onOpenAbout: () -> Unit,
     onLanguage: (String) -> Unit,
     onColumns: (Int) -> Unit,
     onRows: (Int) -> Unit,
@@ -130,23 +137,7 @@ fun SettingsScreenContent(
 ) {
     var showPinDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back),
-                            )
-                        }
-                    }
-                },
-            )
-        },
-    ) { padding ->
+    Scaffold(topBar = { SettingsTopBar(onBack) }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -155,18 +146,20 @@ fun SettingsScreenContent(
                 .padding(Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
-            SettingsGroup(stringResource(R.string.settings_group_language)) {
-                LanguageSection(settings.defaultLanguage, onLanguage)
-            }
-            SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
-                GridSection(board, settings, onColumns, onRows, onShowLabels, onAddSpace)
-            }
-            SettingsGroup(stringResource(R.string.settings_group_voice)) {
-                SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
-            }
-            SettingsGroup(stringResource(R.string.settings_group_accessibility)) {
-                BlindModeSection(settings.blindMode, onBlindMode)
-            }
+            SettingsGroups(
+                settings = settings,
+                board = board,
+                onLanguage = onLanguage,
+                onColumns = onColumns,
+                onRows = onRows,
+                onShowLabels = onShowLabels,
+                onAddSpace = onAddSpace,
+                onSpeak = onSpeak,
+                onTtsRate = onTtsRate,
+                onTtsPitch = onTtsPitch,
+                onBlindMode = onBlindMode,
+                onOpenAbout = onOpenAbout,
+            )
             SettingsGroup(stringResource(R.string.settings_group_security)) {
                 PinSection(
                     hasPin = settings.hasPin,
@@ -196,6 +189,7 @@ private fun SettingsScreenPreview() {
             settings = Settings(),
             board = null,
             onBack = {},
+            onOpenAbout = {},
             onLanguage = {},
             onColumns = {},
             onRows = {},
@@ -221,6 +215,7 @@ private fun SettingsScreenWithPinPreview() {
             settings = Settings(hasPin = true, blindMode = true, defaultLanguage = "en"),
             board = null,
             onBack = {},
+            onOpenAbout = {},
             onLanguage = {},
             onColumns = {},
             onRows = {},
@@ -281,6 +276,63 @@ private fun SetPinDialog(onDismiss: () -> Unit, onSet: (String) -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/**
+ * The settings groups themselves, split out of the screen so that file stays a
+ * scaffold and a scroll container.
+ */
+@Composable
+private fun ColumnScope.SettingsGroups(
+    settings: Settings,
+    board: BoardEntity?,
+    onLanguage: (String) -> Unit,
+    onColumns: (Int) -> Unit,
+    onRows: (Int) -> Unit,
+    onShowLabels: (Boolean) -> Unit,
+    onAddSpace: (Boolean) -> Unit,
+    onSpeak: (Boolean) -> Unit,
+    onTtsRate: (Float) -> Unit,
+    onTtsPitch: (Float) -> Unit,
+    onBlindMode: (Boolean) -> Unit,
+    onOpenAbout: () -> Unit,
+) {
+    SettingsGroup(stringResource(R.string.settings_group_language)) {
+        LanguageSection(settings.defaultLanguage, onLanguage)
+    }
+    SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
+        GridSection(board, settings, onColumns, onRows, onShowLabels, onAddSpace)
+    }
+    SettingsGroup(stringResource(R.string.settings_group_voice)) {
+        SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)
+    }
+    SettingsGroup(stringResource(R.string.settings_group_accessibility)) {
+        BlindModeSection(settings.blindMode, onBlindMode)
+    }
+    // About is a row, not a destination in the navigation bar. It was a
+    // quarter of the bottom bar for a screen read once (#32).
+    SettingsGroup(stringResource(R.string.settings_group_about)) {
+        NavigationRow(stringResource(R.string.settings_about_row), onOpenAbout)
+    }
+}
+
+/** Title, plus a back arrow only when this screen was pushed rather than tabbed to. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsTopBar(onBack: (() -> Unit)?) {
+    TopAppBar(
+        title = { Text(stringResource(R.string.settings_title)) },
+        navigationIcon = {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                    )
+                }
+            }
         },
     )
 }

@@ -57,6 +57,13 @@ interface CategoryDao {
     @Delete
     suspend fun delete(category: CategoryEntity)
 
-    @Query("DELETE FROM categories")
-    suspend fun clear()
+    /**
+     * Empties one board. Its pictos go too, through `ON DELETE CASCADE`.
+     *
+     * Board-scoped rather than a global `DELETE FROM categories`, which is what
+     * import used to do: harmless while there was one board, and a silent wipe
+     * of every other board the moment there is more than one.
+     */
+    @Query("DELETE FROM categories WHERE boardId = :boardId")
+    suspend fun clearBoard(boardId: String)
 }

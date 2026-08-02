@@ -7,8 +7,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.pictokeyboard.data.arasaac.ArasaacOptions
 import org.pictokeyboard.data.arasaac.ArasaacResult
 import org.pictokeyboard.data.arasaac.ImageCache
@@ -76,6 +78,79 @@ class PictoRepository(
     }
 
     suspend fun setActiveBoard(id: String) = boardDao.setActive(id)
+
+    /**
+     * Everything the boards list draws, for every board, as one flow.
+     *
+     * Assembled here rather than per card so the screen issues three queries
+     * regardless of how many boards there are. `heroPictos` covers only the
+     * first category of each board — that is all a miniature shows — so the
+     * picto query stays bounded no matter how large the vocabulary grows.
+     */
+    fun observeBoardSummaries(): Flow<List<BoardSummary>> =
+        combine(
+            boardDao.observeAll(),
+            categoryDao.observeAll(),
+            pictoDao.observeCountsByBoard(),
+        ) { boards, categories, counts ->
+            Triple(boards, categories, counts)
+        }.flatMapLatest { (boards, categories, counts) ->
+            val byBoard = categories.groupBy { it.boardId }
+            val firstCategoryIds = boards.mapNotNull { byBoard[it.id]?.firstOrNull()?.id }
+            val pictoCounts = counts.associate { it.boardId to it.pictoCount }
+
+            val heroPictos = if (firstCategoryIds.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                pictoDao.observeByCategories(firstCategoryIds)
+            }
+            heroPictos.map { pictos ->
+                val pictosByCategory = pictos.groupBy { it.categoryId }
+                boards.map { board ->
+                    val boardCategories = byBoard[board.id].orEmpty()
+                    BoardSummary(
+                        board = board,
+                        categories = boardCategories,
+                        heroPictos = boardCategories.firstOrNull()
+                            ?.let { pictosByCategory[it.id] }
+                            .orEmpty(),
+                        pictoCount = pictoCounts[board.id] ?: 0,
+                    )
+                }
+            }
+        }
+
+    /**
+     * Copies [board] and everything on it under a new name.
+     *
+     * Every id is regenerated: a duplicate that shared picto ids with its
+     * original would have edits to one silently appear in the other, which is
+     * the opposite of what duplicating a board is for. Cached image paths are
+     * shared deliberately — the file on disk is the same picture, and copying
+     * it would double the storage a caregiver's boards cost for nothing.
+     */
+    suspend fun duplicateBoard(board: BoardEntity, newName: String): BoardEntity {
+        val copy = board.copy(
+            id = "board-" + UUID.randomUUID(),
+            name = newName,
+            position = boardDao.maxPosition() + 1,
+            // Duplicating must not yank the keyboard out from under whoever is
+            // using it. The copy is created dormant; switching to it is a
+            // separate, deliberate action.
+            active = false,
+        )
+        boardDao.upsert(copy)
+        categoryDao.getByBoard(board.id).forEach { category ->
+            val newCategory = category.copy(id = "cat-" + UUID.randomUUID(), boardId = copy.id)
+            categoryDao.upsert(newCategory)
+            pictoDao.upsertAll(
+                pictoDao.getByCategory(category.id).map { picto ->
+                    picto.copy(id = "pic-" + UUID.randomUUID(), categoryId = newCategory.id)
+                },
+            )
+        }
+        return copy
+    }
 
     /**
      * Copies the layout a pre-board install kept globally onto the board the

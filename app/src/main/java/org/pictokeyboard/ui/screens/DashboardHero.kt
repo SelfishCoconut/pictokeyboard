@@ -2,7 +2,6 @@ package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,9 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
@@ -61,34 +58,23 @@ import java.io.File
 internal fun BoardMiniature(
     categories: List<CategoryEntity>,
     pictos: List<PictoEntity>,
-    pictoCount: Int,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    caption: @Composable (() -> Unit)? = null,
 ) {
     val colors = PictoTheme.colors
-    val description = if (categories.isEmpty()) {
-        stringResource(R.string.dashboard_board_empty)
-    } else {
-        stringResource(R.string.dashboard_board_a11y, categories.size, pictoCount)
-    }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // One tap target with one label: the tiles inside are a picture of the
-            // board, not a dozen separate things to swipe through in TalkBack.
-            .semantics(mergeDescendants = true) { contentDescription = description }
             .clip(MaterialTheme.shapes.large)
             .border(1.dp, colors.lineStrong, MaterialTheme.shapes.large)
-            .background(colors.paper)
-            .clickable(role = Role.Button, onClick = onClick),
+            .background(colors.paper),
     ) {
         if (categories.isEmpty()) {
             EmptyBoardHint()
         } else {
             MiniBoard(categories = categories, pictos = pictos)
         }
-        BoardCaption(categoryCount = categories.size, pictoCount = pictoCount)
+        caption?.invoke()
     }
 }
 
@@ -229,28 +215,6 @@ private fun CategoryGlyph(category: CategoryEntity, size: androidx.compose.ui.un
                 modifier = Modifier.fillMaxSize(),
             )
         }
-    }
-}
-
-@Composable
-private fun BoardCaption(categoryCount: Int, pictoCount: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(PictoTheme.colors.card)
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            stringResource(R.string.dashboard_board_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = PictoTheme.colors.ink,
-        )
-        Text(
-            stringResource(R.string.dashboard_board_counts, categoryCount, pictoCount),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PictoTheme.colors.inkSoft,
-        )
     }
 }
 

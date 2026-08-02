@@ -8,6 +8,9 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
+/** One row of [PictoDao.observeCountsByBoard]. */
+data class BoardPictoCount(val boardId: String, val pictoCount: Int)
+
 @Dao
 interface PictoDao {
 
@@ -19,6 +22,27 @@ interface PictoDao {
 
     @Query("SELECT COUNT(*) FROM pictos")
     fun observeCount(): Flow<Int>
+
+    /**
+     * How many pictograms each board holds, for the counts on its card.
+     *
+     * A LEFT JOIN from categories so a board whose categories are all empty
+     * still reports 0 rather than being absent from the result — the boards
+     * list has to render a card for it either way.
+     */
+    @Query(
+        "SELECT c.boardId AS boardId, COUNT(p.id) AS pictoCount " +
+            "FROM categories c LEFT JOIN pictos p ON p.categoryId = c.id " +
+            "GROUP BY c.boardId",
+    )
+    fun observeCountsByBoard(): Flow<List<BoardPictoCount>>
+
+    /**
+     * Pictos of several categories at once, for the miniatures on the boards
+     * list: one query for every card rather than one subscription per card.
+     */
+    @Query("SELECT * FROM pictos WHERE categoryId IN (:categoryIds) ORDER BY position ASC")
+    fun observeByCategories(categoryIds: List<String>): Flow<List<PictoEntity>>
 
     @Query("SELECT * FROM pictos WHERE categoryId = :categoryId ORDER BY position ASC")
     suspend fun getByCategory(categoryId: String): List<PictoEntity>
