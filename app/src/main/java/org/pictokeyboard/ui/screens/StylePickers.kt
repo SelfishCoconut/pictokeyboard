@@ -1,8 +1,8 @@
 package org.pictokeyboard.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
@@ -54,11 +56,12 @@ fun ColorPalettePicker(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CategoryPalette.forEach { argb ->
+        CategoryPalette.forEach { swatch ->
             ColorSwatch(
-                argb = argb.toInt(),
-                selected = argb.toInt() == selected,
-                onClick = { onSelect(argb.toInt()) },
+                argb = swatch.argb.toInt(),
+                name = stringResource(swatch.nameRes),
+                selected = swatch.argb.toInt() == selected,
+                onClick = { onSelect(swatch.argb.toInt()) },
             )
         }
     }
@@ -74,7 +77,7 @@ fun ColorPalettePicker(
  * which picked white on mid-tone hues where only black was readable.
  */
 @Composable
-private fun ColorSwatch(argb: Int, selected: Boolean, onClick: () -> Unit) {
+private fun ColorSwatch(argb: Int, name: String, selected: Boolean, onClick: () -> Unit) {
     val colors = PictoTheme.colors
     Box(
         contentAlignment = Alignment.Center,
@@ -84,6 +87,10 @@ private fun ColorSwatch(argb: Int, selected: Boolean, onClick: () -> Unit) {
             // to the 40dp circle while the code still said `touchTarget`.
             .size(Spacing.touchTarget)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            // mergeDescendants so the check mark does not announce separately;
+            // `selected` on the selectable above already carries the state, which
+            // is what TalkBack reads after the name.
+            .semantics(mergeDescendants = true) { contentDescription = name }
             .padding(Spacing.xs)
             .background(Color(argb), CircleShape)
             .border(
@@ -173,11 +180,12 @@ fun PictoColorPicker(
                 modifier = Modifier.size(18.dp),
             )
         }
-        CategoryPalette.forEach { argb ->
+        CategoryPalette.forEach { swatch ->
             ColorSwatch(
-                argb = argb.toInt(),
-                selected = argb.toInt() == selected,
-                onClick = { onSelect(argb.toInt()) },
+                argb = swatch.argb.toInt(),
+                name = stringResource(swatch.nameRes),
+                selected = swatch.argb.toInt() == selected,
+                onClick = { onSelect(swatch.argb.toInt()) },
             )
         }
     }
@@ -194,6 +202,7 @@ fun BorderStylePicker(
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         BorderStyles.ALL.forEach { style ->
             val isSelected = style == selected
+            val name = stringResource(borderStyleName(style))
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -205,10 +214,21 @@ fun BorderStylePicker(
                         color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                         shape = RoundedCornerShape(12.dp),
                     )
-                    .clickable { onSelect(style) },
+                    // Was a bare `.clickable { }` over an empty body: no name, no
+                    // role, no state. The whole control is drawn, so nothing but
+                    // semantics can describe it.
+                    .selectable(selected = isSelected, role = Role.RadioButton) { onSelect(style) }
+                    .semantics { contentDescription = name },
             ) {}
         }
     }
+}
+
+@StringRes
+private fun borderStyleName(style: String): Int = when (style) {
+    BorderStyles.DASHED -> R.string.frame_style_dashed
+    BorderStyles.DOTTED -> R.string.frame_style_dotted
+    else -> R.string.frame_style_solid
 }
 
 /** Stroke-thickness selector (the presets in [BorderStyles.WIDTHS_DP]). */
@@ -222,6 +242,7 @@ fun ThicknessPicker(
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         BorderStyles.WIDTHS_DP.forEach { width ->
             val isSelected = width == selected
+            val name = stringResource(thicknessName(width))
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -233,10 +254,25 @@ fun ThicknessPicker(
                         color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                         shape = RoundedCornerShape(12.dp),
                     )
-                    .clickable { onSelect(width) },
+                    .selectable(selected = isSelected, role = Role.RadioButton) { onSelect(width) }
+                    .semantics { contentDescription = name },
             ) {}
         }
     }
+}
+
+/**
+ * Named by weight rather than by "3 dp", because the number is meaningless to
+ * someone who cannot see the result and the presets are ordered by exactly this.
+ * Falls through to the nearest heavier name if [BorderStyles.WIDTHS_DP] ever
+ * grows, which is wrong-but-announced rather than silent.
+ */
+@StringRes
+private fun thicknessName(widthDp: Int): Int = when {
+    widthDp <= BorderStyles.WIDTHS_DP[0] -> R.string.frame_thickness_thin
+    widthDp <= BorderStyles.WIDTHS_DP[1] -> R.string.frame_thickness_medium
+    widthDp <= BorderStyles.WIDTHS_DP[2] -> R.string.frame_thickness_thick
+    else -> R.string.frame_thickness_extra_thick
 }
 
 // Dash geometry as multiples of the stroke width, so the pattern keeps its

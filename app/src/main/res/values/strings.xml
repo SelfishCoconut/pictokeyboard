@@ -229,4 +229,67 @@
     <string name="about_license_link">View CC BY-NC-SA 4.0 license</string>
     <string name="about_terms_link">ARASAAC terms of use</string>
     <string name="about_website_link">ARASAAC website</string>
+
+    <!--
+      Accessibility names for controls whose only visible content is a colour or
+      a shape. Without these, TalkBack announces 26 indistinguishable targets and
+      the caregiver who most needs the colour code cannot use it. Named rather
+      than numbered ("Colour 3 of 26") because in AAC the hue *is* the meaning.
+    -->
+    <string name="color_amber">Amber</string>
+    <string name="color_green">Green</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_red">Red</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_grey">Grey</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_light_green">Light green</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_indigo">Indigo</string>
+    <string name="color_brown">Brown</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_deep_orange">Deep orange</string>
+    <string name="color_blue_grey">Blue grey</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_lime">Lime</string>
+    <string name="color_deep_purple">Deep purple</string>
+    <string name="color_light_blue">Light blue</string>
+    <string name="color_hot_pink">Hot pink</string>
+    <string name="color_dark_red">Dark red</string>
+    <string name="color_dark_green">Dark green</string>
+    <string name="color_dark_brown">Dark brown</string>
+    <string name="color_slate">Slate</string>
+    <string name="color_white">White</string>
+    <string name="color_black">Black</string>
+
+    <string name="frame_style_solid">Solid</string>
+    <string name="frame_style_dashed">Dashed</string>
+    <string name="frame_style_dotted">Dotted</string>
+    <string name="frame_thickness_thin">Thin</string>
+    <string name="frame_thickness_medium">Medium</string>
+    <string name="frame_thickness_thick">Thick</string>
+    <string name="frame_thickness_extra_thick">Extra thick</string>
+
+    <!--
+      Tone-only descriptions. ARASAAC's own parameter keys ("mulatto", "aztec")
+      name ethnicities and are not fit to read aloud to a user; what the swatch
+      actually shows is a tone, so that is what it announces.
+    -->
+    <string name="skin_light">Light</string>
+    <string name="skin_medium">Medium</string>
+    <string name="skin_medium_dark">Medium dark</string>
+    <string name="skin_dark">Dark</string>
+    <string name="skin_warm_light">Warm light</string>
+    <string name="hair_blonde">Blonde</string>
+    <string name="hair_brown">Brown</string>
+    <string name="hair_dark_brown">Dark brown</string>
+    <string name="hair_grey">Grey</string>
+    <string name="hair_dark_grey">Dark grey</string>
+    <string name="hair_red">Red</string>
+    <string name="hair_black">Black</string>
+
+    <string name="a11y_toggle_selection">Select or deselect</string>
+    <string name="a11y_category_color">Category colour: %1$s</string>
+
 </resources>

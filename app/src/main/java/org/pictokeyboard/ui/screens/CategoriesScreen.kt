@@ -46,6 +46,9 @@ fun CategoriesScreen(
         onBack = onBack,
         onOpenCategory = onOpenCategory,
         onReorder = viewModel::reorderCategories,
+        // moveCategory has existed on the view model since #14 and was called
+        // from nowhere; the drag gesture was the only route into reordering.
+        onMove = viewModel::moveCategory,
         loadSuggested = { viewModel.topUsed() },
         onAddFromTemplate = { template -> viewModel.addCategoryFromTemplate(template, settings.defaultLanguage) },
         onAddSuggested = { name, records -> viewModel.addSuggestedCategory(name, records) },
@@ -89,6 +92,7 @@ fun CategoriesScreenContent(
     onBack: (() -> Unit)?,
     onOpenCategory: (String) -> Unit,
     onReorder: (List<CategoryEntity>) -> Unit,
+    onMove: (CategoryEntity, Boolean) -> Unit,
     loadSuggested: suspend () -> List<UsageEntity>,
     onAddFromTemplate: (CategoryTemplate) -> Unit,
     onAddSuggested: (String, List<UsageEntity>) -> Unit,
@@ -123,6 +127,7 @@ fun CategoriesScreenContent(
             reordering = reordering,
             modifier = Modifier.padding(padding),
             onReorder = onReorder,
+            onMove = onMove,
             onEdit = { dialog = CategoryDialog.Edit(it) },
             onDelete = { dialog = CategoryDialog.Delete(it) },
             onOpen = onOpenCategory,
@@ -289,6 +294,7 @@ private fun CategoriesScreenPreview() {
             onBack = {},
             onOpenCategory = {},
             onReorder = {},
+            onMove = { _, _ -> },
             loadSuggested = { emptyList() },
             onAddFromTemplate = {},
             onAddSuggested = { _, _ -> },
