@@ -1,7 +1,7 @@
 # PictoKeyboard — accounts and board sync
 
 **Date:** 2026-08-02
-**Status:** design agreed, not yet filed as issues
+**Status:** filed — milestone **Accounts and sync** (#79–#83)
 **Scope:** Supabase-backed caregiver accounts, cloud backup of boards and voice
 settings, restore onto a new device, and self-service deletion.
 
@@ -251,14 +251,14 @@ personal. The rule that photos never leave the device already helps here.
 
 Five issues, in order. Each is shippable on its own.
 
-1. **Caregiver accounts** — Supabase client, Google and email/password sign-in,
+1. **#79 Caregiver accounts** — Supabase client, Google and email/password sign-in,
    password reset, the Account section in Settings, sign out. No sync.
-2. **Board schema, RLS and push** — server migrations, `sync_deletions`,
+2. **#80 Board schema, RLS and push** — server migrations, `sync_deletions`,
    `SyncWorker`, the additive push of §5.1–5.2.
-3. **Restore onto a new device** — pull, the union rule, the first-sign-in flow,
+3. **#81 Restore onto a new device** — pull, the union rule, the first-sign-in flow,
    the label-only state for a picto whose photo stayed behind.
-4. **Voice settings sync** — the `settings` blob on `profiles`.
-5. **Deletion and compliance** — both deletion scopes, the web URL, the privacy
+4. **#82 Voice settings sync** — the `settings` blob on `profiles`.
+5. **#83 Deletion and compliance** — both deletion scopes, the web URL, the privacy
    policy, the Play Data Safety update.
 
 Sharing (#39, #40, #41) rebases onto this afterwards, using `published_boards`
