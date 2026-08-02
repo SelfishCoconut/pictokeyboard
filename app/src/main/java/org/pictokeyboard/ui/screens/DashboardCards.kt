@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,8 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.pictokeyboard.R
+import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.Spacing
 
 // The dashboard's cards. Each is independent of the others and of the view
@@ -107,6 +111,7 @@ private fun SetupStepsCard(status: KeyboardStatus, onEnable: () -> Unit, onSelec
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SetupStep(
     index: Int,
@@ -136,14 +141,57 @@ private fun SetupStep(
                 Text("$index", style = MaterialTheme.typography.titleMedium, color = badgeContent)
             }
         }
-        Text(
-            if (done) doneTitle else title,
-            style = MaterialTheme.typography.bodyLarge,
+        // The label and its button sit side by side while both fit, and the
+        // button drops beneath the label when they do not.
+        //
+        // A plain Row could not do this. The button was unweighted, so it
+        // measured at its full intrinsic width and the weighted label took
+        // whatever was left over — and "Abrir ajustes de entrada" leaves less
+        // than the width of the word "PictoKeyboard". Android's last resort for
+        // a word wider than its line is to break it mid-word, so the product's
+        // own name rendered as "PictoKeyb / oard" on the first screen a new
+        // caregiver sees, in the card telling them how to turn the keyboard on
+        // (#70). Moving the button is the right trade: the name is not
+        // negotiable, and a button on its own line costs nothing.
+        FlowRow(
             modifier = Modifier.weight(1f),
-        )
-        if (!done) {
-            FilledTonalButton(onClick = onAction) { Text(action) }
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            Text(
+                if (done) doneTitle else title,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
+            if (!done) {
+                FilledTonalButton(
+                    onClick = onAction,
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                ) { Text(action) }
+            }
         }
+    }
+}
+
+/**
+ * The Spanish setup card on a narrow screen at the largest supported font scale
+ * — the case that broke in #70, pinned so it cannot break again unnoticed.
+ *
+ * The locale is not incidental. "Abrir ajustes de entrada" is half again the
+ * width of "Open input settings", so Spanish is where the label column runs out
+ * of room first, and 360dp is the narrowest screen the app supports. Checking
+ * English at default scale — which is what a casual look at a preview grid
+ * gets you — shows nothing wrong at all.
+ */
+@Preview(name = "setup · es · 360dp · large text", locale = "es", fontScale = 2f, widthDp = 360, showBackground = true)
+@Composable
+private fun SetupStepsNarrowSpanishPreview() {
+    PictoKeyboardTheme {
+        SetupStatusCard(
+            status = KeyboardStatus(enabled = false, selected = false),
+            onEnable = {},
+            onSelect = {},
+        )
     }
 }
 
