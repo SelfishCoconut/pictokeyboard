@@ -23,8 +23,17 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
 
+# `issues: write` is not for anything this workflow does itself -- it never
+# touches an issue. Closing a linked issue on merge is performed by GitHub as the
+# *merging actor*, and because auto-merge is enabled with GITHUB_TOKEN, that
+# actor is github-actions[bot] rather than a human. Without this scope the bot
+# merges the PR, GitHub parses the `Closes #n` (closingIssuesReferences is
+# populated), and then does nothing with it -- silently, so the only symptom is a
+# growing pile of issues that are fixed and still open. Every PR merged before
+# this line landed had to be closed by hand. See #64.
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 jobs:
