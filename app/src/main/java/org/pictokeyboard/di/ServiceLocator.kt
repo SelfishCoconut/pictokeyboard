@@ -3,11 +3,16 @@ package org.pictokeyboard.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import org.pictokeyboard.BuildConfig
 import org.pictokeyboard.data.arasaac.ArasaacApi
 import org.pictokeyboard.data.arasaac.ArasaacRepository
 import org.pictokeyboard.data.arasaac.ImageCache
+import org.pictokeyboard.data.auth.AuthRepository
+import org.pictokeyboard.data.auth.SupabaseConfig
 import org.pictokeyboard.data.backup.BackupManager
 import org.pictokeyboard.data.db.AppDatabase
 import org.pictokeyboard.data.pkb.PkbBackup
@@ -80,5 +85,21 @@ class ServiceLocator(context: Context) {
         settingsStore = settings,
         imageCache = imageCache,
         appVersion = BuildConfig.VERSION_NAME,
+    )
+
+    /**
+     * Caregiver accounts (#79).
+     *
+     * On its own scope rather than a screen's, because the session flow has to
+     * outlive any one screen. Constructed even on a build with no credentials,
+     * where it holds no client and reports `Unavailable` forever.
+     *
+     * The IME shares this locator, so this property *existing* is not the same
+     * as the keyboard using it — and nothing under `ime/` may touch it.
+     * `ImeHasNoSupabaseTest` proves none does.
+     */
+    val authRepository = AuthRepository(
+        config = SupabaseConfig.fromBuildConfig(),
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     )
 }

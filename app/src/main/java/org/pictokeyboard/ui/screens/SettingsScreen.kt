@@ -36,7 +36,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.pictokeyboard.App
 import org.pictokeyboard.R
+import org.pictokeyboard.data.auth.AccountState
 import org.pictokeyboard.data.pkb.PkbFailure
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
@@ -54,9 +56,14 @@ import java.time.LocalDate
 fun SettingsScreen(
     viewModel: ConfigViewModel,
     onOpenAbout: () -> Unit,
+    onOpenAccount: () -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    // Straight from the repository rather than through ConfigViewModel: accounts
+    // are not board data, and threading them through would give every board
+    // screen a reason to know about auth.
+    val accountState by App.locator().authRepository.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var message by remember { mutableStateOf<BackupMessage?>(null) }
 
@@ -97,8 +104,10 @@ fun SettingsScreen(
 
     SettingsScreenContent(
         settings = settings,
+        accountState = accountState,
         onBack = onBack,
         onOpenAbout = onOpenAbout,
+        onOpenAccount = onOpenAccount,
         onLanguage = viewModel::setLanguage,
         onAddSpace = viewModel::setAddSpace,
         onSpeak = viewModel::setSpeak,
@@ -154,8 +163,10 @@ data class BackupCounts(val boards: Int, val pictos: Int, val media: Int)
 @Composable
 fun SettingsScreenContent(
     settings: Settings,
+    accountState: AccountState,
     onBack: (() -> Unit)?,
     onOpenAbout: () -> Unit,
+    onOpenAccount: () -> Unit,
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
@@ -189,6 +200,7 @@ fun SettingsScreenContent(
                 onBlindMode = onBlindMode,
                 onOpenAbout = onOpenAbout,
             )
+            AccountSettingsRow(state = accountState, onOpen = onOpenAccount)
             SettingsGroup(stringResource(R.string.settings_group_security)) {
                 PinSection(
                     hasPin = settings.hasPin,
@@ -216,8 +228,10 @@ private fun SettingsScreenPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(),
+            accountState = AccountState.SignedOut,
             onBack = {},
             onOpenAbout = {},
+            onOpenAccount = {},
             onLanguage = {},
             onAddSpace = {},
             onSpeak = {},
@@ -238,8 +252,10 @@ private fun SettingsScreenWithPinPreview() {
     PictoKeyboardTheme {
         SettingsScreenContent(
             settings = Settings(hasPin = true, blindMode = true, defaultLanguage = "en"),
+            accountState = AccountState.SignedIn("caregiver@example.com"),
             onBack = {},
             onOpenAbout = {},
+            onOpenAccount = {},
             onLanguage = {},
             onAddSpace = {},
             onSpeak = {},
