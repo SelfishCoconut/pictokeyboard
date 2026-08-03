@@ -97,3 +97,28 @@ jobs:
           -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Row-level security tests
         run: supabase test db
+
+  # The account deletion endpoint (#83).
+  #
+  # Separate from `database` because it needs what that job deliberately leaves
+  # out: Auth to mint a real JWT, Kong to route, and the edge runtime to run the
+  # function. Keeping them apart is what stops the fifteen-second RLS job
+  # becoming a four-minute one.
+  #
+  # It is worth the four minutes. This is the only endpoint that can destroy a
+  # caregiver's account, and the claim under test -- that naming somebody else
+  # in the body cannot delete them -- is not something SQL can assert.
+  functions:
+    name: functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Postgres, Auth and the edge runtime
+        run: >-
+          supabase start
+          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor
+      - name: Account deletion function tests
+        run: supabase/tests/functions/delete_account.test.sh
