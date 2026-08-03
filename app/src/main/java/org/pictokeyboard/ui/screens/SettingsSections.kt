@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -181,9 +182,14 @@ internal fun BackupSection(
         // the caregiver has, and it interrupts whatever else is being read.
         message?.let {
             Text(
-                text = it.counts
-                    ?.let { c -> stringResource(it.text, c.boards, c.pictos, c.media) }
-                    ?: stringResource(it.text),
+                text = it.counts?.let { c ->
+                    stringResource(
+                        it.text,
+                        pluralStringResource(R.plurals.count_boards, c.boards, c.boards),
+                        pluralStringResource(R.plurals.count_pictos, c.pictos, c.pictos),
+                        pluralStringResource(R.plurals.count_images, c.media, c.media),
+                    )
+                } ?: stringResource(it.text),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
             )

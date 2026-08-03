@@ -223,9 +223,21 @@
     <string name="settings_export">Export everything</string>
     <string name="settings_import">Import a backup</string>
     <string name="settings_backup_explainer">Your boards stay on this phone. An export file is the only backup there is — keep it somewhere else, such as Drive.</string>
-    <string name="settings_export_done">Backup saved: %1$d boards, %2$d symbols, %3$d photos</string>
+    <string name="settings_export_done">Backup saved: %1$s, %2$s and %3$s</string>
+    <string name="settings_import_done">Added %1$s, %2$s and %3$s. Nothing you already had was changed.</string>
+    <plurals name="count_boards">
+        <item quantity="one">%d board</item>
+        <item quantity="other">%d boards</item>
+    </plurals>
+    <plurals name="count_pictos">
+        <item quantity="one">%d symbol</item>
+        <item quantity="other">%d symbols</item>
+    </plurals>
+    <plurals name="count_images">
+        <item quantity="one">%d image</item>
+        <item quantity="other">%d images</item>
+    </plurals>
     <string name="settings_export_failed">The backup could not be written</string>
-    <string name="settings_import_done">Added %1$d boards, %2$d symbols, %3$d photos. Nothing you already had was changed.</string>
     <string name="settings_import_failed">That file is not a PictoKeyboard backup</string>
     <string name="settings_import_failed_newer">That backup was made by a newer version of PictoKeyboard. Update the app and try again — nothing was imported.</string>
     <string name="settings_import_failed_unsafe">That file was refused: something in it is not what a backup should contain. Nothing was imported.</string>

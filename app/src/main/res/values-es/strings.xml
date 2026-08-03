@@ -209,9 +209,21 @@
     <string name="settings_export">Exportar todo</string>
     <string name="settings_import">Importar una copia</string>
     <string name="settings_backup_explainer">Tus tableros se quedan en este teléfono. El archivo exportado es la única copia de seguridad que hay: guárdalo en otro sitio, por ejemplo en Drive.</string>
-    <string name="settings_export_done">Copia guardada: %1$d tableros, %2$d símbolos, %3$d fotos</string>
+    <string name="settings_export_done">Copia guardada: %1$s, %2$s y %3$s</string>
+    <string name="settings_import_done">Se han añadido %1$s, %2$s y %3$s. No se ha cambiado nada de lo que ya tenías.</string>
+    <plurals name="count_boards">
+        <item quantity="one">%d tablero</item>
+        <item quantity="other">%d tableros</item>
+    </plurals>
+    <plurals name="count_pictos">
+        <item quantity="one">%d símbolo</item>
+        <item quantity="other">%d símbolos</item>
+    </plurals>
+    <plurals name="count_images">
+        <item quantity="one">%d imagen</item>
+        <item quantity="other">%d imágenes</item>
+    </plurals>
     <string name="settings_export_failed">No se pudo escribir la copia</string>
-    <string name="settings_import_done">Se han añadido %1$d tableros, %2$d símbolos y %3$d fotos. No se ha cambiado nada de lo que ya tenías.</string>
     <string name="settings_import_failed">Ese archivo no es una copia de PictoKeyboard</string>
     <string name="settings_import_failed_newer">Esa copia se hizo con una versión más nueva de PictoKeyboard. Actualiza la aplicación e inténtalo de nuevo: no se ha importado nada.</string>
     <string name="settings_import_failed_unsafe">Ese archivo se ha rechazado: contiene algo que no debería haber en una copia. No se ha importado nada.</string>
