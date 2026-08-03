@@ -4,11 +4,13 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
+import org.pictokeyboard.BuildConfig
 import org.pictokeyboard.data.arasaac.ArasaacApi
 import org.pictokeyboard.data.arasaac.ArasaacRepository
 import org.pictokeyboard.data.arasaac.ImageCache
 import org.pictokeyboard.data.backup.BackupManager
 import org.pictokeyboard.data.db.AppDatabase
+import org.pictokeyboard.data.pkb.PkbBackup
 import org.pictokeyboard.data.prefs.SettingsStore
 import org.pictokeyboard.data.repo.PictoRepository
 import retrofit2.Retrofit
@@ -66,5 +68,17 @@ class ServiceLocator(context: Context) {
         pictoDao = db.pictoDao(),
         imageCache = imageCache,
         moshi = moshi,
+    )
+
+    /**
+     * The whole-device backup (#88), as opposed to [backupManager]'s one-board
+     * JSON. This is the one that carries the photographs, and the only backup
+     * a caregiver has — nothing goes to a server.
+     */
+    val pkbBackup = PkbBackup(
+        db = db,
+        settingsStore = settings,
+        imageCache = imageCache,
+        appVersion = BuildConfig.VERSION_NAME,
     )
 }

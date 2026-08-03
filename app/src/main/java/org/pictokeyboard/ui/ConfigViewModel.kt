@@ -18,10 +18,13 @@ import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
+import org.pictokeyboard.data.pkb.PkbImportSummary
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
+import java.io.InputStream
+import java.io.OutputStream
 
 /** Search panel UI state for the ARASAAC picker. */
 sealed interface SearchState {
@@ -43,6 +46,7 @@ class ConfigViewModel : ViewModel() {
     private val repo = locator.pictoRepository
     private val settingsStore = locator.settings
     private val backup = locator.backupManager
+    private val pkb = locator.pkbBackup
     private val arasaac = locator.arasaacRepository
 
     val categories: StateFlow<List<CategoryEntity>> =
@@ -350,6 +354,28 @@ class ConfigViewModel : ViewModel() {
     suspend fun exportJson(boardId: String? = null): String {
         val board = boardId?.let { repo.board(it) } ?: repo.activeBoard() ?: return ""
         return backup.export(language = board.language, boardId = board.id)
+    }
+
+    // --- The whole-device backup (#88) ---------------------------------------
+
+    /**
+     * Writes every board, symbol, photograph and voice setting into [out].
+     *
+     * Distinct from [exportJson], which is one board as JSON and has no photos
+     * in it. This is the backup: nothing goes to a server, so if a caregiver
+     * never runs this they have none.
+     */
+    fun exportEverything(out: OutputStream, onResult: (Result<PkbImportSummary>) -> Unit) =
+        viewModelScope.launch {
+            onResult(out.use { pkb.exportTo(it) })
+        }
+
+    /** Adds the contents of a `.pkb` to this device. Never replaces what is here. */
+    fun importEverything(
+        source: () -> InputStream,
+        onResult: (Result<PkbImportSummary>) -> Unit,
+    ) = viewModelScope.launch {
+        onResult(pkb.importFrom(source))
     }
 
     fun importJson(json: String, onResult: (Boolean) -> Unit) = viewModelScope.launch {
