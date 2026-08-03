@@ -390,6 +390,10 @@
     <string name="account_error_invalid_email">That email address was not accepted. Check it for typos.</string>
     <string name="account_error_too_many">Too many tries. Wait a few minutes and try again.</string>
     <string name="account_error_signup_disabled">New accounts are switched off at the moment.</string>
+    <!-- Names both ways forward, because a phone with no Google account is
+         often a managed or school device where adding one is not the
+         caregiver's to do. -->
+    <string name="account_error_no_google_account">There is no Google account on this phone. Add one in the phone\'s settings, or sign in with an email address instead.</string>
     <string name="account_error_server">Something went wrong at our end. Try again in a moment.</string>
     <string name="account_error_offline">No answer from the server. Check your connection and try again.</string>
     <string name="account_working">Working…</string>

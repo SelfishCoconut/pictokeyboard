@@ -1,7 +1,11 @@
 package org.pictokeyboard.data.auth
 
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialUnknownException
+import androidx.credentials.exceptions.NoCredentialException
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.IOException
 
@@ -73,5 +77,37 @@ class AuthFailureTest {
     @Test
     fun `a failure with no exception at all is a server failure`() {
         assertEquals(AuthFailure.Server, (null as Throwable?).toAuthFailure())
+    }
+
+    @Test
+    fun `a phone with no Google account is its own failure`() {
+        // The case this mapping exists for. AAC devices are routinely school
+        // managed or bought cheap, so "no Google account" is ordinary, not
+        // exotic -- and it needs a sentence, not silence.
+        assertEquals(
+            AuthFailure.NoGoogleAccount,
+            NoCredentialException("no credentials available").toGoogleFailure(),
+        )
+    }
+
+    @Test
+    fun `dismissing the Google sheet says nothing at all`() {
+        // Null means say nothing. Someone who opened the sheet and changed
+        // their mind has done nothing wrong, and reporting a failure at them
+        // teaches distrust of a control that behaved correctly.
+        assertNull(GetCredentialCancellationException("user cancelled").toGoogleFailure())
+    }
+
+    @Test
+    fun `a credential error we have no advice for is a server failure`() {
+        assertEquals(
+            AuthFailure.Server,
+            GetCredentialUnknownException("something else").toGoogleFailure(),
+        )
+    }
+
+    @Test
+    fun `a Google sign-in with no connection still blames the connection`() {
+        assertEquals(AuthFailure.Offline, IOException("unreachable").toGoogleFailure())
     }
 }

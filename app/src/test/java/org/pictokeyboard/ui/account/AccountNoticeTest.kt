@@ -1,7 +1,10 @@
 package org.pictokeyboard.ui.account
 
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.pictokeyboard.R
 import org.pictokeyboard.data.auth.AuthFailure
@@ -34,5 +37,20 @@ class AccountNoticeTest {
         // sentence written for the other.
         val messages = AuthFailure.entries.map(::messageFor)
         assertEquals(AuthFailure.entries.size, messages.toSet().size)
+    }
+
+    @Test
+    fun `closing the Google sheet leaves the screen silent`() {
+        // The whole point of #93's fix is that it does not cost us this. A
+        // dismissal is not a failure, and the moment cancelling starts
+        // reporting one, the button becomes something to be afraid of.
+        assertNull(noticeForGoogle(GetCredentialCancellationException("cancelled")))
+    }
+
+    @Test
+    fun `no Google account on the phone gets a sentence, as an error`() {
+        val notice = noticeForGoogle(NoCredentialException("none available"))
+        assertEquals(R.string.account_error_no_google_account, notice?.text)
+        assertEquals(true, notice?.isError)
     }
 }

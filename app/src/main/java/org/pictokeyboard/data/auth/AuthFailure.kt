@@ -1,5 +1,7 @@
 package org.pictokeyboard.data.auth
 
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import java.io.IOException
@@ -33,6 +35,9 @@ enum class AuthFailure {
 
     /** New accounts are switched off on the project. */
     SignupDisabled,
+
+    /** There is no Google account on this phone to sign in with. */
+    NoGoogleAccount,
 
     /** The server answered, and the answer was not one we have advice for. */
     Server,
@@ -71,6 +76,29 @@ internal fun authFailureOf(code: AuthErrorCode?): AuthFailure = when (code) {
  */
 fun Throwable?.toAuthFailure(): AuthFailure = when (this) {
     is AuthRestException -> authFailureOf(errorCode)
+    is IOException -> AuthFailure.Offline
+    else -> AuthFailure.Server
+}
+
+/**
+ * What went wrong with a Google sign-in, or **null** meaning *say nothing*.
+ *
+ * Null is a real answer here, not a missing one. A caregiver who opened the
+ * sheet and changed their mind has done nothing wrong, and reporting a failure
+ * at them teaches distrust of a control that behaved exactly as asked.
+ *
+ * The reason this reads the exception itself instead of `compose-auth`'s result
+ * type: that type folds a missing Google account into the same `ClosedByUser`
+ * case as a genuine dismissal, and those two need opposite responses. By the
+ * time the result exists the distinction is gone, so the call has to be ours.
+ *
+ * [NoCredentialException] is matched before the cancellation case deliberately —
+ * both descend from `GetCredentialException`, and being explicit about which
+ * wins costs nothing and survives a reshuffle of the hierarchy.
+ */
+fun Throwable.toGoogleFailure(): AuthFailure? = when (this) {
+    is NoCredentialException -> AuthFailure.NoGoogleAccount
+    is GetCredentialCancellationException -> null
     is IOException -> AuthFailure.Offline
     else -> AuthFailure.Server
 }

@@ -55,7 +55,7 @@ fun AccountScreen(onBack: () -> Unit, viewModel: AccountViewModel = viewModel())
         form = form,
         busy = busy,
         notice = message,
-        onGoogle = rememberGoogleSignIn(onFailure = viewModel::reportGoogleFailure),
+        onGoogle = rememberGoogleSignIn(onSignIn = viewModel::signInWithGoogle),
         onBack = onBack,
         onForm = viewModel::setForm,
         onSignIn = viewModel::signIn,
@@ -272,6 +272,22 @@ private fun AccountErrorPreview() {
         state = AccountState.SignedOut,
         form = AccountForm(email = "caregiver@example.com", password = "hunter22"),
         notice = AccountNotice(R.string.account_error_credentials, isError = true),
+    )
+}
+
+/**
+ * The #93 message, which is the longest of the ten and names two ways forward.
+ *
+ * Worth its own preview at `fontScale = 2f`: it sits directly above the Google
+ * button that provoked it, and a sentence clipped there leaves the caregiver
+ * with the dead end the message exists to explain.
+ */
+@ScreenPreviews
+@Composable
+private fun AccountNoGoogleAccountPreview() {
+    AccountPreview(
+        state = AccountState.SignedOut,
+        notice = AccountNotice(R.string.account_error_no_google_account, isError = true),
     )
 }
 
