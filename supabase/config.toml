@@ -412,3 +412,12 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# The account deletion endpoint (#83).
+#
+# verify_jwt stays on. The function itself uses `auth: 'user'` and would reject
+# an unauthenticated call anyway, but leaving the platform check in place means
+# a request with no JWT never reaches our code at all. Two gates on the one
+# endpoint that can destroy an account is the right number.
+[functions.delete-account]
+verify_jwt = true
