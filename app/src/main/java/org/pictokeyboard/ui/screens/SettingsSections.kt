@@ -26,8 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -151,11 +153,41 @@ internal fun PinSection(hasPin: Boolean, onSetPinClick: () -> Unit, onRemovePin:
     }
 }
 
+/**
+ * The explainer is not decoration.
+ *
+ * Nothing here goes to a server, which is deliberate — a disabled child's
+ * vocabulary, family names and photographs stay on their own phone. The price
+ * is that a caregiver who never exports has no backup at all, and the only
+ * honest thing to do about that is say so where the button is.
+ */
 @Composable
-internal fun BackupSection(onExport: () -> Unit, onImport: () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        Button(onClick = onExport) { Text(stringResource(R.string.settings_export)) }
-        OutlinedButton(onClick = onImport) { Text(stringResource(R.string.settings_import)) }
+internal fun BackupSection(
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    message: BackupMessage? = null,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = stringResource(R.string.settings_backup_explainer),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Button(onClick = onExport) { Text(stringResource(R.string.settings_export)) }
+            OutlinedButton(onClick = onImport) { Text(stringResource(R.string.settings_import)) }
+        }
+        // Assertive rather than polite: this is the outcome of the only backup
+        // the caregiver has, and it interrupts whatever else is being read.
+        message?.let {
+            Text(
+                text = it.counts
+                    ?.let { c -> stringResource(it.text, c.boards, c.pictos, c.media) }
+                    ?: stringResource(it.text),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+            )
+        }
     }
 }
 

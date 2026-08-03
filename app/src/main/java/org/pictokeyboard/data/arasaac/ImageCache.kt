@@ -25,6 +25,19 @@ class ImageCache(context: Context, private val client: OkHttpClient) {
     fun fileForCustom(id: String): File = File(dir, "custom_$id.png")
 
     /**
+     * Where a photograph out of a `.pkb` lands.
+     *
+     * [digest] is content-addressed and validated by the archive before it gets
+     * here, so it cannot contain a separator and this cannot be made to write
+     * outside [dir]. Importing the same photo twice writes the same file, which
+     * is the deduplication falling out of the naming rather than being arranged.
+     */
+    fun fileForImported(digest: String): File = File(dir, "pkb_$digest.png")
+
+    /** A staging area for an import, emptied before each one and after it. */
+    fun importStagingDir(): File = File(dir, "pkb-staging").apply { mkdirs() }
+
+    /**
      * Downloads ARASAAC pictogram [id] (optionally [options]-customized) into the
      * cache and returns the absolute path, or null on failure. Each distinct
      * customization is cached under its own file. No-op if already present.
