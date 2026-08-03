@@ -1,5 +1,6 @@
 package org.pictokeyboard.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -19,9 +21,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
-import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
-import io.github.jan.supabase.compose.auth.composeAuth
 import org.pictokeyboard.App
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.account.AccountForm
@@ -133,28 +132,21 @@ internal fun AccountMessage(notice: AccountNotice?, busy: Boolean) {
 }
 
 /**
- * Google sign-in through Credential Manager, or **null** when this build has no
- * OAuth client — in which case the button is absent rather than disabled.
+ * Whether there is a Google button to draw, and what tapping it does — or
+ * **null** when this build has no OAuth client, in which case the button is
+ * absent rather than disabled.
  *
- * The result handling is the part worth reading. `ClosedByUser` is not a
- * failure: a caregiver who opened the sheet and changed their mind has done
- * nothing wrong, and telling them "that did not work" teaches them to distrust
- * a control that behaved correctly. Only a network or provider error reports.
+ * The sign-in itself belongs to the view model; all this contributes is the
+ * [android.content.Context] that Credential Manager needs in order to put a
+ * sheet on screen.
  */
 @Composable
-internal fun rememberGoogleSignIn(onFailure: () -> Unit): (() -> Unit)? {
+internal fun rememberGoogleSignIn(onSignIn: (Context) -> Unit): (() -> Unit)? {
     val repo = App.locator().authRepository
     // No client and no OAuth id mean the same thing to the caller: there is no
     // Google button to draw.
-    val supabase = repo.client?.takeIf { repo.googleServerClientId != null } ?: return null
+    repo.client?.takeIf { repo.googleServerClientId != null } ?: return null
 
-    val state = supabase.composeAuth.rememberSignInWithGoogle(
-        onResult = { result ->
-            when (result) {
-                is NativeSignInResult.Success, is NativeSignInResult.ClosedByUser -> Unit
-                is NativeSignInResult.NetworkError, is NativeSignInResult.Error -> onFailure()
-            }
-        },
-    )
-    return { state.startFlow() }
+    val context = LocalContext.current
+    return { onSignIn(context) }
 }

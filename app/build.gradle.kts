@@ -268,7 +268,13 @@ dependencies {
 
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)
-    implementation(libs.supabase.compose.auth)
+    // Credential Manager called directly rather than through supabase-kt's
+    // compose-auth, which is why that artifact is no longer a dependency: its
+    // result type folds a missing Google account into the same "closed by user"
+    // case as a real dismissal, and those two need opposite responses. See #93.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.identity.googleid)
     implementation(libs.ktor.client.okhttp)
 
     implementation(libs.coil.compose)

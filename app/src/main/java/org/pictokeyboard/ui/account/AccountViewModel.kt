@@ -1,5 +1,6 @@
 package org.pictokeyboard.ui.account
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,7 +9,6 @@ import kotlinx.coroutines.launch
 import org.pictokeyboard.App
 import org.pictokeyboard.R
 import org.pictokeyboard.data.auth.AccountState
-import org.pictokeyboard.data.auth.AuthFailure
 import org.pictokeyboard.data.auth.toAuthFailure
 
 /** What the signed-out form holds, and whether it is worth sending. */
@@ -85,13 +85,14 @@ class AccountViewModel : ViewModel() {
     fun signOut() = run { repo.signOut() }
 
     /**
-     * Google sign-in is driven by Compose Auth, so only its failure lands here —
-     * and it arrives as a Credential Manager result rather than a Supabase error,
-     * with nothing in it worth repeating to a caregiver.
+     * Google sign-in, which needs a [Context] because Credential Manager has to
+     * put a sheet on screen. It is passed in and never held.
+     *
+     * [noticeForGoogle] rather than the default mapping, because this is the one
+     * path where a failure can correctly produce **no message at all**.
      */
-    fun reportGoogleFailure() {
-        _message.value = AccountNotice(messageFor(AuthFailure.Server), isError = true)
-    }
+    fun signInWithGoogle(context: Context) =
+        run(failureNotice = ::noticeForGoogle) { repo.signInWithGoogle(context) }
 
     /**
      * One call in flight at a time, with the failure surfaced rather than
@@ -100,8 +101,20 @@ class AccountViewModel : ViewModel() {
      * [successMessage] exists for the actions whose success is otherwise
      * invisible — sending a recovery email changes nothing on screen, and
      * silence there reads as a button that did not work.
+     *
+     * [failureNotice] is overridable because Google sign-in is the one action
+     * whose failure can legitimately be worth saying nothing about.
      */
-    private fun run(successMessage: Int? = null, block: suspend () -> Result<Unit>) {
+    private fun run(
+        successMessage: Int? = null,
+        // The exception decides the sentence. Reporting every failure as one
+        // line was how a wrong password came back as "check your connection" --
+        // advice for a problem the caregiver did not have.
+        failureNotice: (Throwable) -> AccountNotice? = {
+            AccountNotice(messageFor(it.toAuthFailure()), isError = true)
+        },
+        block: suspend () -> Result<Unit>,
+    ) {
         if (_busy.value) return
         _busy.value = true
         viewModelScope.launch {
@@ -109,10 +122,7 @@ class AccountViewModel : ViewModel() {
             _busy.value = false
             _message.value = result.fold(
                 onSuccess = { successMessage?.let { AccountNotice(it, isError = false) } },
-                // The exception decides the sentence. Reporting every failure as
-                // one line was how a wrong password came back as "check your
-                // connection" -- advice for a problem the caregiver did not have.
-                onFailure = { AccountNotice(messageFor(it.toAuthFailure()), isError = true) },
+                onFailure = failureNotice,
             )
         }
     }

@@ -374,6 +374,9 @@
     <string name="account_error_invalid_email">No se ha aceptado esa dirección de correo. Revisa si tiene alguna errata.</string>
     <string name="account_error_too_many">Demasiados intentos. Espera unos minutos e inténtalo de nuevo.</string>
     <string name="account_error_signup_disabled">Ahora mismo no se pueden crear cuentas nuevas.</string>
+    <!-- Nombra las dos salidas: en un móvil gestionado por el centro, añadir una
+         cuenta de Google no suele estar en manos del cuidador. -->
+    <string name="account_error_no_google_account">No hay ninguna cuenta de Google en este móvil. Añade una en los ajustes del teléfono o inicia sesión con un correo electrónico.</string>
     <string name="account_error_server">Algo ha fallado por nuestra parte. Inténtalo de nuevo en un momento.</string>
     <string name="account_error_offline">No hay respuesta del servidor. Comprueba la conexión e inténtalo de nuevo.</string>
     <string name="account_working">Trabajando…</string>

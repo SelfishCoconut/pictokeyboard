@@ -18,6 +18,11 @@ moshi = "1.15.2"
 coil = "2.7.0"
 # supabase-kt brings its own Ktor; the version here only pins the engine we pick.
 supabase = "3.7.0"
+# Arrived transitively with compose-auth until #93. Named and declared directly
+# now that we call Credential Manager ourselves, because only a direct call can
+# tell "this phone has no Google account" apart from "the caregiver cancelled".
+androidxCredentials = "1.6.0"
+googleId = "1.2.0"
 ktor = "3.0.3"
 coroutines = "1.11.0"
 appcompat = "1.7.1"
@@ -67,7 +72,9 @@ moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.re
 
 supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
 supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
-supabase-compose-auth = { group = "io.github.jan-tennert.supabase", name = "compose-auth" }
+androidx-credentials ={ group = "androidx.credentials", name = "credentials", version.ref = "androidxCredentials" }
+androidx-credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "androidxCredentials" }
+google-identity-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }

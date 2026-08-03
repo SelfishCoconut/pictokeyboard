@@ -1,12 +1,17 @@
 package org.pictokeyboard.data.auth
 
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.compose.auth.ComposeAuth
-import io.github.jan.supabase.compose.auth.googleNativeLogin
 import io.github.jan.supabase.createSupabaseClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.pictokeyboard.BuildConfig
+import java.security.MessageDigest
+import java.util.UUID
 
 /**
  * Every call into Supabase Auth, in one place.
@@ -41,15 +48,11 @@ class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
     val client: SupabaseClient? = if (!config.isConfigured) {
         null
     } else {
-        createSupabaseClient(config.url, config.anonKey) {
-            install(Auth)
-            // Only with an id to give it. Installing it blank fails at the
-            // caregiver's first tap rather than at construction, which surfaces
-            // as an unexplained failure instead of a missing button.
-            googleServerClientId?.let { id ->
-                install(ComposeAuth) { googleNativeLogin(serverClientId = id) }
-            }
-        }
+        // Auth only. The ComposeAuth plugin used to be installed here to drive
+        // Google sign-in; #93 replaced it with a direct Credential Manager call,
+        // because its result type cannot tell a missing Google account apart
+        // from a caregiver dismissing the sheet.
+        createSupabaseClient(config.url, config.anonKey) { install(Auth) }
     }
 
     val state: StateFlow<AccountState> = when (val supabase = client) {
@@ -91,6 +94,49 @@ class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
     }
 
     /**
+     * Google sign-in, asked of Credential Manager directly.
+     *
+     * `compose-auth`'s `rememberSignInWithGoogle` would be less code, but it
+     * reports a phone with **no Google account** as `ClosedByUser` — the same
+     * case as a caregiver dismissing the sheet. One of those needs a sentence
+     * and the other needs silence, so the distinction has to survive as far as
+     * the caller, and only the raw exception carries it. See #93.
+     *
+     * The nonce ties the token Google issues to this one request: it is sent to
+     * Google hashed and to Supabase raw, so a token lifted from another exchange
+     * cannot be replayed into this one.
+     */
+    suspend fun signInWithGoogle(context: Context): Result<Unit> {
+        val supabase = client ?: return Result.failure(IllegalStateException("Supabase not configured"))
+        val serverClientId = googleServerClientId
+            ?: return Result.failure(IllegalStateException("No Google OAuth client in this build"))
+
+        val rawNonce = UUID.randomUUID().toString()
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(
+                GetGoogleIdOption.Builder()
+                    .setServerClientId(serverClientId)
+                    // False on purpose: filtering to accounts that have already
+                    // used this app leaves a first-time caregiver with an empty
+                    // sheet, which is the same dead end in a different costume.
+                    .setFilterByAuthorizedAccounts(false)
+                    .setNonce(sha256(rawNonce))
+                    .build(),
+            )
+            .build()
+
+        return runCatching {
+            val response = CredentialManager.create(context).getCredential(context, request)
+            val googleId = GoogleIdTokenCredential.createFrom(response.credential.data)
+            supabase.auth.signInWith(IDToken) {
+                idToken = googleId.idToken
+                provider = Google
+                nonce = rawNonce
+            }
+        }
+    }
+
+    /**
      * Signing out is not a delete.
      *
      * Every board stays on this device and the app returns to behaving exactly
@@ -111,3 +157,9 @@ class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
         return runCatching { block(supabase) }
     }
 }
+
+/** Lowercase hex SHA-256, the form Google expects a nonce to arrive in. */
+private fun sha256(value: String): String =
+    MessageDigest.getInstance("SHA-256")
+        .digest(value.toByteArray())
+        .joinToString("") { "%02x".format(it) }
