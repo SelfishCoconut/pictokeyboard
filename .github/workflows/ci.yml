@@ -90,7 +90,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned, not `latest`. Resolving `latest` costs an unauthenticated
+          # GitHub API call per job, and with two jobs using the CLI that is
+          # enough to trip the rate limit -- which is exactly how this job first
+          # went red, on a toolchain error rather than anything under test. A
+          # pin also means the CLI cannot change under CI without a commit.
+          version: 2.111.0
       - name: Start Postgres and apply migrations
         run: >-
           supabase start
@@ -115,7 +120,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned for the reason given on the database job above.
+          version: 2.111.0
       - name: Start Postgres, Auth and the edge runtime
         run: >-
           supabase start
