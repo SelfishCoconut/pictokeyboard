@@ -22,7 +22,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.2.0
       - name: Format
         run: ./gradlew spotlessCheck
       - name: Static analysis
@@ -46,7 +46,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.2.0
       - run: ./gradlew assembleDebug
       - uses: actions/upload-artifact@v7
         with:
@@ -62,7 +62,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.2.0
       - run: ./gradlew testDebugUnitTest
       - name: Upload test report
         if: always()
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           # Pinned, not `latest`. Resolving `latest` costs an unauthenticated
           # GitHub API call per job, and with two jobs using the CLI that is
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           # Pinned for the reason given on the database job above.
           version: 2.111.0
