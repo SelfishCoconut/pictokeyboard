@@ -26,3 +26,7 @@ keystore.properties
 # Stray office documents
 *.docx
 
+
+# Editor swap files, which can hold the contents of gitignored secrets
+.*.kate-swp
+*.swp

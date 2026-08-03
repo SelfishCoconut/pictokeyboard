@@ -1,8 +1,8 @@
 package org.pictokeyboard.ui.screens
 
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -27,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,11 +39,13 @@ import kotlinx.coroutines.launch
 import org.pictokeyboard.App
 import org.pictokeyboard.R
 import org.pictokeyboard.data.auth.AccountState
+import org.pictokeyboard.data.pkb.PkbFailure
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.ScreenPreviews
 import org.pictokeyboard.ui.theme.Spacing
+import java.time.LocalDate
 
 /**
  * Stateful wrapper: owns the view model, the file pickers and the toasts, so
@@ -64,31 +65,40 @@ fun SettingsScreen(
     // screen a reason to know about auth.
     val accountState by App.locator().authRepository.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var pendingExportJson by remember { mutableStateOf<String?>(null) }
+    var message by remember { mutableStateOf<BackupMessage?>(null) }
 
+    // Writes through the system file picker so the backup can land in Drive or
+    // Files, and not only on the phone that is about to break.
     val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
+        ActivityResultContracts.CreateDocument(PKB_MIME),
     ) { uri ->
-        val json = pendingExportJson
-        if (uri != null && json != null) {
-            context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-            Toast.makeText(context, R.string.settings_export_done, Toast.LENGTH_SHORT).show()
+        val out = uri?.let { context.contentResolver.openOutputStream(it) } ?: return@rememberLauncherForActivityResult
+        viewModel.exportEverything(out) { result ->
+            message = result.fold(
+                onSuccess = {
+                    BackupMessage(R.string.settings_export_done, BackupCounts(it.boards, it.pictos, it.media))
+                },
+                onFailure = { BackupMessage(R.string.settings_export_failed) },
+            )
         }
-        pendingExportJson = null
     }
 
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        if (uri != null) {
-            val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            if (text != null) {
-                viewModel.importJson(text) { ok ->
-                    val msg = if (ok) R.string.settings_import_done else R.string.settings_import_failed
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                }
-            }
+        if (uri == null) return@rememberLauncherForActivityResult
+        viewModel.importEverything(
+            // Opened twice: the archive reads the manifest before it will write
+            // a single photograph, so a file from a newer app imports none of
+            // itself rather than half of it.
+            source = { requireNotNull(context.contentResolver.openInputStream(uri)) },
+        ) { result ->
+            message = result.fold(
+                onSuccess = {
+                    BackupMessage(R.string.settings_import_done, BackupCounts(it.boards, it.pictos, it.media))
+                },
+                onFailure = { BackupMessage(it.importFailureText()) },
+            )
         }
     }
 
@@ -106,15 +116,47 @@ fun SettingsScreen(
         onBlindMode = viewModel::setBlindMode,
         onSetPin = { pin, onDone -> viewModel.setPin(pin, onDone) },
         onRemovePin = viewModel::removePin,
-        onExport = {
-            scope.launch {
-                pendingExportJson = viewModel.exportJson()
-                exportLauncher.launch("pictokeyboard-board.json")
-            }
-        },
-        onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+        backupMessage = message,
+        onExport = { exportLauncher.launch(defaultBackupName()) },
+        onImport = { importLauncher.launch(arrayOf(PKB_MIME, "application/zip", "*/*")) },
     )
 }
+
+/**
+ * `.pkb` has no registered media type, so the picker is told it is a generic
+ * binary and the extension carries the meaning. Anything narrower would have
+ * Drive and Files refuse to hand the file back on import.
+ */
+private const val PKB_MIME = "application/octet-stream"
+
+/** Dated, so a caregiver keeping several backups can tell them apart. */
+private fun defaultBackupName(): String =
+    "pictokeyboard-${LocalDate.now()}.pkb"
+
+/**
+ * Every reason an import can stop, in words the caregiver can act on. The
+ * archive reports these as types precisely so this mapping can exist — an
+ * English message out of an exception would reach a Spanish user untranslated.
+ */
+private fun Throwable.importFailureText(): Int = when (this) {
+    is PkbFailure.NewerFormat -> R.string.settings_import_failed_newer
+    is PkbFailure.UnsafeEntry -> R.string.settings_import_failed_unsafe
+    else -> R.string.settings_import_failed
+}
+
+/**
+ * How a backup turned out, held as a resource id and its arguments rather than
+ * as finished text.
+ *
+ * Deliberately not a toast. A toast is gone before a caregiver reading the
+ * screen with TalkBack reaches it, and the result of the only backup they have
+ * is exactly the thing that must not evaporate. It is rendered as a live region
+ * next to the buttons instead, and it stays there.
+ */
+data class BackupMessage(@StringRes val text: Int, val counts: BackupCounts? = null)
+
+/** What a backup moved, in the order the sentence names them. */
+data class BackupCounts(val boards: Int, val pictos: Int, val media: Int)
 
 /** Stateless settings screen. Everything it needs arrives as a value or a callback. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,6 +177,7 @@ fun SettingsScreenContent(
     onRemovePin: () -> Unit,
     onExport: () -> Unit,
     onImport: () -> Unit,
+    backupMessage: BackupMessage? = null,
 ) {
     var showPinDialog by remember { mutableStateOf(false) }
 
@@ -166,7 +209,7 @@ fun SettingsScreenContent(
                 )
             }
             SettingsGroup(stringResource(R.string.settings_group_backup)) {
-                BackupSection(onExport, onImport)
+                BackupSection(onExport, onImport, backupMessage)
             }
         }
     }

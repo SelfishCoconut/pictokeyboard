@@ -8,6 +8,8 @@ import kotlinx.coroutines.launch
 import org.pictokeyboard.App
 import org.pictokeyboard.R
 import org.pictokeyboard.data.auth.AccountState
+import org.pictokeyboard.data.auth.AuthFailure
+import org.pictokeyboard.data.auth.toAuthFailure
 
 /** What the signed-out form holds, and whether it is worth sending. */
 data class AccountForm(val email: String = "", val password: String = "") {
@@ -56,8 +58,8 @@ class AccountViewModel : ViewModel() {
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy
 
-    private val _message = MutableStateFlow<Int?>(null)
-    val message: StateFlow<Int?> = _message
+    private val _message = MutableStateFlow<AccountNotice?>(null)
+    val message: StateFlow<AccountNotice?> = _message
 
     fun setForm(value: AccountForm) {
         _form.value = value
@@ -82,9 +84,13 @@ class AccountViewModel : ViewModel() {
 
     fun signOut() = run { repo.signOut() }
 
-    /** Google sign-in is driven by Compose Auth, so only its failure lands here. */
+    /**
+     * Google sign-in is driven by Compose Auth, so only its failure lands here —
+     * and it arrives as a Credential Manager result rather than a Supabase error,
+     * with nothing in it worth repeating to a caregiver.
+     */
     fun reportGoogleFailure() {
-        _message.value = R.string.account_error_generic
+        _message.value = AccountNotice(messageFor(AuthFailure.Server), isError = true)
     }
 
     /**
@@ -101,7 +107,13 @@ class AccountViewModel : ViewModel() {
         viewModelScope.launch {
             val result = block()
             _busy.value = false
-            _message.value = if (result.isSuccess) successMessage else R.string.account_error_generic
+            _message.value = result.fold(
+                onSuccess = { successMessage?.let { AccountNotice(it, isError = false) } },
+                // The exception decides the sentence. Reporting every failure as
+                // one line was how a wrong password came back as "check your
+                // connection" -- advice for a problem the caregiver did not have.
+                onFailure = { AccountNotice(messageFor(it.toAuthFailure()), isError = true) },
+            )
         }
     }
 }

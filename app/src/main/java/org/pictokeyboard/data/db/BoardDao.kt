@@ -15,6 +15,13 @@ interface BoardDao {
     fun observeAll(): Flow<List<BoardEntity>>
 
     /**
+     * Every board, once. The export takes the whole set in one go rather than
+     * a board at a time, so it needs a snapshot and not a stream.
+     */
+    @Query("SELECT * FROM boards ORDER BY position ASC")
+    suspend fun getAll(): List<BoardEntity>
+
+    /**
      * The boards the keyboard offers as tabs.
      *
      * Scoped in SQL rather than filtered in the collector because the keyboard

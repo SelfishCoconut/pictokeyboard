@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import org.pictokeyboard.R
 import org.pictokeyboard.data.auth.AccountState
 import org.pictokeyboard.ui.account.AccountForm
+import org.pictokeyboard.ui.account.AccountNotice
 import org.pictokeyboard.ui.account.AccountViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.ScreenPreviews
@@ -53,7 +54,7 @@ fun AccountScreen(onBack: () -> Unit, viewModel: AccountViewModel = viewModel())
         state = state,
         form = form,
         busy = busy,
-        messageRes = message,
+        notice = message,
         onGoogle = rememberGoogleSignIn(onFailure = viewModel::reportGoogleFailure),
         onBack = onBack,
         onForm = viewModel::setForm,
@@ -71,7 +72,7 @@ internal fun AccountScreenContent(
     state: AccountState,
     form: AccountForm,
     busy: Boolean,
-    messageRes: Int?,
+    notice: AccountNotice?,
     /** Null when this build has no Google OAuth client; the button is then absent. */
     onGoogle: (() -> Unit)?,
     onBack: () -> Unit,
@@ -114,7 +115,7 @@ internal fun AccountScreenContent(
                 AccountState.SignedOut -> SignedOutBody(
                     form = form,
                     busy = busy,
-                    messageRes = messageRes,
+                    notice = notice,
                     onGoogle = onGoogle,
                     onForm = onForm,
                     onSignIn = onSignIn,
@@ -125,7 +126,7 @@ internal fun AccountScreenContent(
                 is AccountState.SignedIn -> SignedInBody(
                     email = state.email,
                     busy = busy,
-                    messageRes = messageRes,
+                    notice = notice,
                     onSignOut = onSignOut,
                 )
             }
@@ -137,7 +138,7 @@ internal fun AccountScreenContent(
 private fun SignedOutBody(
     form: AccountForm,
     busy: Boolean,
-    messageRes: Int?,
+    notice: AccountNotice?,
     onGoogle: (() -> Unit)?,
     onForm: (AccountForm) -> Unit,
     onSignIn: () -> Unit,
@@ -153,7 +154,7 @@ private fun SignedOutBody(
     // it, and a caregiver who signs in believing their boards are now backed up
     // -- and then loses the phone -- was misled by this screen.
     Hint(stringResource(R.string.account_nothing_syncs_yet))
-    AccountMessage(messageRes = messageRes, busy = busy)
+    AccountMessage(notice = notice, busy = busy)
     onGoogle?.let { google ->
         OutlinedButton(onClick = google, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.account_google))
@@ -173,7 +174,7 @@ private fun SignedOutBody(
 private fun SignedInBody(
     email: String?,
     busy: Boolean,
-    messageRes: Int?,
+    notice: AccountNotice?,
     onSignOut: () -> Unit,
 ) {
     Text(
@@ -181,7 +182,7 @@ private fun SignedInBody(
             ?: stringResource(R.string.account_signed_in),
         style = MaterialTheme.typography.titleMedium,
     )
-    AccountMessage(messageRes = messageRes, busy = busy)
+    AccountMessage(notice = notice, busy = busy)
     OutlinedButton(
         onClick = onSignOut,
         enabled = !busy,
@@ -232,7 +233,7 @@ private fun AccountPreview(
     state: AccountState,
     form: AccountForm = AccountForm(),
     busy: Boolean = false,
-    messageRes: Int? = null,
+    notice: AccountNotice? = null,
     onGoogle: (() -> Unit)? = {},
 ) {
     PictoKeyboardTheme {
@@ -240,7 +241,7 @@ private fun AccountPreview(
             state = state,
             form = form,
             busy = busy,
-            messageRes = messageRes,
+            notice = notice,
             onGoogle = onGoogle,
             onBack = {},
             onForm = {},
@@ -258,14 +259,19 @@ private fun AccountSignedOutPreview() {
     AccountPreview(AccountState.SignedOut)
 }
 
-/** The failure path, which is the one most likely to be unreadable in dark mode. */
+/**
+ * The failure path, which is the one most likely to be unreadable in dark mode.
+ *
+ * A mistyped password rather than a dead network, because that is the failure a
+ * caregiver meets most often and the longest of the nine sentences.
+ */
 @ScreenPreviews
 @Composable
 private fun AccountErrorPreview() {
     AccountPreview(
         state = AccountState.SignedOut,
         form = AccountForm(email = "caregiver@example.com", password = "hunter22"),
-        messageRes = R.string.account_error_generic,
+        notice = AccountNotice(R.string.account_error_credentials, isError = true),
     )
 }
 

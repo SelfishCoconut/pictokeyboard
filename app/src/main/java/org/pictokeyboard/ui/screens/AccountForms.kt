@@ -25,6 +25,7 @@ import io.github.jan.supabase.compose.auth.composeAuth
 import org.pictokeyboard.App
 import org.pictokeyboard.R
 import org.pictokeyboard.ui.account.AccountForm
+import org.pictokeyboard.ui.account.AccountNotice
 import org.pictokeyboard.ui.theme.Spacing
 
 /**
@@ -107,19 +108,20 @@ internal fun EmailPasswordForm(
  * screen, and silence there reads as a button that did nothing.
  */
 @Composable
-internal fun AccountMessage(messageRes: Int?, busy: Boolean) {
+internal fun AccountMessage(notice: AccountNotice?, busy: Boolean) {
     val text = when {
         busy -> stringResource(R.string.account_working)
-        messageRes != null -> stringResource(messageRes)
+        notice != null -> stringResource(notice.text)
         else -> null
     } ?: return
 
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,
-        // The generic failure is the only error this screen reports, so colour
-        // is decided by which message it is rather than by a separate flag.
-        color = if (messageRes == R.string.account_error_generic) {
+        // From the notice, not from which string it holds: there are nine error
+        // messages now, and an id comparison would colour eight of them as if
+        // nothing had gone wrong.
+        color = if (notice?.isError == true) {
             MaterialTheme.colorScheme.error
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant

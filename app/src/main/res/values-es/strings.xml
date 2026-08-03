@@ -206,11 +206,27 @@
     <string name="settings_pin_set">Establecer / cambiar PIN</string>
     <string name="settings_pin_remove">Quitar PIN</string>
     <string name="settings_backup">Copia de seguridad</string>
-    <string name="settings_export">Exportar tablero (JSON)</string>
-    <string name="settings_import">Importar tablero (JSON)</string>
-    <string name="settings_export_done">Tablero exportado</string>
-    <string name="settings_import_done">Tablero importado</string>
-    <string name="settings_import_failed">Error al importar: archivo no válido</string>
+    <string name="settings_export">Exportar todo</string>
+    <string name="settings_import">Importar una copia</string>
+    <string name="settings_backup_explainer">Tus tableros se quedan en este teléfono. El archivo exportado es la única copia de seguridad que hay: guárdalo en otro sitio, por ejemplo en Drive.</string>
+    <string name="settings_export_done">Copia guardada: %1$s, %2$s y %3$s</string>
+    <string name="settings_import_done">Se han añadido %1$s, %2$s y %3$s. No se ha cambiado nada de lo que ya tenías.</string>
+    <plurals name="count_boards">
+        <item quantity="one">%d tablero</item>
+        <item quantity="other">%d tableros</item>
+    </plurals>
+    <plurals name="count_pictos">
+        <item quantity="one">%d símbolo</item>
+        <item quantity="other">%d símbolos</item>
+    </plurals>
+    <plurals name="count_images">
+        <item quantity="one">%d imagen</item>
+        <item quantity="other">%d imágenes</item>
+    </plurals>
+    <string name="settings_export_failed">No se pudo escribir la copia</string>
+    <string name="settings_import_failed">Ese archivo no es una copia de PictoKeyboard</string>
+    <string name="settings_import_failed_newer">Esa copia se hizo con una versión más nueva de PictoKeyboard. Actualiza la aplicación e inténtalo de nuevo: no se ha importado nada.</string>
+    <string name="settings_import_failed_unsafe">Ese archivo se ha rechazado: contiene algo que no debería haber en una copia. No se ha importado nada.</string>
 
     <string name="about_title">Acerca de y créditos</string>
     <string name="about_app">PictoKeyboard es un teclado de pictogramas diseñado para personas con dificultades del habla o de escritura.</string>
@@ -351,7 +367,15 @@
     <string name="account_signed_in">Sesión iniciada</string>
     <string name="account_sign_out">Cerrar sesión</string>
     <string name="account_sign_out_note">Tus tableros se quedan en este teléfono. Cerrar sesión no borra nada.</string>
-    <string name="account_error_generic">No ha funcionado. Comprueba la conexión e inténtalo de nuevo.</string>
+    <string name="account_error_credentials">Ese correo y esa contraseña no coinciden. Revisa los dos e inténtalo de nuevo.</string>
+    <string name="account_error_email_not_confirmed">Primero confirma tu correo: te enviamos un enlace al crear la cuenta.</string>
+    <string name="account_error_email_taken">Ese correo ya tiene una cuenta. Inicia sesión.</string>
+    <string name="account_error_weak_password">Esa contraseña es demasiado fácil de adivinar. Prueba con una más larga.</string>
+    <string name="account_error_invalid_email">No se ha aceptado esa dirección de correo. Revisa si tiene alguna errata.</string>
+    <string name="account_error_too_many">Demasiados intentos. Espera unos minutos e inténtalo de nuevo.</string>
+    <string name="account_error_signup_disabled">Ahora mismo no se pueden crear cuentas nuevas.</string>
+    <string name="account_error_server">Algo ha fallado por nuestra parte. Inténtalo de nuevo en un momento.</string>
+    <string name="account_error_offline">No hay respuesta del servidor. Comprueba la conexión e inténtalo de nuevo.</string>
     <string name="account_working">Trabajando…</string>
     <string name="account_nothing_syncs_yet">Iniciar sesión todavía no guarda copia de nada: eso llega en una versión posterior.</string>
 </resources>

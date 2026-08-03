@@ -220,11 +220,27 @@
     <string name="settings_pin_set">Set / change PIN</string>
     <string name="settings_pin_remove">Remove PIN</string>
     <string name="settings_backup">Backup</string>
-    <string name="settings_export">Export board (JSON)</string>
-    <string name="settings_import">Import board (JSON)</string>
-    <string name="settings_export_done">Board exported</string>
-    <string name="settings_import_done">Board imported</string>
-    <string name="settings_import_failed">Import failed: invalid file</string>
+    <string name="settings_export">Export everything</string>
+    <string name="settings_import">Import a backup</string>
+    <string name="settings_backup_explainer">Your boards stay on this phone. An export file is the only backup there is — keep it somewhere else, such as Drive.</string>
+    <string name="settings_export_done">Backup saved: %1$s, %2$s and %3$s</string>
+    <string name="settings_import_done">Added %1$s, %2$s and %3$s. Nothing you already had was changed.</string>
+    <plurals name="count_boards">
+        <item quantity="one">%d board</item>
+        <item quantity="other">%d boards</item>
+    </plurals>
+    <plurals name="count_pictos">
+        <item quantity="one">%d symbol</item>
+        <item quantity="other">%d symbols</item>
+    </plurals>
+    <plurals name="count_images">
+        <item quantity="one">%d image</item>
+        <item quantity="other">%d images</item>
+    </plurals>
+    <string name="settings_export_failed">The backup could not be written</string>
+    <string name="settings_import_failed">That file is not a PictoKeyboard backup</string>
+    <string name="settings_import_failed_newer">That backup was made by a newer version of PictoKeyboard. Update the app and try again — nothing was imported.</string>
+    <string name="settings_import_failed_unsafe">That file was refused: something in it is not what a backup should contain. Nothing was imported.</string>
 
     <!-- About -->
     <string name="about_title">About &amp; credits</string>
@@ -367,7 +383,15 @@
     <string name="account_signed_in">Signed in</string>
     <string name="account_sign_out">Sign out</string>
     <string name="account_sign_out_note">Your boards stay on this phone. Signing out never deletes anything.</string>
-    <string name="account_error_generic">That did not work. Check your connection and try again.</string>
+    <string name="account_error_credentials">That email and password do not go together. Check both and try again.</string>
+    <string name="account_error_email_not_confirmed">Confirm your email first — there is a link in the message we sent when the account was made.</string>
+    <string name="account_error_email_taken">That email already has an account. Sign in instead.</string>
+    <string name="account_error_weak_password">That password is too easy to guess. Try a longer one.</string>
+    <string name="account_error_invalid_email">That email address was not accepted. Check it for typos.</string>
+    <string name="account_error_too_many">Too many tries. Wait a few minutes and try again.</string>
+    <string name="account_error_signup_disabled">New accounts are switched off at the moment.</string>
+    <string name="account_error_server">Something went wrong at our end. Try again in a moment.</string>
+    <string name="account_error_offline">No answer from the server. Check your connection and try again.</string>
     <string name="account_working">Working…</string>
     <string name="account_nothing_syncs_yet">Signing in does not back anything up yet — that arrives in a later version.</string>
 </resources>
