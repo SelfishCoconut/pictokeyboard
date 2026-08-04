@@ -10,7 +10,7 @@ navigationCompose = "2.9.8"
 room = "2.8.4"
 # Only ever pulled in transitively. Named here so a constraint can raise it --
 # see the `constraints` block in app/build.gradle.kts.
-kotlinxSerialization = "1.8.1"
+kotlinxSerialization = "1.11.0"
 datastore = "1.2.1"
 retrofit = "3.0.0"
 okhttp = "5.4.0"
@@ -23,7 +23,7 @@ supabase = "3.7.0"
 # tell "this phone has no Google account" apart from "the caregiver cancelled".
 androidxCredentials = "1.6.0"
 googleId = "1.2.0"
-ktor = "3.0.3"
+ktor = "3.5.2"
 coroutines = "1.11.0"
 appcompat = "1.7.1"
 recyclerview = "1.4.0"
