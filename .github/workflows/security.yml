@@ -42,7 +42,7 @@ jobs:
       # Kotlin cannot be analysed with build-mode `none` -- CodeQL reports
       # "could not be processed without a build". It has to trace a real
       # compilation, which must happen between init and analyze.
-      - uses: github/codeql-action/init@v4.37.3
+      - uses: github/codeql-action/init@v4.37.4
         with:
           languages: java-kotlin
           build-mode: manual
@@ -53,7 +53,7 @@ jobs:
       # build compiles nothing, the tracer observes nothing, and CodeQL fails
       # with "could not process any of it" on any push that touched no Kotlin.
       - run: ./gradlew clean assembleDebug --no-build-cache
-      - uses: github/codeql-action/analyze@v4.37.3
+      - uses: github/codeql-action/analyze@v4.37.4
 
   dependencies:
     name: dependency audit
