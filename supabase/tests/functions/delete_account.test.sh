@@ -72,6 +72,47 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$FN" \
   -H "apikey: $PUBLISHABLE" -H "Authorization: Bearer $STALE")
 check "a stale or forged JWT is refused" "401" "$code"
 
+# --- CORS, because one of the two callers is a browser -----------------------
+#
+# The web deletion page calls this function from a different origin, so the
+# browser sends a preflight first and refuses to make the real request unless it
+# succeeds. `withSupabase` is documented to handle CORS; this asserts it, so an
+# upgrade that changes that is caught here rather than by a caregiver meeting a
+# page that does nothing.
+#
+# The failure this prevents is a quiet one: the request never leaves the
+# browser, the page shows no error the user can act on, and the only deletion
+# route that works without the app is the one that has broken.
+ORIGIN='https://selfishcoconut.github.io'
+
+headers_of() { # headers_of <curl args...> -> response headers
+  curl -s -D - -o /dev/null "$@"
+}
+
+header_value() { # header_value <headers> <name> -> value, or empty
+  printf '%s\n' "$1" | tr -d '\r' | grep -i "^$2:" | head -1 | cut -d' ' -f2-
+}
+
+preflight=$(headers_of -X OPTIONS "$FN" \
+  -H "Origin: $ORIGIN" \
+  -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: authorization, content-type, apikey')
+preflight_code=$(printf '%s\n' "$preflight" | head -1 | awk '{print $2}')
+case "$preflight_code" in 200|204) preflight_ok=yes ;; *) preflight_ok="no ($preflight_code)" ;; esac
+check "the CORS preflight is answered" "yes" "$preflight_ok"
+check "the preflight allows the calling origin" "yes" \
+  "$([ -n "$(header_value "$preflight" 'access-control-allow-origin')" ] && echo yes || echo no)"
+check "the preflight allows the authorization header" "yes" \
+  "$(printf '%s' "$(header_value "$preflight" 'access-control-allow-headers')" |
+     grep -qi 'authorization\|\*' && echo yes || echo no)"
+
+# A browser cannot read *any* response -- including an error -- without the
+# allow-origin header on the real response too. Checked on the 401 because that
+# is the response the page has to be able to show a message for.
+refusal=$(headers_of -X POST "$FN" -H "apikey: $PUBLISHABLE" -H "Origin: $ORIGIN")
+check "a refusal is still readable by the browser" "yes" \
+  "$([ -n "$(header_value "$refusal" 'access-control-allow-origin')" ] && echo yes || echo no)"
+
 # --- The one that matters ---------------------------------------------------
 
 # A valid caller naming somebody else in the body. The function must delete the

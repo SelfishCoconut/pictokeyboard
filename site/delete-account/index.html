@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete my PictoKeyboard account</title>
+<meta name="description" content="Delete your PictoKeyboard account permanently, without installing the app.">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="alternate" hreflang="en" href="https://selfishcoconut.github.io/pictokeyboard/delete-account/">
+<link rel="alternate" hreflang="es" href="https://selfishcoconut.github.io/pictokeyboard/es/eliminar-cuenta/">
+<link rel="alternate" hreflang="x-default" href="https://selfishcoconut.github.io/pictokeyboard/delete-account/">
+</head>
+<body>
+<main>
+  <h1>Delete my PictoKeyboard account</h1>
+  <p class="lede">This deletes your account from our server, permanently and
+     immediately. There is no grace period and no waiting list.</p>
+
+  <div class="safe">
+    <strong>Your boards are not affected.</strong>
+    Boards, categories, pictograms and photographs live in the app's own storage
+    on your phone. They were never on our server, and deleting your account does
+    not touch them. The keyboard keeps working exactly as it does now.
+  </div>
+
+  <p>If the app is installed, the same thing is under
+     <em>Settings → Account → Delete my account</em>. This page exists so you can
+     delete your account without needing the app at all.</p>
+
+  <p class="muted">Want a copy of everything first? The app can export all your
+     boards and photographs as a single <code>.pkb</code> file. It is easier to
+     do that while the account still exists.</p>
+
+  <hr>
+
+  <h2>Step 1 — prove it is your account</h2>
+  <p>We ask you to sign in for one reason: so that nobody but you can delete your
+     account. We never delete an account named in a form — only the one that has
+     signed in.</p>
+
+  <form id="signin">
+    <label for="email">Email address</label>
+    <input id="email" name="email" type="email" autocomplete="email" required
+           placeholder="you@example.com">
+
+    <label for="password">Password
+      <span class="muted">— leave blank if you signed up with Google</span>
+    </label>
+    <input id="password" name="password" type="password" autocomplete="current-password">
+
+    <button class="primary" type="submit">Sign in</button>
+    <button type="button" id="code-btn">Email me a code instead</button>
+  </form>
+
+  <form id="verify" hidden>
+    <label for="code">The 6-digit code we emailed you</label>
+    <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+           pattern="[0-9]*" required>
+    <button class="primary" type="submit">Confirm code</button>
+  </form>
+
+  <section id="confirm" hidden>
+    <h2>Step 2 — confirm</h2>
+    <p>Signed in as <strong id="who"></strong>.</p>
+    <p>Deleting removes your account and the email address or Google identifier
+       attached to it. This cannot be undone.</p>
+    <button class="danger" type="button" id="delete-btn">Delete my account permanently</button>
+  </section>
+
+  <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+  <hr>
+
+  <h2>Prefer not to use this page?</h2>
+  <p>Email <a href="mailto:pictokeyboard@duck.com">pictokeyboard@duck.com</a> from the
+     address on the account, and we will delete it for you.</p>
+</main>
+
+<footer>
+  <a href="../es/eliminar-cuenta/" lang="es">Español</a> ·
+  <a href="../privacy/">Privacy policy</a> ·
+  <a href="../">PictoKeyboard</a> ·
+  <a href="https://github.com/SelfishCoconut/pictokeyboard">Source code</a>
+</footer>
+
+<script>
+  window.PK_MESSAGES = {
+    yourAccount: 'your account',
+    noPassword: 'If you signed up with Google there is no password — use “Email me a code instead”.',
+    signingIn: 'Signing in…',
+    emailFirst: 'Enter your email address first.',
+    sendingCode: 'Sending a code…',
+    codeSent: 'If that address has an account, a 6-digit code is on its way.',
+    checkingCode: 'Checking the code…',
+    deleting: 'Deleting…',
+    deleteFailed: 'We could not delete the account just now. Please try again, or email us.',
+    tooManyRequests: 'Too many requests just now — the code can only be sent every so often. Wait a few minutes and try again, or email pictokeyboard@duck.com and we will delete the account for you.',
+    codeExpired: 'That code has expired. Ask for a new one.',
+    wrongDetails: 'That email address and password do not match an account. If you signed up with Google, use “Email me a code instead”.',
+    somethingWentWrong: 'Something went wrong. Please try again, or email pictokeyboard@duck.com and we will delete the account for you.',
+    deleted: 'Your account has been deleted. The boards on your phone are untouched.',
+  }
+</script>
+<script type="module" src="../assets/delete-account.js"></script>
+</body>
+</html>

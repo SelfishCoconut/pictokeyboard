@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad — PictoKeyboard</title>
+<meta name="description" content="Qué hace PictoKeyboard con la información. Es corta porque la aplicación hace muy poco.">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="alternate" hreflang="en" href="https://selfishcoconut.github.io/pictokeyboard/privacy/">
+<link rel="alternate" hreflang="es" href="https://selfishcoconut.github.io/pictokeyboard/es/privacidad/">
+<link rel="alternate" hreflang="x-default" href="https://selfishcoconut.github.io/pictokeyboard/privacy/">
+</head>
+<body>
+<main>
+  <h1>Política de privacidad</h1>
+  <p class="lede">PictoKeyboard es un teclado de pictogramas para Android. Lo
+     configura un padre, una madre, un cuidador o un terapeuta, y lo usa una
+     persona con dificultades del habla o de escritura para decir lo que quiere
+     en cualquier aplicación del teléfono.</p>
+
+  <p>Esta política es corta porque la aplicación hace muy poco, y todo lo que
+     dice se puede comprobar en el código fuente, que es público.</p>
+
+  <p class="muted">Última actualización: <time datetime="2026-08-06">6 de agosto de 2026</time></p>
+
+  <div class="safe">
+    <strong>Lo que se escribe nunca sale del teléfono.</strong>
+    Ni a nosotros ni a nadie. Esta aplicación no tiene analíticas, ni informes de
+    fallos, ni publicidad, ni rastreo de ningún tipo.
+  </div>
+
+  <h2>Qué puede ver el teclado y qué hace con ello</h2>
+  <p>Un teclado de Android puede, técnicamente, observar el campo de texto en el
+     que escribe. Como es una capacidad seria, esto es exactamente lo que hace
+     PictoKeyboard con ella.</p>
+  <ul>
+    <li>El texto se entrega a la aplicación en la que se escribe. Ese es el
+        propósito de un teclado, y no va a ningún otro sitio.</li>
+    <li>La aplicación lleva una cuenta, <strong>en el dispositivo</strong>, de
+        cuántas veces se usa cada pictograma, para ofrecer primero los más
+        usados. Es un recuento de pictogramas, no un registro de lo que se dijo,
+        y nunca sale del teléfono.</li>
+    <li><strong>Los campos de contraseña quedan excluidos por completo</strong>
+        de ese recuento.</li>
+    <li>Cuando una aplicación pide al teclado que no aprenda de un campo —
+        <code>IME_FLAG_NO_PERSONALIZED_LEARNING</code> de Android, que es como lo
+        indican los modos de incógnito y los campos sensibles — PictoKeyboard lo
+        respeta y no registra nada.</li>
+  </ul>
+  <p>No hay registro de pulsaciones, ni predicción en la nube, ni envío de lo
+     escrito de ninguna clase.</p>
+
+  <h2>Información que sí sale del teléfono</h2>
+  <p>Hay exactamente dos destinos.</p>
+
+  <h3>1. ARASAAC, para las imágenes de los pictogramas</h3>
+  <p>Los pictogramas provienen de <a href="https://arasaac.org">ARASAAC</a>, el
+     Centro Aragonés para la Comunicación Aumentativa y Alternativa. Cuando la
+     aplicación necesita una imagen que aún no tiene guardada, se la pide a los
+     servidores de ARASAAC.</p>
+  <p>Esa petición indica a ARASAAC qué pictograma se ha solicitado y, como en
+     cualquier petición web, lleva la dirección IP del dispositivo. No les dice
+     quién usa la aplicación ni qué se ha escrito: la aplicación no envía ningún
+     identificador con estas peticiones. Después las imágenes se guardan en el
+     teléfono, así que el mismo pictograma no se pide dos veces. ARASAAC es un
+     organismo público independiente y a su servicio se aplican sus propios
+     términos.</p>
+
+  <h3>2. Nuestro servidor de cuentas, solo si se crea una cuenta</h3>
+  <p>La cuenta es opcional. El teclado funciona por completo sin ella y la
+     aplicación no insiste. Si un cuidador decide crear una, se envía a nuestro
+     servidor, alojado en <a href="https://supabase.com">Supabase</a>:</p>
+  <ul>
+    <li>el <strong>correo electrónico</strong> usado para registrarse, y una
+        contraseña cifrada de forma segura; o</li>
+    <li>un <strong>identificador de cuenta de Google</strong> y el correo
+        electrónico, si se usa «Continuar con Google». No recibimos —ni pedimos—
+        acceso a nada más de la cuenta de Google.</li>
+  </ul>
+  <p>Eso es todo. En el momento de escribir esto, <strong>no se envía ningún
+     contenido de los tableros a nuestro servidor</strong>: la función de
+     publicación que lo haría todavía no existe, y esta política se actualizará
+     antes de que llegue.</p>
+  <p>No vendemos datos, no los compartimos con anunciantes y no hay más
+     destinatarios que los dos nombrados arriba.</p>
+
+  <h2>Menores</h2>
+  <p>PictoKeyboard está pensado para que lo maneje una persona adulta en nombre
+     de quien lo usa, y por eso las pantallas de configuración están detrás de un
+     PIN. No recogemos a sabiendas información personal de menores. La cuenta es
+     del cuidador, no de la persona que habla con el teclado: nunca pedimos su
+     nombre, su edad, su diagnóstico ni ningún otro dato sobre ella.</p>
+
+  <h2>Eliminar tu cuenta y tus datos</h2>
+  <p>Puedes eliminar tu cuenta cuando quieras, y ocurre de inmediato. No hay
+     periodo de gracia ni lista de espera.</p>
+  <ul>
+    <li><strong>En la aplicación</strong>: Ajustes → Cuenta → Eliminar mi cuenta.</li>
+    <li><strong>Desde la web, sin instalar la aplicación</strong>:
+        <a href="../eliminar-cuenta/">Eliminar mi cuenta</a>.</li>
+  </ul>
+  <p>Al eliminarla se borran tu cuenta y el correo electrónico o el identificador
+     de Google asociado, de forma permanente.</p>
+
+  <div class="safe">
+    <strong>Tus tableros no se ven afectados.</strong>
+    Están en el teléfono, nunca estuvieron en nuestro servidor y se quedan tal
+    como están. Si quieres una copia de todo antes, la aplicación puede exportar
+    todos tus tableros y fotografías en un único archivo <code>.pkb</code>: es
+    más fácil mientras la cuenta todavía existe.
+  </div>
+
+  <h2>Permisos que pide la aplicación</h2>
+  <ul>
+    <li><strong>Internet</strong> y <strong>estado de la red</strong>: para
+        descargar las imágenes de los pictogramas de ARASAAC y para llegar al
+        servidor de cuentas si se usa una cuenta.</li>
+  </ul>
+  <p>Esa es la lista completa. En particular, la aplicación
+     <strong>no pide permiso de cámara</strong>: cuando se añade una fotografía a
+     un tablero, la hace la propia aplicación de cámara del teléfono y devuelve
+     el resultado, así que PictoKeyboard nunca tiene acceso propio a la cámara.</p>
+
+  <h2>Licencia de los pictogramas</h2>
+  <p>Los pictogramas son propiedad del Gobierno de Aragón y han sido creados por
+     Sergio Palao para ARASAAC, que los distribuye bajo
+     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es">CC BY-NC-SA 4.0</a>.</p>
+
+  <h2>Cambios</h2>
+  <p>Si esta política cambia, la fecha de arriba cambia con ella. Cada revisión
+     es pública y está fechada en
+     <a href="https://github.com/SelfishCoconut/pictokeyboard/commits/main/site/es/privacidad/index.html">el
+     historial de este documento</a>.</p>
+
+  <h2>Contacto</h2>
+  <p>Cualquier duda sobre esta política, o sobre los datos que tenemos de ti,
+     puede enviarse a
+     <a href="mailto:pictokeyboard@duck.com">pictokeyboard@duck.com</a>.</p>
+</main>
+
+<footer>
+  <a href="../../privacy/" lang="en">English</a> ·
+  <a href="../eliminar-cuenta/">Eliminar mi cuenta</a> ·
+  <a href="../">PictoKeyboard</a> ·
+  <a href="https://github.com/SelfishCoconut/pictokeyboard">Código fuente</a>
+</footer>
+</body>
+</html>

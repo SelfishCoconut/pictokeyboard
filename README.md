@@ -169,3 +169,18 @@ shown in the app's **About & credits** screen.
 
 - License: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 - ARASAAC terms of use: https://arasaac.org/terms-of-use
+
+## Privacy
+
+**What you type never leaves the phone.** No analytics, no crash reporting, no
+advertising, no tracking. Your boards, pictograms and photographs stay on the
+device. The keyboard honours `IME_FLAG_NO_PERSONALIZED_LEARNING` and never
+records anything from a password field.
+
+An account is optional and only ever stores an email address (or a Google
+account id). You can delete it at any time — from the app, or from the web
+without installing anything.
+
+- Privacy policy: https://selfishcoconut.github.io/pictokeyboard/privacy/
+- Delete my account: https://selfishcoconut.github.io/pictokeyboard/delete-account/
+- En español: https://selfishcoconut.github.io/pictokeyboard/es/
