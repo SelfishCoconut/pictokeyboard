@@ -374,6 +374,17 @@
     <string name="account_error_invalid_email">No se ha aceptado esa dirección de correo. Revisa si tiene alguna errata.</string>
     <string name="account_error_too_many">Demasiados intentos. Espera unos minutos e inténtalo de nuevo.</string>
     <string name="account_error_signup_disabled">Ahora mismo no se pueden crear cuentas nuevas.</string>
+    <string name="account_delete">Eliminar mi cuenta</string>
+    <string name="account_delete_title">¿Eliminar esta cuenta?</string>
+    <!-- Empieza por lo que *no* se borra: quien lee "eliminar" con el móvil
+         lleno del vocabulario de su hijo da por hecho que los tableros también
+         se van, y esta frase es lo único que dice lo contrario. -->
+    <string name="account_delete_body">Todos los tableros, fotos y grabaciones de este móvil se quedan donde están. Esto elimina la cuenta en sí — tu correo electrónico y tu nombre visible — y no se puede deshacer. Los tableros que hayas publicado siguen en el catálogo, ya sin tu nombre.</string>
+    <!-- Nombra lo que hace, no "Aceptar": una confirmación destructiva que dice
+         "Aceptar" es una que se pulsa sin leerla. -->
+    <string name="account_delete_confirm">Eliminar la cuenta</string>
+    <string name="account_delete_hint">¿Quieres antes una copia de tus tableros? Expórtalo todo desde Ajustes y luego elimina la cuenta.</string>
+    <string name="account_deleted">Esa cuenta ya no existe. Tus tableros siguen en este móvil.</string>
     <!-- Nombra las dos salidas: en un móvil gestionado por el centro, añadir una
          cuenta de Google no suele estar en manos del cuidador. -->
     <string name="account_error_no_google_account">No hay ninguna cuenta de Google en este móvil. Añade una en los ajustes del teléfono o inicia sesión con un correo electrónico.</string>

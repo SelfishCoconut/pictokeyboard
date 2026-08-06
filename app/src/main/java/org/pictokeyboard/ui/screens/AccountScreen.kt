@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,9 +17,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,6 +67,7 @@ fun AccountScreen(onBack: () -> Unit, viewModel: AccountViewModel = viewModel())
         onSignUp = viewModel::signUp,
         onRecover = viewModel::sendRecovery,
         onSignOut = viewModel::signOut,
+        onDeleteAccount = viewModel::deleteAccount,
     )
 }
 
@@ -81,6 +87,7 @@ internal fun AccountScreenContent(
     onSignUp: () -> Unit,
     onRecover: () -> Unit,
     onSignOut: () -> Unit,
+    onDeleteAccount: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -128,6 +135,7 @@ internal fun AccountScreenContent(
                     busy = busy,
                     notice = notice,
                     onSignOut = onSignOut,
+                    onDeleteAccount = onDeleteAccount,
                 )
             }
         }
@@ -176,6 +184,7 @@ private fun SignedInBody(
     busy: Boolean,
     notice: AccountNotice?,
     onSignOut: () -> Unit,
+    onDeleteAccount: () -> Unit,
 ) {
     Text(
         email?.let { stringResource(R.string.account_signed_in_as, it) }
@@ -194,6 +203,28 @@ private fun SignedInBody(
     // destructive, and dressing it as though it were would teach caregivers to
     // fear a control that costs them nothing.
     Hint(stringResource(R.string.account_sign_out_note))
+
+    // Deletion, which *is* destructive, gets the opposite treatment: a
+    // confirmation, and the export route named before the button rather than
+    // after it, while there is still an account to export from.
+    Hint(stringResource(R.string.account_delete_hint))
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    TextButton(
+        onClick = { confirming = true },
+        enabled = !busy,
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+    ) {
+        Text(stringResource(R.string.account_delete))
+    }
+    if (confirming) {
+        DeleteAccountDialog(
+            onDismiss = { confirming = false },
+            onConfirm = {
+                confirming = false
+                onDeleteAccount()
+            },
+        )
+    }
 }
 
 /**
@@ -249,6 +280,7 @@ private fun AccountPreview(
             onSignUp = {},
             onRecover = {},
             onSignOut = {},
+            onDeleteAccount = {},
         )
     }
 }

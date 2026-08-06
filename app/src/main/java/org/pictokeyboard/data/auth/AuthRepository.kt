@@ -7,12 +7,16 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.functions.Functions
+import io.github.jan.supabase.functions.functions
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -52,7 +56,13 @@ class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
         // Google sign-in; #93 replaced it with a direct Credential Manager call,
         // because its result type cannot tell a missing Google account apart
         // from a caregiver dismissing the sheet.
-        createSupabaseClient(config.url, config.anonKey) { install(Auth) }
+        createSupabaseClient(config.url, config.anonKey) {
+            install(Auth)
+            // Only for delete-account. Removing an auth.users row needs the
+            // secret key, which must never be in the APK, so the one thing this
+            // client cannot do itself it asks an Edge Function to do. See #83.
+            install(Functions)
+        }
     }
 
     val state: StateFlow<AccountState> = when (val supabase = client) {
@@ -134,6 +144,28 @@ class AuthRepository(config: SupabaseConfig, scope: CoroutineScope) {
                 nonce = rawNonce
             }
         }
+    }
+
+    /**
+     * Deleting the account, which is the one thing here that cannot be undone.
+     *
+     * The work happens in the `delete-account` Edge Function because removing an
+     * `auth.users` row needs the secret key, and the secret key must never be in
+     * the APK. The caller is taken from the JWT on this request, so this cannot
+     * be asked to delete anyone else — there is deliberately no user id to pass.
+     *
+     * The sign-out afterwards is **local on purpose**. A global sign-out asks
+     * the server to revoke a session belonging to a user that no longer exists;
+     * that call can fail, and a failure there would be reported as a failed
+     * deletion after the account had already gone — the one outcome worse than
+     * either success or failure on its own.
+     */
+    suspend fun deleteAccount(): Result<Unit> = call { supabase ->
+        val response = supabase.functions.invoke("delete-account")
+        check(response.status.isSuccess()) {
+            "delete-account returned ${response.status.value}"
+        }
+        supabase.auth.signOut(SignOutScope.LOCAL)
     }
 
     /**
