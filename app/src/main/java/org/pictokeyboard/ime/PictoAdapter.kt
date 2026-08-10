@@ -1,5 +1,6 @@
 package org.pictokeyboard.ime
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ class PictoAdapter(
     private val onClick: (PictoEntity) -> Unit,
     private val onLongClick: (PictoEntity) -> Unit = {},
     private val haptics: () -> Boolean = { true },
+    private val palette: () -> KeyboardPalette? = { null },
 ) : ListAdapter<PictoAdapter.Tile, PictoAdapter.VH>(DIFF) {
 
     /**
@@ -102,13 +104,14 @@ class PictoAdapter(
 
         fun bind(item: Tile) {
             val picto = item.picto
+            val skin = palette()
             tile.background = ViewStyles.pressableTile(
                 colorArgb = item.frameColor,
-                strokeWidthPx = dp(item.borderWidthDp),
+                strokeWidthPx = skin?.strokeWidth(dp(item.borderWidthDp)) ?: dp(item.borderWidthDp),
                 cornerRadiusPx = dp(TILE_CORNER_DP).toFloat(),
                 // `tile`, not white-in-light-only: ARASAAC art is black line work,
                 // so the tile stays white in dark mode too.
-                fillArgb = ContextCompat.getColor(itemView.context, R.color.tile),
+                fillArgb = skin?.tile ?: ContextCompat.getColor(itemView.context, R.color.tile),
                 borderStyle = item.borderStyle,
             )
             // The drawable reacts to the pressed state of the view that owns it,
@@ -128,6 +131,9 @@ class PictoAdapter(
             }
 
             label.text = picto.label
+            // 700 in high contrast: a caption at 400 is thin strokes, and thin
+            // strokes are a legibility problem that contrast alone does not fix.
+            label.typeface = if (skin?.highContrast == true) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
             label.visibility = if (item.showLabel) View.VISIBLE else View.GONE
 
             // The name comes from the data, not from whether the caption happens

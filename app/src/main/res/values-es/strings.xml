@@ -197,6 +197,8 @@
     <string name="settings_language">Idioma predeterminado</string>
     <string name="settings_add_space">Añadir un espacio tras cada palabra</string>
     <string name="settings_haptics">Vibrar al pulsar una tecla</string>
+    <string name="settings_high_contrast">Alto contraste</string>
+    <string name="settings_high_contrast_hint">Blanco y negro puros, con bordes más marcados y textos más gruesos. Se aplica al teclado además de a esta aplicación.</string>
     <string name="settings_haptics_hint">Una vibración breve que confirma que la pulsación se ha registrado, para quien no puede ver el campo de texto. También se respeta el ajuste de vibración del propio teléfono.</string>
     <string name="settings_layout_moved">Las columnas, las filas, el texto y los marcos son de cada tablero, no del teléfono: se ajustan en el propio tablero, en Diseño.</string>
     <string name="settings_speak">Pronunciar cada picto en voz alta</string>

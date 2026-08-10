@@ -1,8 +1,14 @@
 package org.pictokeyboard.ime
 
+import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.util.StateSet
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.core.widget.ImageViewCompat
+import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.ui.theme.CategoryColors
 
@@ -144,6 +150,73 @@ object ViewStyles {
             addState(StateSet.WILD_CARD, categoryChip(colorArgb, selected, backgroundArgb, metrics))
         }
 
+    /**
+     * Repaints the six keys from [skin] (#109).
+     *
+     * `bg_key_recessive.xml` and `bg_key_primary.xml` already carry the right
+     * *idea* — quiet by default, unmistakable when pressed, because "did my tap
+     * land?" deserves an unambiguous answer. What an XML selector cannot do is
+     * change colour at runtime, and high contrast has to reach the action row or
+     * the mode stops at the edge of the grid.
+     *
+     * So the same two selectors are rebuilt here from tokens. The shape is
+     * copied deliberately rather than shared with the XML: those files remain
+     * the layout's defaults, drawn for the frame before this runs.
+     */
+    fun applyKeyColors(root: View, skin: KeyboardPalette) {
+        val radius = root.resources.displayMetrics.density * KEY_CORNER_DP
+
+        fun recessive() = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), solid(skin.accent, radius))
+            addState(
+                StateSet.WILD_CARD,
+                framedTile(
+                    colorArgb = skin.lineStrong,
+                    strokeWidthPx = (root.resources.displayMetrics.density * KEY_STROKE_DP).toInt(),
+                    cornerRadiusPx = radius,
+                    fillArgb = skin.line,
+                ),
+            )
+        }
+
+        fun primary() = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), solid(skin.ink, radius))
+            addState(StateSet.WILD_CARD, solid(skin.accent, radius))
+        }
+
+        // Label and glyph colours flip with the pressed face, so they are state
+        // lists too -- a fixed colour would be unreadable on one of the two.
+        val recessiveContent = ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+            intArrayOf(skin.onAccent, skin.ink),
+        )
+        val primaryContent = ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+            intArrayOf(skin.paper, skin.onAccent),
+        )
+
+        RECESSIVE_KEYS.forEach { id ->
+            root.findViewById<View>(id)?.let { key ->
+                key.background = recessive()
+                when (key) {
+                    is TextView -> key.setTextColor(recessiveContent)
+                    is ImageView -> ImageViewCompat.setImageTintList(key, recessiveContent)
+                }
+            }
+        }
+        root.findViewById<TextView>(R.id.key_space)?.let { key ->
+            key.background = primary()
+            key.setTextColor(primaryContent)
+        }
+    }
+
+    private fun solid(argb: Int, cornerRadiusPx: Float): GradientDrawable =
+        GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = cornerRadiusPx
+            setColor(argb)
+        }
+
     /** How a chip is drawn, as opposed to what colour it is. */
     data class ChipMetrics(
         val cornerRadiusPx: Float,
@@ -173,4 +246,16 @@ object ViewStyles {
      * usability problem rather than feedback.
      */
     private const val PRESSED_STROKE_MULTIPLIER = 2
+
+    private const val KEY_CORNER_DP = 10f
+    private const val KEY_STROKE_DP = 1.5f
+
+    /** Every key drawn with the recessive face; space is the one primary key. */
+    private val RECESSIVE_KEYS = listOf(
+        R.id.key_backspace,
+        R.id.key_speak,
+        R.id.key_clear,
+        R.id.key_switch,
+        R.id.key_enter,
+    )
 }
