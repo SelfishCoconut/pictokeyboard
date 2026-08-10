@@ -253,6 +253,13 @@
     <string name="about_terms_link">ARASAAC terms of use</string>
     <string name="about_website_link">ARASAAC website</string>
 
+    <!-- The summary answers the question the link would otherwise make someone
+         leave the app to answer. It leads with the keyboard, because that is
+         the part with the frightening capability. -->
+    <string name="about_privacy_heading">Privacy</string>
+    <string name="about_privacy_summary">What you type never leaves this phone. Your boards, pictograms and photographs stay on the device too. There is no tracking, no advertising and no analytics in this app.</string>
+    <string name="about_privacy_link">Read the privacy policy</string>
+
     <!--
       Accessibility names for controls whose only visible content is a colour or
       a shape. Without these, TalkBack announces 26 indistinguishable targets and

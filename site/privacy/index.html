@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy — PictoKeyboard</title>
+<meta name="description" content="What PictoKeyboard does with information. Short, because the app does very little.">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="alternate" hreflang="en" href="https://selfishcoconut.github.io/pictokeyboard/privacy/">
+<link rel="alternate" hreflang="es" href="https://selfishcoconut.github.io/pictokeyboard/es/privacidad/">
+<link rel="alternate" hreflang="x-default" href="https://selfishcoconut.github.io/pictokeyboard/privacy/">
+</head>
+<body>
+<main>
+  <h1>Privacy policy</h1>
+  <p class="lede">PictoKeyboard is a pictogram keyboard for Android. It is set up
+     by a parent, carer or therapist, and used by someone with speech or typing
+     difficulties to say what they mean in any app on the phone.</p>
+
+  <p>This policy is short because the app does very little, and everything in it
+     is checkable against the source code, which is public.</p>
+
+  <p class="muted">Last updated: <time datetime="2026-08-06">6 August 2026</time></p>
+
+  <div class="safe">
+    <strong>What the person types never leaves the phone.</strong>
+    Not to us, not to anyone. There is no analytics, no crash reporting, no
+    advertising and no tracking of any kind in this app.
+  </div>
+
+  <h2>What the keyboard can see, and what it does with it</h2>
+  <p>An Android keyboard is technically able to observe the text field it types
+     into. Because that is a serious capability, here is exactly how
+     PictoKeyboard uses it.</p>
+  <ul>
+    <li>Text is delivered to the app being typed into. That is the whole purpose
+        of a keyboard, and it goes nowhere else.</li>
+    <li>The app keeps a count, <strong>on the device</strong>, of how often each
+        pictogram is used, so the most-used symbols can be offered first. That is
+        a tally of pictograms, not a record of what was said, and it never leaves
+        the phone.</li>
+    <li><strong>Password fields are excluded from that tally entirely.</strong></li>
+    <li>When an app asks the keyboard not to learn from a field — Android's
+        <code>IME_FLAG_NO_PERSONALIZED_LEARNING</code>, which is how incognito
+        modes and sensitive fields signal this — PictoKeyboard honours it and
+        records nothing.</li>
+  </ul>
+  <p>There is no key logging, no cloud prediction, and no upload of typed
+     content of any kind.</p>
+
+  <h2>Information that does leave the phone</h2>
+  <p>There are exactly two destinations.</p>
+
+  <h3>1. ARASAAC, for pictogram images</h3>
+  <p>The pictograms come from <a href="https://arasaac.org">ARASAAC</a>, the
+     Aragonese Centre of Augmentative and Alternative Communication. When the app
+     needs a pictogram image it has not already stored, it requests it from
+     ARASAAC's servers.</p>
+  <p>That request tells ARASAAC which pictogram was asked for and, as with any
+     web request, carries the device's IP address. It does not tell them who is
+     using the app or what was typed — the app sends no identifier of any kind
+     with these requests. Images are cached on the phone afterwards, so the same
+     pictogram is not fetched twice. ARASAAC is an independent public body and
+     its own terms apply to its service.</p>
+
+  <h3>2. Our account server, only if an account is created</h3>
+  <p>An account is optional. The keyboard works fully without one, and the app
+     does not nag. If a caregiver chooses to create one, the following is sent to
+     our server, which runs on <a href="https://supabase.com">Supabase</a>:</p>
+  <ul>
+    <li>the <strong>email address</strong> used to sign up, and a securely hashed
+        password; or</li>
+    <li>a <strong>Google account identifier</strong> and email address, if
+        “Continue with Google” is used instead. We do not receive, and never ask
+        for, access to anything else in the Google account.</li>
+  </ul>
+  <p>That is all of it. At the time of writing <strong>no board content is sent
+     to our server at all</strong> — the publishing feature that would do so is
+     not built yet, and this policy will be updated before it ships. An account
+     today exists so that it is ready when board backup arrives.</p>
+  <p>We do not sell data, we do not share it with advertisers, and there are no
+     third-party recipients beyond the two named above.</p>
+
+  <h2>Children</h2>
+  <p>PictoKeyboard is meant to be operated by an adult on behalf of the person
+     using it, and the setup screens sit behind a PIN for that reason. We do not
+     knowingly collect personal information from children. An account belongs to
+     the caregiver, not to the person speaking with the keyboard — we never ask
+     for that person's name, age, diagnosis, or any other detail about them.</p>
+
+  <h2>Deleting your account and your data</h2>
+  <p>You can delete your account at any time, and it happens immediately. There
+     is no grace period and no waiting list.</p>
+  <ul>
+    <li><strong>In the app</strong>: Settings → Account → Delete my account.</li>
+    <li><strong>From the web, without installing the app</strong>:
+        <a href="../delete-account/">Delete my account</a>.</li>
+  </ul>
+  <p>Deleting removes your account record and the email address or Google
+     identifier attached to it, permanently.</p>
+
+  <div class="safe">
+    <strong>Your boards are not affected.</strong>
+    They are on the phone, they were never on our server, and they stay exactly
+    as they are. If you want a copy of everything first, the app can export all
+    your boards and photographs as a single <code>.pkb</code> file — easier to do
+    while the account still exists.
+  </div>
+
+  <h2>Permissions the app asks for</h2>
+  <ul>
+    <li><strong>Internet</strong> and <strong>network state</strong> — to fetch
+        pictogram images from ARASAAC, and to reach the account server if an
+        account is used.</li>
+  </ul>
+  <p>That is the complete list. In particular the app requests
+     <strong>no camera permission</strong>: when a photograph is added to a
+     board, the phone's own camera app takes the picture and hands back the
+     result, so PictoKeyboard never has camera access of its own.</p>
+
+  <h2>Pictogram licensing</h2>
+  <p>The pictograms are the property of the Government of Aragón and were created
+     by Sergio Palao for ARASAAC, which distributes them under
+     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en">CC BY-NC-SA 4.0</a>.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the date above changes with it. Every revision is
+     public and timestamped in
+     <a href="https://github.com/SelfishCoconut/pictokeyboard/commits/main/docs/privacy/index.html">this
+     document's history</a>.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy, or about data held about you, can be sent to
+     <a href="mailto:pictokeyboard@duck.com">pictokeyboard@duck.com</a>.</p>
+</main>
+
+<footer>
+  <a href="../es/privacidad/" lang="es">Español</a> ·
+  <a href="../delete-account/">Delete my account</a> ·
+  <a href="../">PictoKeyboard</a> ·
+  <a href="https://github.com/SelfishCoconut/pictokeyboard">Source code</a>
+</footer>
+</body>
+</html>

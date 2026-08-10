@@ -36,6 +36,11 @@ jobs:
           name: lint-report
           path: "app/build/reports/lint-results-*.html"
           if-no-files-found: ignore
+      # Here rather than only in the Pages workflow, which runs on push to main
+      # -- by then a broken privacy policy or deletion page is already merged.
+      # This is `quality`, which is a required check, so it blocks instead.
+      - name: Check the site
+        run: python3 .github/scripts/check-site.py
 
   build:
     name: build
@@ -122,9 +127,27 @@ jobs:
         with:
           # Pinned for the reason given on the database job above.
           version: 2.111.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # mailpit is NOT excluded, unlike the other optional services: the web
+      # deletion page asks Auth to send a sign-in code, and with no mail server
+      # that request fails outright rather than sending nothing. Excluding it
+      # would turn the page's own test into a test of the exclusion list.
       - name: Start Postgres, Auth and the edge runtime
         run: >-
           supabase start
-          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor
+          -x realtime,storage-api,imgproxy,postgres-meta,studio,logflare,vector,supavisor
       - name: Account deletion function tests
         run: supabase/tests/functions/delete_account.test.sh
+      # The web deletion page's only coverage. See the test's own header for why
+      # a static page still needs a test that runs.
+      - name: Web deletion page flow
+        run: |
+          set -euo pipefail
+          status=$(supabase status -o json)
+          read_key() { echo "$status" | python3 -c "import sys,json;print(json.load(sys.stdin)['$1'])"; }
+          API=$(read_key API_URL) \
+          PUBLISHABLE=$(read_key PUBLISHABLE_KEY) \
+          SECRET=$(read_key SECRET_KEY) \
+          deno run --allow-net --allow-env supabase/tests/functions/deletion_page_flow.test.ts

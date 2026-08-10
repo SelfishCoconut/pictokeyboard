@@ -238,6 +238,13 @@
     <string name="about_terms_link">Términos de uso de ARASAAC</string>
     <string name="about_website_link">Sitio web de ARASAAC</string>
 
+    <!-- El resumen responde a la pregunta que, si no, obligaría a salir de la
+         aplicación para resolverla. Empieza por el teclado, que es la parte con
+         la capacidad que asusta. -->
+    <string name="about_privacy_heading">Privacidad</string>
+    <string name="about_privacy_summary">Lo que se escribe nunca sale de este teléfono. Los tableros, los pictogramas y las fotografías también se quedan en el dispositivo. Esta aplicación no tiene rastreo, ni publicidad, ni analíticas.</string>
+    <string name="about_privacy_link">Leer la política de privacidad</string>
+
     <!--
       Nombres accesibles para controles cuyo único contenido visible es un color
       o una forma. Sin ellos, TalkBack anuncia 26 destinos indistinguibles y la

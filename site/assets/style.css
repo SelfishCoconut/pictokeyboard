@@ -1,0 +1,135 @@
+/*
+ * One stylesheet for the whole site, which is three pages long.
+ *
+ * No framework and no build step: these pages have to stay reachable and
+ * readable for as long as the app is on Play, and the least maintenance is the
+ * kind that has no dependencies to go stale. Everything here is system fonts
+ * and CSS custom properties.
+ */
+
+:root {
+  color-scheme: light dark;
+  --fg: #16181d;
+  --bg: #ffffff;
+  --muted: #5b6069;
+  --line: #d9dde3;
+  --accent: #1a6ee0;
+  --danger: #b3261e;
+  --ok: #0f6d3c;
+  --card: #f7f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e8ec;
+    --bg: #14161a;
+    --muted: #a2a8b3;
+    --line: #2c3037;
+    --accent: #7fb0ff;
+    --danger: #f2b8b5;
+    --ok: #7ad1a1;
+    --card: #1b1e24;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2.5rem 1.15rem 5rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Never justified: ragged-right is easier to read, and justification opens
+     rivers of whitespace at the narrow widths this is mostly read at. */
+  text-align: left;
+}
+
+main { max-width: 36rem; margin: 0 auto; }
+
+h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 .5rem; letter-spacing: -.01em; }
+h2 { font-size: 1.15rem; margin: 2.25rem 0 .5rem; letter-spacing: -.005em; }
+h3 { font-size: 1rem; margin: 1.5rem 0 .35rem; }
+
+.lede { color: var(--muted); margin-top: 0; font-size: 1.05rem; }
+.muted { color: var(--muted); font-size: .93rem; }
+
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .9em;
+  background: var(--card);
+  padding: .1em .35em;
+  border-radius: 4px;
+}
+
+hr { border: 0; border-top: 1px solid var(--line); margin: 2.25rem 0; }
+
+/* The reassurance box. Used for the one thing every page has to say before it
+   says anything else: the boards on the phone are not at risk. */
+.safe {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ok);
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  margin: 1.5rem 0;
+  background: var(--card);
+}
+.safe strong { display: block; margin-bottom: .35rem; }
+
+label { display: block; font-weight: 600; margin: 1.15rem 0 .35rem; }
+
+input {
+  width: 100%;
+  padding: .72rem .8rem;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: .75rem 1.15rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  margin-top: 1rem;
+  /* 44px minimum target, because this page is used on phones by people who are
+     often already anxious about pressing the wrong thing. */
+  min-height: 44px;
+}
+button[disabled] { opacity: .55; cursor: not-allowed; }
+
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+@media (prefers-color-scheme: dark) { .primary { color: #0b1220; } }
+
+.danger { border-color: var(--danger); color: var(--danger); }
+
+.status {
+  margin-top: 1.15rem;
+  padding: .85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.status[data-kind="error"] { border-color: var(--danger); color: var(--danger); }
+.status[data-kind="ok"] { border-color: var(--ok); color: var(--ok); }
+
+footer {
+  max-width: 36rem;
+  margin: 3rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .93rem;
+}

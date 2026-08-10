@@ -248,6 +248,15 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
+# The sign-in email for the web deletion page (#83). Not cosmetic: the default
+# template carries a link and no code, so without this the page's code box can
+# never be filled and the only deletion route that works without the app is
+# broken. See the template's own comment, and docs/owner-setup.md for the
+# matching dashboard change on the hosted project.
+[auth.email.template.magic_link]
+subject = "Your PictoKeyboard sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true

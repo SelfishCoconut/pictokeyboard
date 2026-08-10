@@ -1,0 +1,120 @@
+name: Pages
+
+# Publishes site/ to GitHub Pages: the privacy policy and the account deletion
+# page. Play requires both to live at a public, stable URL, and requires the
+# deletion route to work for someone who does not have the app installed.
+#
+# The site is plain HTML with no build step and no framework, so this workflow
+# does exactly one interesting thing: it substitutes the two values that must
+# not live in the repository. (The contact address is not one of them -- it is a
+# disposable alias created for this project, meant to be public, and a policy's
+# contact is more useful visible in the repository than hidden behind a
+# variable.)
+#
+# The publishable ("anon") key is public by design -- row-level security is the
+# boundary, not secrecy -- but it is kept out of the repository so a fork does
+# not inherit this project's backend, matching how the Android build reads it
+# from local.properties. The secret key is NEVER used here and must never appear
+# in anything this workflow can read.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  # So the site can be re-deployed after rotating a key, which touches no file.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never two deploys at once, and never cancel one in flight: a half-deployed
+# privacy policy is a Play compliance problem, not an inconvenience.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Substitute deploy-time values
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          # Fail loudly rather than deploying a page whose sign-in silently
+          # cannot work. A deletion page that looks fine and does nothing is
+          # worse than an obviously broken deploy, because Play and the person
+          # trying to delete their account both believe it works.
+          missing=()
+          [ -n "${SUPABASE_URL}" ] || missing+=("SUPABASE_URL (secret)")
+          [ -n "${SUPABASE_PUBLISHABLE_KEY}" ] || missing+=("SUPABASE_PUBLISHABLE_KEY (secret)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf 'Missing required configuration:\n'
+            printf '  - %s\n' "${missing[@]}"
+            printf 'Set these in Settings -> Secrets and variables -> Actions.\n'
+            exit 1
+          fi
+
+          # python rather than sed: a key or address containing /, & or \ would
+          # be silently mangled by sed's replacement syntax, and the result
+          # would be a page that fails at runtime for one user in a hundred.
+          python3 - <<'PY'
+          import os, pathlib
+
+          values = {
+              '__SUPABASE_URL__': os.environ['SUPABASE_URL'],
+              '__SUPABASE_PUBLISHABLE_KEY__': os.environ['SUPABASE_PUBLISHABLE_KEY'],
+          }
+
+          # .js as well as .html: the deletion page's logic lives in
+          # assets/delete-account.js so every language shares one copy, and the
+          # key it needs is in there rather than in the markup.
+          targets = [p for p in pathlib.Path('site').rglob('*') if p.suffix in ('.html', '.js')]
+          for path in targets:
+              text = original = path.read_text(encoding='utf-8')
+              for placeholder, value in values.items():
+                  text = text.replace(placeholder, value)
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  print(f'substituted in {path}')
+          PY
+
+          # Nothing may reach Pages with a placeholder still in it.
+          if grep -rn '__SUPABASE_URL__\|__SUPABASE_PUBLISHABLE_KEY__' site/; then
+            echo "A placeholder survived substitution -- refusing to deploy."
+            exit 1
+          fi
+
+          # The secret key must never be published. This is the last point at
+          # which that can be checked, so it is checked here rather than assumed
+          # from the fact that no step above asks for it.
+          if grep -rn 'sb_secret_\|service_role' site/; then
+            echo "Refusing to deploy: site/ contains something that looks like a secret key."
+            exit 1
+          fi
+
+      # Everything that must be true of these pages before they are public:
+      # links, message parity across languages, structure, and contrast. See
+      # the script's own docstring for why each check exists.
+      - name: Check the site
+        run: python3 .github/scripts/check-site.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
