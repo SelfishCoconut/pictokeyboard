@@ -1,11 +1,15 @@
-# Owner setup — the steps only you can do
+# Owner setup — everything still waiting on you
 
-Everything here needs access I do not have: repository settings, the Supabase
-dashboard, and the Play Console. Nothing in the codebase can substitute for
-them, and several fail *quietly* if skipped — so each step says where to click,
-and how to tell it actually worked rather than only looked like it did.
+Two kinds of thing live here. **Steps** need access I do not have: repository
+settings, the Supabase dashboard, the Play Console. **Decisions** need an
+opinion about the product that is not mine to hold. Neither can be done from
+the codebase, and several of the steps fail *quietly* if skipped — so each one
+says where to click and how to tell it actually worked.
 
-## Where this stands
+## The short version
+
+**One thing is blocking today: [custom SMTP](#5-custom-smtp--now-a-prerequisite-not-a-pre-release-chore).**
+Everything else is either done, or waits for a release that has not happened.
 
 | # | Step | State |
 |---|---|---|
@@ -13,8 +17,8 @@ and how to tell it actually worked rather than only looked like it did.
 | 2 | `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` secrets | **done** |
 | 3 | `functions` added to the required checks | **done** — 11 checks now |
 | 4 | Merge #100 and #101 | **done** — the site is live |
-| 5 | **Custom SMTP** | **yours — do this first**, it unblocks 6 |
-| 6 | Magic Link email template | **yours** — blocked by 5, see below |
+| 5 | **Custom SMTP** | **yours — blocking**, and it unblocks 6 |
+| 6 | Magic Link email template | **yours** — blocked by 5 |
 | 7 | Play Console answers | **yours** — at listing time |
 
 The site is published and all six pages load:
@@ -23,6 +27,73 @@ The site is published and all six pages load:
 - <https://selfishcoconut.github.io/pictokeyboard/delete-account/>
 - <https://selfishcoconut.github.io/pictokeyboard/es/privacidad/>
 - <https://selfishcoconut.github.io/pictokeyboard/es/eliminar-cuenta/>
+
+---
+
+## Decisions waiting on you
+
+Not steps — questions where the options are worked out but the call is yours.
+Each has a recommendation so it can be settled in a sentence.
+
+### A. How much filtering does Discover need? (#37)
+
+**The question.** #37 specifies name search, a Boards/Categories filter, **and**
+tag filters: 30+ tags across four facets (Place, People, Situation, Topic),
+multi-select, AND across facets. That is the largest remaining piece of UI in
+any open issue, and it sits awkwardly beside the rule that closed #47 and #49 —
+*no extra menus, keep it simple*.
+
+**Why it is not obviously wrong.** Discover exists to solve the empty-app
+problem: a caregiver opening PictoKeyboard for the first time faces an empty
+grid, which is the hardest moment in every AAC product. Filters help *only*
+once the catalogue is big. On day one it ships with five boards, and a
+four-facet filter matrix over five boards is furniture.
+
+**Recommendation:** ship search plus the Boards/Categories toggle, and cut tag
+filtering to a **single flat row of the most useful tags** — Home, School,
+Mealtime, Feelings, Food. Add facets later if the catalogue ever grows enough to
+need them. That keeps #37 honest to its own argument (*"tags are a fixed list,
+not free text"*) without building a query builder for five rows of content.
+
+**If you disagree**, say so and #37 stays as written — it is a defensible spec,
+just a big one.
+
+### B. A domain to send from, or the free route? (#92)
+
+**The question.** Custom SMTP needs a `From:` address whose domain will sign the
+mail. `pictokeyboard.app` is **not registered**.
+
+| Option | Cost | Trade-off |
+|---|---|---|
+| Register `pictokeyboard.app` | ~€12/year | Clean, looks like the app, best deliverability |
+| **Gmail + App Password** | **free** | Works properly — Google DKIM-signs it — but codes arrive from a personal-looking address |
+| Stay on the default mailer | free | **Not an option**: team addresses only, and the template stays locked |
+
+**Recommendation:** take the Gmail route **now** to unblock development, and buy
+the domain when you are actually preparing the store listing. The two are not
+exclusive and switching later is a settings change, not a migration.
+
+Full walkthrough in [step 5](#5-custom-smtp--now-a-prerequisite-not-a-pre-release-chore).
+
+### C. Nothing else is waiting on you
+
+Every other open issue is mine to build. If you want to change what is being
+built next, that is worth saying — the current order is #109, then the sentence
+help chain (#42 → #43 → #44 → #45 → #46 → #48).
+
+---
+
+## Decisions already settled
+
+Recorded so they stay settled, rather than being reopened from scratch.
+
+| Date | Decision | Because |
+|---|---|---|
+| 2026-08-10 | Sentence help is **one Beautify button and one Undo** | No extra menus; #47, #49, #50 closed, negation moved into the #45 validator as a hard constraint |
+| 2026-08-10 | Screen reading (`AccessibilityService`) **will not be built** | Reads every word on every screen, needs a disclosure flow and allowlist UI, and raises Play review risk — for better expansions in a feature that works without it |
+| 2026-08-10 | Custom SMTP is **blocking**, not pre-release | Free-tier template editing was locked by Supabase on 3 June 2026 |
+| 2026-08-06 | `pictokeyboard@duck.com` is the project's contact address | Disposable, meant to be public, and receiving needs no setup |
+| 2026-08-02 | Caregiver accounts on Supabase, **not** a psychologist web portal | See `docs/superpowers/specs/2026-08-02-accounts-and-sync-design.md` |
 
 ---
 
