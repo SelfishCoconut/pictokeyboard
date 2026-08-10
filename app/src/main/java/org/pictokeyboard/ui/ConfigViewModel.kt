@@ -332,6 +332,7 @@ class ConfigViewModel : ViewModel() {
     }
 
     fun setAddSpace(value: Boolean) = viewModelScope.launch { settingsStore.setAddSpaceAfter(value) }
+    fun setHaptics(value: Boolean) = viewModelScope.launch { settingsStore.setHapticFeedback(value) }
     fun setSpeak(value: Boolean) = viewModelScope.launch { settingsStore.setSpeakOnTap(value) }
     fun setTtsRate(value: Float) = viewModelScope.launch { settingsStore.setTtsRate(value) }
     fun setTtsPitch(value: Float) = viewModelScope.launch { settingsStore.setTtsPitch(value) }

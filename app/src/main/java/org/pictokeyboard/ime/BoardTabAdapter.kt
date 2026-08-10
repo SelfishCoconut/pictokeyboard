@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
+import org.pictokeyboard.ime.PressFeedback.confirmPress
 import org.pictokeyboard.ui.theme.CategoryColors
 
 /**
@@ -29,8 +30,11 @@ import org.pictokeyboard.ui.theme.CategoryColors
  * when the caregiver has set a PIN — the PIN protects the board's *contents*, not
  * the choice of which board to speak from.
  */
-class BoardTabAdapter(private val onClick: (BoardEntity) -> Unit) :
-    ListAdapter<BoardTabAdapter.Row, BoardTabAdapter.VH>(DIFF) {
+class BoardTabAdapter(
+    private val onClick: (BoardEntity) -> Unit,
+    /** A supplier for the reason given on [PictoAdapter]. */
+    private val haptics: () -> Boolean = { true },
+) : ListAdapter<BoardTabAdapter.Row, BoardTabAdapter.VH>(DIFF) {
 
     /**
      * One tab as it should be drawn. Selection is folded into the item rather
@@ -95,7 +99,10 @@ class BoardTabAdapter(private val onClick: (BoardEntity) -> Unit) :
                 icon.alpha = if (item.selected) 1f else IDLE_ALPHA
             }
 
-            root.setOnClickListener { onClick(board) }
+            root.setOnClickListener {
+                it.confirmPress(haptics())
+                onClick(board)
+            }
             describeAsTab(item.selected)
         }
 
