@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           # Pinned, not `latest`. Resolving `latest` costs an unauthenticated
           # GitHub API call per job, and with two jobs using the CLI that is
@@ -123,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           # Pinned for the reason given on the database job above.
           version: 2.111.0
@@ -133,7 +133,7 @@ jobs:
       # So the common path does not touch the network at all. The cache is keyed
       # on the test file because that is where the pinned versions live; change a
       # version and the key changes with it, which is the behaviour we want.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/deno
           key: deno-${{ runner.os }}-${{ hashFiles('supabase/tests/functions/*.ts') }}
