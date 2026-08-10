@@ -14,7 +14,21 @@
 // Kept in step with the page by hand -- if the page's calls change, change
 // these. Run:  supabase start && deno run --allow-net --allow-env \
 //   supabase/tests/functions/deletion_page_flow.test.ts
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0'
+//
+// `npm:` rather than the page's own `https://esm.sh/...`, deliberately, and the
+// version is pinned to match it exactly (#111). This file used to import the
+// page's literal specifier, on the reasoning that testing the real URL is
+// stronger than testing an equivalent copy. It is -- but `functions` is a
+// required check, so it also meant a bad minute at esm.sh blocked every open
+// pull request in the repository, including Android-only ones with no Supabase
+// code in them. That happened on #110.
+//
+// The library is byte-for-byte the same package at the same version, so every
+// assertion below covers the same API surface it always did. What the page's
+// actual specifier needs -- proof that *that URL* resolves and exports what the
+// page calls -- is a different question, and it is answered separately by
+// .github/scripts/check-page-imports.sh, which can tell a 404 from a 522.
+import { createClient } from 'npm:@supabase/supabase-js@2.58.0'
 
 const API = Deno.env.get('API')!
 const PUBLISHABLE = Deno.env.get('PUBLISHABLE')!

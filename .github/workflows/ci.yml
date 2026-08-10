@@ -130,6 +130,19 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      # So the common path does not touch the network at all. The cache is keyed
+      # on the test file because that is where the pinned versions live; change a
+      # version and the key changes with it, which is the behaviour we want.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ runner.os }}-${{ hashFiles('supabase/tests/functions/*.ts') }}
+          restore-keys: deno-${{ runner.os }}-
+      # The page's own imports, checked against the CDN it actually uses. Kept
+      # apart from the flow test below so a CDN outage and a broken specifier
+      # produce different messages -- see the script for why that matters.
+      - name: Check the pages' remote imports
+        run: .github/scripts/check-page-imports.sh
       # mailpit is NOT excluded, unlike the other optional services: the web
       # deletion page asks Auth to send a sign-in code, and with no mail server
       # that request fails outright rather than sending nothing. Excluding it
