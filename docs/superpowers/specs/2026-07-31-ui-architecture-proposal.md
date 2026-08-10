@@ -539,6 +539,26 @@ Track A blocks it, and it blocks nothing in Track A. See §12.
 
 **Status:** proposed milestone, several issues. Not a single feature.
 
+> ### Amended 2026-08-10 — simplified to one button
+>
+> The interaction described below was an automatic suggestion chip with a
+> three-way choice, plus an intent row, plus an optional screen-reading service.
+> That is a lot of surface on a keyboard whose argument is that it is simple, so
+> it was cut back to **one Beautify button and one Undo** (#46).
+>
+> | Was | Now |
+> |---|---|
+> | Suggestion generated automatically, chip appears | Nothing runs until Beautify is pressed |
+> | Keep / try again / send as typed | Press applies it; press again cycles variants; Undo restores |
+> | Intent row, five choices (#47) | **Closed** — negation moved into the validator as a hard constraint (#45) |
+> | Read the conversation, `AccessibilityService` (#49) | **Closed** — cost far exceeded the gain |
+> | Privacy and Play declarations for the above (#50) | **Closed** — residue folded into #43, #46 and #48 |
+> | Settings: tone, length, intent toggle, app allowlist | Settings: on/off, model state, delete weights, one privacy sentence |
+>
+> §§12.2–12.3 and 12.8–12.10 below are amended in place. Everything about the
+> model itself — the eval set, selection, the separate process, the validator —
+> is unchanged, and that is most of the milestone.
+
 ### 12.1 What it does
 
 The board produces telegraphic language, because that is what a grid of content
@@ -571,12 +591,21 @@ to read the result to catch it.
 So:
 
 - **The raw words still go into the field the instant a picto is tapped.** Mirror semantics, already decided for the sentence bar, already the right answer. Nothing waits on the model.
-- **The expansion appears as a suggestion chip** and replaces the field only when tapped.
-- **Two or three variants, not one.** Choosing is agency; accepting is not.
-- **The original is always one tap away** after accepting.
+- **Nothing is generated until Beautify is pressed.** The tap is the consent, and it is the only thing that starts a model call. *(Amended: the tap now happens before the user reads the result rather than after. What makes that safe is the validator below, which bounds the worst case to a clumsy rearrangement of the user's own words, plus an Undo that is always one tap away.)*
+- **Two or three variants, not one.** Choosing is agency; accepting is not. Pressing Beautify again cycles them.
+- **The original is always one tap away** after a beautify.
 - **Off by default.** Turning it on is the caregiver's decision, and turning it off is the user's.
 
 ### 12.3 Intent — the bit the grid cannot express
+
+> **Amended 2026-08-10: the intent row is closed (#47). The problem it names is
+> real and is solved differently.** Negation — the half that reverses meaning —
+> is now a hard constraint in the validator (#45): a candidate may not introduce
+> a negator the user did not type, nor drop one they did. That is enforcement
+> rather than an affordance, and unlike a row of buttons it works without anyone
+> tapping anything. Statement-vs-question is left to inference, scored separately
+> in #42, and is one Undo from reversible. The analysis below stands; only the
+> remedy changed.
 
 A picto grid loses two things that change meaning completely, and no amount of
 context recovers them:
@@ -700,6 +729,17 @@ suggestion nobody waits for is dead weight.
 
 ### 12.8 Reading the conversation
 
+> **Amended 2026-08-10: closed, not deferred (#49).** The section below argued
+> this was worth it because #47 had already delivered most of its value with no
+> permission at all, leaving this as an optional enhancement. With #47 closed
+> that argument inverts — this would become the *only* source of context, and so
+> a much larger commitment than the text below assumes. Weighed again on those
+> terms it does not survive: a permission that reads every word on every screen,
+> plus a disclosure flow, an allowlist screen and a riskier Play review, bought
+> against better expansions in a feature that already works on the typed words
+> alone. Reopen only if #42 shows context-free expansion failing badly enough
+> that prompt work cannot fix it — evidence, not appetite, should decide it.
+
 The IME can already see the field it is typing into, via
 `InputConnection.getExtractedText()` — that gives the draft, and in a few apps a
 little more. It cannot see what the *other person* said, which is exactly the
@@ -729,21 +769,29 @@ anything else you need out quickly.
 
 Nowhere new. **The sentence bar from A6 is already the right home:**
 
+Before pressing — one extra button, and nothing else changes:
+
 ```
 ┌────────────────────────────────────────┐
-│ ✨ estoy bien, pero quiero comida   ▸  │  ← suggestion; tap to use, ▸ for more
-├────────────────────────────────────────┤
-│  yo  bien  querer  comida       🔊  ✕  │  ← what they actually typed
+│  yo  bien  querer  comida    ✨  🔊  ✕ │  ← ✨ = Beautify
 ├──┬─────────────────────────────────────┤
 ```
 
-The typed words stay visible underneath. The suggestion never replaces them on
-screen until it is chosen, and after choosing, one tap goes back.
+After pressing — the bar shows the rephrasing, with one way back:
+
+```
+┌────────────────────────────────────────┐
+│  estoy bien y quiero comida  ✨  ↩  🔊 │  ← ✨ again = next variant, ↩ = undo
+├──┬─────────────────────────────────────┤
+```
+
+No second row, no chip, no popup. Beautify is one key in a row that already
+exists, and Undo takes the place of the clear button while a rephrasing is
+showing.
 
 Settings gains one group, **Sentence help**: on/off · model and download state ·
-*read the conversation* with the permission flow · the app allowlist · tone
-(plain / polite) · length (short / natural). Everything else it needs already
-exists.
+delete weights · one plain sentence saying it all happens on the phone.
+Everything else it needs already exists.
 
 ### 12.10 The issues in this milestone
 
@@ -753,15 +801,17 @@ exists.
 | **B2** · #43 | Model selection and quantisation against B1 | |
 | **B3** · #44 | `:llm` process, bound service, on-demand weight download, RAM capability check | |
 | **B4** · #45 | **Content-word validator** and its unit tests | the safety property |
-| **B5** · #46 | Suggestion in the sentence bar — **keep, try again, send as typed** | depends on A6 |
-| **B6** · #47 | **Intent row**, toggleable; guess-only when off | most of B8's value, none of its cost |
-| **B7** · #48 | Settings group, prominent disclosure, off by default | |
-| **B8** · #49 | `AccessibilityService`, per-app allowlist, in-memory-only context | ship after B5–B6 work without it |
-| **B9** · #50 | Privacy policy, Play declarations, store listing | needed before B8 reaches production |
+| **B4** · #45 | **Negation as a hard constraint**, on top of the content-word rule | took over #47's job |
+| **B5** · #46 | **Beautify button** in the sentence bar — press to rephrase, press again to cycle, undo in one tap | depends on A6 |
+| **B6** · #48 | Settings group, off by default | |
+| ~~#47~~ | ~~Intent row~~ | **closed 2026-08-10** — extra surface; negation moved to B4 |
+| ~~#49~~ | ~~`AccessibilityService`, per-app allowlist~~ | **closed 2026-08-10** — cost exceeded the gain |
+| ~~#50~~ | ~~Privacy policy, Play declarations for the above~~ | **closed 2026-08-10** — residue folded into B2, B5, B6 |
 
-B1–B7 deliver a working feature with no special permissions at all. **B8 is a
-separate release.** If it is ever refused by review, everything before it still
-ships.
+The milestone is now **six issues, no special permissions, and one new button.**
+Five of the six are about the model rather than the interface, which is the
+right proportion: the hard part was never the UI, and the UI it ended up needing
+is a single key.
 
 ---
 
