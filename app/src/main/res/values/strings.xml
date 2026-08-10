@@ -210,6 +210,8 @@
 
     <string name="settings_language">Default language</string>
     <string name="settings_add_space">Add a space after each word</string>
+    <string name="settings_haptics">Vibrate when a key is pressed</string>
+    <string name="settings_haptics_hint">A short buzz confirming a tap landed, for someone who cannot see the text field. The phone\'s own vibration setting is respected as well.</string>
     <string name="settings_layout_moved">Columns, rows, captions and frames belong to a board, not to the phone — set them on the board itself, under Layout.</string>
     <string name="settings_speak">Speak each picto aloud</string>
     <string name="settings_tts_rate">Speech rate</string>

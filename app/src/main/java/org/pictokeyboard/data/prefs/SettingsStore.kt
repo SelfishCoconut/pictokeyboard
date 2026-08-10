@@ -41,6 +41,19 @@ data class Settings(
     val hasPin: Boolean = false,
     /** Eyes-free gesture keyboard. Toggled by a two-finger double-tap. */
     val blindMode: Boolean = false,
+    /**
+     * A short buzz confirming that a key was pressed.
+     *
+     * On by default, because for a user who cannot read the text field to check,
+     * touch is the confirmation channel that does not depend on vision or
+     * literacy. It is still a *second* channel — the pressed face carries the
+     * same message — so turning it off loses nothing for a user who can see.
+     *
+     * The system-wide haptic setting is honoured independently of this one: this
+     * turns haptics off for the keyboard alone, without touching a device
+     * setting that may be someone's only feedback everywhere else.
+     */
+    val hapticFeedback: Boolean = true,
 )
 
 /**
@@ -66,6 +79,7 @@ class SettingsStore(private val context: Context) {
             ttsPitch = p[KEY_TTS_PITCH] ?: 1.0f,
             hasPin = p[KEY_PIN_HASH] != null,
             blindMode = p[KEY_BLIND_MODE] ?: false,
+            hapticFeedback = p[KEY_HAPTICS] ?: true,
         )
     }
 
@@ -77,6 +91,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setTtsRate(value: Float) = edit { it[KEY_TTS_RATE] = value.coerceIn(0.5f, 2.0f) }
     suspend fun setTtsPitch(value: Float) = edit { it[KEY_TTS_PITCH] = value.coerceIn(0.5f, 2.0f) }
     suspend fun setBlindMode(value: Boolean) = edit { it[KEY_BLIND_MODE] = value }
+    suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
 
     // --- Layout values inherited from before boards existed ------------------
 
@@ -170,5 +185,6 @@ class SettingsStore(private val context: Context) {
         private val KEY_PIN_HASH = stringPreferencesKey("pin_hash")
         private val KEY_PIN_SALT = stringPreferencesKey("pin_salt")
         private val KEY_BLIND_MODE = booleanPreferencesKey("blind_mode")
+        private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
     }
 }

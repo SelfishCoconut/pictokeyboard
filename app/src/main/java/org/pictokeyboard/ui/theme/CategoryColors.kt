@@ -62,6 +62,19 @@ object CategoryColors {
         return target
     }
 
+    /**
+     * [overlay] composited onto opaque [base], flattened to an opaque colour.
+     *
+     * Needed because the translucent helpers here — [wash], [tintSoft] — are
+     * meant to sit on a *known* surface, and `GradientDrawable` given a
+     * translucent fill lets whatever is behind the view show through instead.
+     * On a picto tile that surface is opaque white even in dark mode, because
+     * ARASAAC art is black line work, so the two must be flattened before they
+     * reach the drawable rather than left to the compositor.
+     */
+    fun over(base: Int, overlay: Int): Int =
+        blend(base, opaque(overlay), ((overlay ushr ALPHA_SHIFT) and BYTE) / MAX_ALPHA)
+
     /** Linear mix of two opaque colours, [amount] of the way from [from] to [to]. */
     private fun blend(from: Int, to: Int, amount: Float): Int {
         fun mix(shift: Int): Int {
@@ -103,6 +116,7 @@ object CategoryColors {
     private const val WHITE = 0xFFFFFFFF.toInt()
 
     // Percentages from the design, as 8-bit alpha: 12% and 6%.
+    private const val MAX_ALPHA = 255f
     private const val TINT_SOFT_ALPHA = 31
     private const val WASH_ALPHA = 15
 }

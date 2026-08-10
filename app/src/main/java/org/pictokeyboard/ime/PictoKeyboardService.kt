@@ -33,6 +33,7 @@ import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.prefs.Settings
+import org.pictokeyboard.ime.PressFeedback.confirmPress
 import org.pictokeyboard.tts.TtsManager
 import org.pictokeyboard.ui.theme.CategoryColors
 
@@ -201,9 +202,18 @@ class PictoKeyboardService : InputMethodService() {
 
     /** The three lists the keyboard draws: boards across, categories down, pictos in the grid. */
     private fun bindLists() {
-        categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected)
-        pictoAdapter = PictoAdapter(onClick = ::onPictoTapped, onLongClick = ::sendPictoAsImage)
-        boardTabAdapter = BoardTabAdapter(onClick = ::onBoardSelected)
+        // `{ settings.hapticFeedback }`, not `settings.hapticFeedback`: the
+        // adapters are built once, here, and the caregiver may turn haptics off
+        // from the app long afterwards while this service is still alive. A
+        // captured Boolean would hold whatever the setting was the last time the
+        // keyboard was created, which for an IME can be days.
+        categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected, haptics = { settings.hapticFeedback })
+        pictoAdapter = PictoAdapter(
+            onClick = ::onPictoTapped,
+            onLongClick = ::sendPictoAsImage,
+            haptics = { settings.hapticFeedback },
+        )
+        boardTabAdapter = BoardTabAdapter(onClick = ::onBoardSelected, haptics = { settings.hapticFeedback })
 
         normalView.findViewById<RecyclerView>(R.id.list_categories).apply {
             layoutManager = LinearLayoutManager(context)
@@ -243,7 +253,10 @@ class PictoKeyboardService : InputMethodService() {
             R.id.key_speak to { speakSentence() },
             R.id.key_clear to { clearSentence() },
         ).forEach { (id, action) ->
-            normalView.findViewById<View>(id).setOnClickListener { action() }
+            normalView.findViewById<View>(id).setOnClickListener {
+                it.confirmPress(settings.hapticFeedback)
+                action()
+            }
         }
     }
 

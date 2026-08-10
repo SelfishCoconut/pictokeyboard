@@ -110,6 +110,7 @@ fun SettingsScreen(
         onOpenAccount = onOpenAccount,
         onLanguage = viewModel::setLanguage,
         onAddSpace = viewModel::setAddSpace,
+        onHaptics = viewModel::setHaptics,
         onSpeak = viewModel::setSpeak,
         onTtsRate = viewModel::setTtsRate,
         onTtsPitch = viewModel::setTtsPitch,
@@ -169,6 +170,7 @@ fun SettingsScreenContent(
     onOpenAccount: () -> Unit,
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
+    onHaptics: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
     onTtsPitch: (Float) -> Unit,
@@ -194,6 +196,7 @@ fun SettingsScreenContent(
                 settings = settings,
                 onLanguage = onLanguage,
                 onAddSpace = onAddSpace,
+                onHaptics = onHaptics,
                 onSpeak = onSpeak,
                 onTtsRate = onTtsRate,
                 onTtsPitch = onTtsPitch,
@@ -234,6 +237,7 @@ private fun SettingsScreenPreview() {
             onOpenAccount = {},
             onLanguage = {},
             onAddSpace = {},
+            onHaptics = {},
             onSpeak = {},
             onTtsRate = {},
             onTtsPitch = {},
@@ -258,6 +262,7 @@ private fun SettingsScreenWithPinPreview() {
             onOpenAccount = {},
             onLanguage = {},
             onAddSpace = {},
+            onHaptics = {},
             onSpeak = {},
             onTtsRate = {},
             onTtsPitch = {},
@@ -326,6 +331,7 @@ private fun ColumnScope.SettingsGroups(
     settings: Settings,
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
+    onHaptics: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
     onTtsPitch: (Float) -> Unit,
@@ -336,7 +342,7 @@ private fun ColumnScope.SettingsGroups(
         LanguageSection(settings.defaultLanguage, onLanguage)
     }
     SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
-        KeyboardSection(settings, onAddSpace)
+        KeyboardSection(settings, onAddSpace, onHaptics)
     }
     SettingsGroup(stringResource(R.string.settings_group_voice)) {
         SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)

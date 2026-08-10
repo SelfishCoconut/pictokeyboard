@@ -1,6 +1,8 @@
 package org.pictokeyboard.ime
 
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
+import android.util.StateSet
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.ui.theme.CategoryColors
 
@@ -77,6 +79,71 @@ object ViewStyles {
             )
         }
 
+    /**
+     * A picto key with a pressed face.
+     *
+     * The action row already answers "did my tap land?" by flipping to the
+     * accent (`drawable/bg_key_recessive.xml`), on the reasoning that for a user
+     * with a tremor or poor motor control a subtle answer is no answer. The grid
+     * — the part anyone actually taps — answered nothing at all.
+     *
+     * It cannot flip the same way. ARASAAC art is black line work on a white
+     * tile, so filling the interior with a saturated hue puts black lines on
+     * midnight blue for half the palette. The pictogram is the content; it stays
+     * legible or the cue is worthless.
+     *
+     * So the press is carried by the **frame**, which is chrome, and by a wash
+     * that is nowhere near the artwork's tonal range:
+     *
+     *  - the stroke thickens to [PRESSED_STROKE_MULTIPLIER]× and goes to the
+     *    hue at full saturation
+     *  - the interior takes a [CategoryColors.wash] of the same hue — 6%, enough
+     *    to read as "lit" beside its neighbours, far too light to fight the art
+     *
+     * Both cues survive greyscale, which the fill-flip alone would not.
+     */
+    fun pressableTile(
+        colorArgb: Int,
+        strokeWidthPx: Int,
+        cornerRadiusPx: Float,
+        fillArgb: Int,
+        borderStyle: String = BorderStyles.SOLID,
+    ): StateListDrawable =
+        StateListDrawable().apply {
+            addState(
+                intArrayOf(android.R.attr.state_pressed),
+                framedTile(
+                    colorArgb = CategoryColors.fill(colorArgb),
+                    strokeWidthPx = strokeWidthPx * PRESSED_STROKE_MULTIPLIER,
+                    cornerRadiusPx = cornerRadiusPx,
+                    fillArgb = CategoryColors.over(fillArgb, CategoryColors.wash(colorArgb)),
+                    borderStyle = borderStyle,
+                ),
+            )
+            addState(
+                StateSet.WILD_CARD,
+                framedTile(colorArgb, strokeWidthPx, cornerRadiusPx, fillArgb, borderStyle),
+            )
+        }
+
+    /** A chip that shows what selecting it would look like, while held. */
+    fun pressableChip(
+        colorArgb: Int,
+        selected: Boolean,
+        backgroundArgb: Int,
+        metrics: ChipMetrics,
+    ): StateListDrawable =
+        StateListDrawable().apply {
+            // The pressed face of an unselected chip is its selected face. The
+            // affordance and the outcome are then the same picture, which is one
+            // less thing to learn.
+            addState(
+                intArrayOf(android.R.attr.state_pressed),
+                categoryChip(colorArgb, selected = true, backgroundArgb, metrics),
+            )
+            addState(StateSet.WILD_CARD, categoryChip(colorArgb, selected, backgroundArgb, metrics))
+        }
+
     /** How a chip is drawn, as opposed to what colour it is. */
     data class ChipMetrics(
         val cornerRadiusPx: Float,
@@ -98,4 +165,12 @@ object ViewStyles {
         }
 
     private const val FLAT = 0f
+
+    /**
+     * How much thicker the frame goes while held. Two is legible at arm's
+     * length without the tile appearing to change size, which a larger jump
+     * does — and an apparent size change on a grid someone is aiming at is a
+     * usability problem rather than feedback.
+     */
+    private const val PRESSED_STROKE_MULTIPLIER = 2
 }

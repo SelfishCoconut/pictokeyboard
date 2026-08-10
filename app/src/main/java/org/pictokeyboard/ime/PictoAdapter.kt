@@ -13,9 +13,18 @@ import coil.load
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BorderStyles
 import org.pictokeyboard.data.db.PictoEntity
+import org.pictokeyboard.ime.PressFeedback.confirmPress
 
-class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLongClick: (PictoEntity) -> Unit = {}) :
-    ListAdapter<PictoAdapter.Tile, PictoAdapter.VH>(DIFF) {
+/**
+ * [haptics] is a supplier rather than a value because the adapter outlives the
+ * setting: it is built once in `onCreateInputView` and the caregiver may toggle
+ * haptics long afterwards, from the app, while the keyboard object still exists.
+ */
+class PictoAdapter(
+    private val onClick: (PictoEntity) -> Unit,
+    private val onLongClick: (PictoEntity) -> Unit = {},
+    private val haptics: () -> Boolean = { true },
+) : ListAdapter<PictoAdapter.Tile, PictoAdapter.VH>(DIFF) {
 
     /**
      * One key as it should be drawn: the picto plus every presentation choice
@@ -93,7 +102,7 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
 
         fun bind(item: Tile) {
             val picto = item.picto
-            tile.background = ViewStyles.framedTile(
+            tile.background = ViewStyles.pressableTile(
                 colorArgb = item.frameColor,
                 strokeWidthPx = dp(item.borderWidthDp),
                 cornerRadiusPx = dp(TILE_CORNER_DP).toFloat(),
@@ -102,6 +111,10 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
                 fillArgb = ContextCompat.getColor(itemView.context, R.color.tile),
                 borderStyle = item.borderStyle,
             )
+            // The drawable reacts to the pressed state of the view that owns it,
+            // and the click listener is on itemView -- so the press has to be
+            // handed down or the frame never lights up.
+            tile.isDuplicateParentStateEnabled = true
 
             val model = item.imageModel
             if (model == null) {
@@ -123,7 +136,10 @@ class PictoAdapter(private val onClick: (PictoEntity) -> Unit, private val onLon
             // -- was an anonymous button to TalkBack.
             itemView.contentDescription = picto.spokenText.ifBlank { picto.label }
 
-            itemView.setOnClickListener { onClick(picto) }
+            itemView.setOnClickListener {
+                it.confirmPress(haptics())
+                onClick(picto)
+            }
             itemView.setOnLongClickListener {
                 onLongClick(picto)
                 true

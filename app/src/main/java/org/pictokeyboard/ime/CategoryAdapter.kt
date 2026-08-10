@@ -1,5 +1,6 @@
 package org.pictokeyboard.ime
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,9 +14,11 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
+import org.pictokeyboard.ime.PressFeedback.confirmPress
 import org.pictokeyboard.ui.theme.CategoryColors
 
-class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
+/** [haptics] is a supplier for the reason given on [PictoAdapter]. */
+class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit, private val haptics: () -> Boolean = { true }) :
     ListAdapter<CategoryAdapter.Row, CategoryAdapter.VH>(DIFF) {
 
     /**
@@ -64,7 +67,7 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
             val selected = item.selected
             name.text = category.name
             val color = category.colorArgb
-            root.background = ViewStyles.categoryChip(
+            root.background = ViewStyles.pressableChip(
                 colorArgb = color,
                 selected = selected,
                 // The chip sits on the spine, which is `paper` -- so that is what
@@ -84,12 +87,25 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
             )
             // A selected chip is flooded with its own hue, so its label has to be
             // chosen against that hue rather than against the keyboard background.
+            //
+            // A state list rather than a colour, because an unselected chip is
+            // flooded too while it is held -- that is its pressed face. Setting
+            // the colour for the resting state alone would put `ink` on a
+            // saturated hue for as long as the finger is down, which for the
+            // darker half of the palette is unreadable at exactly the moment the
+            // user is looking to confirm what they hit.
             name.setTextColor(
-                if (selected) {
-                    CategoryColors.contrastText(color)
-                } else {
-                    ContextCompat.getColor(itemView.context, R.color.ink)
-                },
+                ColorStateList(
+                    arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+                    intArrayOf(
+                        CategoryColors.contrastText(color),
+                        if (selected) {
+                            CategoryColors.contrastText(color)
+                        } else {
+                            ContextCompat.getColor(itemView.context, R.color.ink)
+                        },
+                    ),
+                ),
             )
 
             val iconModel = item.iconModel
@@ -100,7 +116,10 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit) :
                 icon.visibility = View.GONE
             }
 
-            root.setOnClickListener { onClick(category) }
+            root.setOnClickListener {
+                it.confirmPress(haptics())
+                onClick(category)
+            }
         }
 
         private fun dp(value: Int): Int =
