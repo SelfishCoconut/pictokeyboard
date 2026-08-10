@@ -13,9 +13,10 @@ and how to tell it actually worked rather than only looked like it did.
 | 2 | `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` secrets | **done** |
 | 3 | `functions` added to the required checks | **done** — 11 checks now |
 | 4 | Merge #100 and #101 | **done** — the site is live |
-| 5 | **Custom SMTP** | **yours — do this first**, it unblocks 6 |
-| 6 | Magic Link email template | **yours** — blocked by 5, see below |
-| 7 | Play Console answers | **yours** — at listing time |
+| 5 | **Google sign-in for the web page** | **yours — the one thing left**, free, no server |
+| 6 | Custom SMTP | **optional**, see below — no longer blocking |
+| 7 | Magic Link email template | **optional** — needs 6 |
+| 8 | Play Console answers | **yours** — at listing time |
 
 The site is published and all six pages load:
 
@@ -26,11 +27,78 @@ The site is published and all six pages load:
 
 ---
 
-## 5. Custom SMTP — now a prerequisite, not a pre-release chore
+## 5. Google sign-in on the deletion page
 
-**This is a correction.** An earlier version of this document had the email
-template as step 3 and custom SMTP as a "before you publish" item. That order is
-wrong on the free tier.
+**Settled 2026-08-10: this replaces custom SMTP as the thing that has to be
+done.** The web deletion page needs to work for every caregiver, and it very
+nearly does already:
+
+| Account type | How they sign in | Works with the default mailer? |
+|---|---|---|
+| Email + password | password | **Yes** — no email is sent at all |
+| Google | *Continue with Google* | **Yes, once this step is done** — OAuth sends no email |
+
+An account created with *Continue with Google* has no password, so before this
+its only way in was an emailed code — and the built-in mailer only delivers to
+project team addresses. OAuth removes the mailer from the picture entirely.
+
+**None of this needs a server, a domain, or any money.**
+
+### What to do
+
+1. **Google Cloud → APIs & Services → Credentials → Create credentials → OAuth
+   client ID.** Application type must be **Web application**. The app's existing
+   Google sign-in uses an *Android* client through `CredentialManager`; that one
+   cannot be reused, because Google treats the two as different client types.
+2. Under **Authorised JavaScript origins**, add:
+
+   ```
+   https://selfishcoconut.github.io
+   ```
+
+3. Under **Authorised redirect URIs**, add your project's Supabase callback —
+   shown on the Google provider page in the next step, and shaped like
+   `https://<ref>.supabase.co/auth/v1/callback`.
+4. Copy the **Client ID** and **Client secret**.
+5. **Supabase → Authentication → Providers → Google.** Enable it and paste both.
+6. **Supabase → Authentication → URL Configuration → Redirect URLs.** Add:
+
+   ```
+   https://selfishcoconut.github.io/pictokeyboard/**
+   ```
+
+   The wildcard covers the English and Spanish deletion pages in one entry, so a
+   Spanish-speaking caregiver comes back to the page they left rather than an
+   English one.
+
+**Check it worked:** open the deletion page, press *Continue with Google*, sign
+in, and confirm you come back to the same page already signed in, with the
+confirm step showing. Then check the address bar — it must be clean, with no
+`#access_token=` left in it.
+
+---
+
+## 6. Custom SMTP — optional now, and it never meant your own server
+
+**This was previously listed as blocking. It is not.** Step 5 removes the last
+thing that needed a working mailer, so what follows is an improvement rather
+than a prerequisite.
+
+To be clear about the name, because it is misleading: **"custom SMTP" does not
+mean running a mail server.** It means pointing Supabase at somebody else's
+instead of theirs — Gmail's, for instance, using an app password. There is
+nothing to host and nothing to maintain.
+
+### What you would still gain by doing it
+
+- **Password recovery works.** `resetPasswordForEmail` is wired to the account
+  screen and cannot deliver to a non-team address today. A caregiver who signs
+  up with email and password and then forgets it currently has no way back.
+- The *"email me a code"* route on the deletion page starts working for
+  everybody, as a third way in beside password and Google.
+- The email template becomes editable again (see step 7).
+
+None of that blocks a release. All of it is worth having eventually.
 
 On **3 June 2026** Supabase stopped free-tier projects from customising auth
 email templates while sending through the default email service — [their
@@ -114,10 +182,11 @@ needs nothing.
 
 ---
 
-## 6. Make Supabase send a **code**, not just a link
+## 7. Make Supabase send a **code**, not just a link
 
-**Do step 5 first** — on the free tier this page is read-only until custom SMTP
-exists. That is the notice you hit.
+**Only relevant if you do step 6.** On the free tier the template page is
+read-only until custom SMTP exists — that is the notice you hit — and with no
+SMTP the code route is not in use anyway.
 
 **Why it matters.** The web deletion page asks for a **6-digit code**, not a
 link: a code needs no redirect URL allow-listed and cannot strand someone on a
@@ -182,7 +251,7 @@ works for any address, not only project members.
 
 ---
 
-## 7. Play Console — at listing time
+## 8. Play Console — at listing time
 
 The answers are worked out in [`play-data-safety.md`](./play-data-safety.md),
 derived from the code rather than from memory, with the commands that produce

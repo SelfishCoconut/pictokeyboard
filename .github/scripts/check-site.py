@@ -68,6 +68,31 @@ def check_messages() -> None:
             report('messages', page, f'missing message {missing!r}')
 
 
+def check_elements() -> None:
+    """Every id the shared module touches exists on every page that loads it.
+
+    The module is one file serving both languages, and it wires listeners by id
+    at load time. A control present in English and missing in Spanish is not a
+    missing button on the Spanish page -- `$('x').addEventListener` throws, the
+    rest of the module never runs, and *deletion itself* stops working in that
+    language while looking perfectly fine.
+
+    Nothing else would catch it: the page is static, there is no browser in CI,
+    and the flow test drives Supabase rather than the DOM.
+    """
+    needed = set(re.findall(r"\$\('([\w-]+)'\)", MODULE.read_text()))
+    if not needed:
+        report('elements', MODULE, 'no element ids found -- has the module changed shape?')
+        return
+    for page in pages():
+        text = page.read_text()
+        if MODULE.name not in text:
+            continue
+        present = set(re.findall(r'id="([\w-]+)"', text))
+        for missing in sorted(needed - present):
+            report('elements', page, f'the module uses #{missing}, which this page does not have')
+
+
 def check_structure() -> None:
     for page in pages():
         text = page.read_text()
@@ -167,7 +192,7 @@ def main() -> int:
         print('site/ not found -- run this from the repository root', file=sys.stderr)
         return 2
 
-    for check in (check_links, check_messages, check_structure, check_contrast):
+    for check in (check_links, check_messages, check_elements, check_structure, check_contrast):
         check()
 
     if problems:
@@ -177,7 +202,7 @@ def main() -> int:
         return 1
 
     print(f'site/ is clean: {len(pages())} pages checked '
-          '(links, messages, structure, contrast)')
+          '(links, messages, elements, structure, contrast)')
     return 0
 
 

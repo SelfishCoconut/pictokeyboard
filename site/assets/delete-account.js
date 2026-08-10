@@ -54,6 +54,33 @@ function describe(error) {
   }
 }
 
+/**
+ * Sign in with Google, without sending a single email.
+ *
+ * This is the route for an account created with "Continue with Google", which
+ * has no password to type. It used to have only one way in -- a code emailed by
+ * the project's built-in mailer, which delivers to project team addresses only
+ * (#92). For every real caregiver that was a dead end on the one page Play
+ * requires to work.
+ *
+ * OAuth needs no mailer at all, so this page now works for every account type
+ * with the default email settings left exactly as they are.
+ *
+ * `redirectTo` is this page, minus any fragment: the caregiver comes back where
+ * they were, in the language they were reading. Both language URLs have to be
+ * allow-listed in the project -- see docs/owner-setup.md.
+ */
+$('google-btn').addEventListener('click', async () => {
+  say(text.openingGoogle)
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: location.href.split('#')[0].split('?')[0] },
+  })
+  // Only reached if the redirect itself could not be started; on success the
+  // browser has already left this page.
+  if (error) say(describe(error), 'error')
+})
+
 function showConfirm(user) {
   $('signin').hidden = true
   $('verify').hidden = true
@@ -112,6 +139,37 @@ $('verify').addEventListener('submit', async event => {
   showConfirm(data.user)
 })
 
+/**
+ * Pick up the session Google just handed back.
+ *
+ * supabase-js parses the tokens out of the URL fragment as it initialises, so by
+ * the time `getSession` resolves the session exists. The fragment is cleared
+ * afterwards regardless: access tokens in an address bar get copied into
+ * messages, restored from history and read over someone's shoulder, and this
+ * particular session can destroy an account.
+ *
+ * Google can also come back refusing -- a closed consent screen arrives as
+ * `error` in the query string rather than as a thrown error -- and saying
+ * nothing would leave the caregiver looking at a form that appears to have
+ * ignored them.
+ */
+async function resumeAfterRedirect() {
+  const params = new URLSearchParams(location.search)
+  const hash = new URLSearchParams(location.hash.slice(1))
+  const refused = params.get('error') ?? hash.get('error')
+
+  const { data } = await supabase.auth.getSession()
+  if (location.hash || location.search) {
+    history.replaceState(null, '', location.pathname)
+  }
+
+  if (data.session) {
+    showConfirm(data.session.user)
+  } else if (refused) {
+    say(text.googleRefused, 'error')
+  }
+}
+
 $('delete-btn').addEventListener('click', async () => {
   const button = $('delete-btn')
   button.disabled = true
@@ -132,3 +190,5 @@ $('delete-btn').addEventListener('click', async () => {
   $('confirm').hidden = true
   say(text.deleted, 'ok')
 })
+
+resumeAfterRedirect()
