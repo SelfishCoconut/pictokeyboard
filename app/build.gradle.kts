@@ -268,6 +268,9 @@ dependencies {
 
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)
+    // Account deletion is an Edge Function call: removing an auth.users row
+    // needs the secret key, which must never be in the APK. See #83.
+    implementation(libs.supabase.functions)
     // Credential Manager called directly rather than through supabase-kt's
     // compose-auth, which is why that artifact is no longer a dependency: its
     // result type folds a missing Google account into the same "closed by user"

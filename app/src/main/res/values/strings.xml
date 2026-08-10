@@ -382,6 +382,18 @@
     <string name="account_signed_in_as">Signed in as %1$s</string>
     <string name="account_signed_in">Signed in</string>
     <string name="account_sign_out">Sign out</string>
+    <string name="account_delete">Delete my account</string>
+    <string name="account_delete_title">Delete this account?</string>
+    <!-- Leads with what is *not* destroyed. Someone reading "delete" while
+         holding a phone full of their child's vocabulary has every reason to
+         assume the boards go too, and this sentence is the only thing that
+         tells them otherwise. -->
+    <string name="account_delete_body">Every board, photo and recording on this phone stays exactly where it is. This removes the account itself — your email address and display name — and it cannot be undone. Boards you have published stay in the catalogue, without your name on them.</string>
+    <!-- Named as the thing it does, not "OK". A destructive confirmation that
+         says "OK" is one an anxious caregiver can press without reading. -->
+    <string name="account_delete_confirm">Delete the account</string>
+    <string name="account_delete_hint">Want a copy of your boards first? Export everything from Settings, then delete.</string>
+    <string name="account_deleted">That account is gone. Your boards are still on this phone.</string>
     <string name="account_sign_out_note">Your boards stay on this phone. Signing out never deletes anything.</string>
     <string name="account_error_credentials">That email and password do not go together. Check both and try again.</string>
     <string name="account_error_email_not_confirmed">Confirm your email first — there is a link in the message we sent when the account was made.</string>

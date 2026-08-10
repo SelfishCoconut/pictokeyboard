@@ -85,6 +85,17 @@ class AccountViewModel : ViewModel() {
     fun signOut() = run { repo.signOut() }
 
     /**
+     * Deleting the account, confirmed by the screen before it reaches here.
+     *
+     * The success line is not decoration. Deletion drops the app back to the
+     * signed-out screen, which looks exactly like a sign-out, so without it a
+     * caregiver has no way to tell whether the account went — and it is
+     * announced rather than flashed, because a toast that vanishes is no
+     * confirmation at all for someone using TalkBack.
+     */
+    fun deleteAccount() = run(R.string.account_deleted) { repo.deleteAccount() }
+
+    /**
      * Google sign-in, which needs a [Context] because Credential Manager has to
      * put a sheet on screen. It is passed in and never held.
      *
