@@ -52,6 +52,14 @@
     <button type="button" id="code-btn">Email me a code instead</button>
   </form>
 
+  <!--
+    Outside the form on purpose: it is not a way of submitting these fields, it
+    is a different way in entirely, and an account created with Google has no
+    password for the inputs above to carry.
+  -->
+  <p class="muted">Signed up with Google? You have no password — use this.</p>
+  <button type="button" id="google-btn">Continue with Google</button>
+
   <form id="verify" hidden>
     <label for="code">The 6-digit code we emailed you</label>
     <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
@@ -86,7 +94,9 @@
 <script>
   window.PK_MESSAGES = {
     yourAccount: 'your account',
-    noPassword: 'If you signed up with Google there is no password — use “Email me a code instead”.',
+    noPassword: 'If you signed up with Google there is no password — use “Continue with Google”.',
+    openingGoogle: 'Taking you to Google…',
+    googleRefused: 'Google sign-in was cancelled, so nothing has changed. You can try again.',
     signingIn: 'Signing in…',
     emailFirst: 'Enter your email address first.',
     sendingCode: 'Sending a code…',

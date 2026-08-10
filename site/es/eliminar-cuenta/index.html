@@ -53,6 +53,14 @@
     <button type="button" id="code-btn">Enviarme un código por correo</button>
   </form>
 
+  <!--
+    Fuera del formulario a propósito: no es otra forma de enviar estos campos,
+    es otra vía de acceso distinta, y una cuenta creada con Google no tiene
+    contraseña que los campos de arriba puedan llevar.
+  -->
+  <p class="muted">¿Te registraste con Google? No tienes contraseña: usa esto.</p>
+  <button type="button" id="google-btn">Continuar con Google</button>
+
   <form id="verify" hidden>
     <label for="code">El código de 6 dígitos que te hemos enviado</label>
     <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
@@ -87,7 +95,9 @@
 <script>
   window.PK_MESSAGES = {
     yourAccount: 'tu cuenta',
-    noPassword: 'Si te registraste con Google no hay contraseña: usa «Enviarme un código por correo».',
+    noPassword: 'Si te registraste con Google no hay contraseña: usa «Continuar con Google».',
+    openingGoogle: 'Te llevamos a Google…',
+    googleRefused: 'Se ha cancelado el acceso con Google, así que no ha cambiado nada. Puedes intentarlo otra vez.',
     signingIn: 'Iniciando sesión…',
     emailFirst: 'Escribe primero tu correo electrónico.',
     sendingCode: 'Enviando un código…',
