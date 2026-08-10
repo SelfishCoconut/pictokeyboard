@@ -20,12 +20,18 @@ private val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(32.dp),
 )
 
+/**
+ * [highContrast] defaults to off so the ~30 preview call sites keep rendering
+ * the palette a user sees by default. The real value comes from `Settings`, in
+ * `MainActivity`, which is the only place that knows it.
+ */
 @Composable
 fun PictoKeyboardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val tokens = if (darkTheme) DarkTokens else LightTokens
+    val tokens = pictoColors(dark = darkTheme, highContrast = highContrast)
     CompositionLocalProvider(LocalPictoColors provides tokens) {
         MaterialTheme(
             colorScheme = tokens.toColorScheme(darkTheme),

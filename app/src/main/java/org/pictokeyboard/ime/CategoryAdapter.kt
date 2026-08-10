@@ -1,6 +1,7 @@
 package org.pictokeyboard.ime
 
 import android.content.res.ColorStateList
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,9 +18,12 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.ime.PressFeedback.confirmPress
 import org.pictokeyboard.ui.theme.CategoryColors
 
-/** [haptics] is a supplier for the reason given on [PictoAdapter]. */
-class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit, private val haptics: () -> Boolean = { true }) :
-    ListAdapter<CategoryAdapter.Row, CategoryAdapter.VH>(DIFF) {
+/** [haptics] and [palette] are suppliers for the reason given on [PictoAdapter]. */
+class CategoryAdapter(
+    private val onClick: (CategoryEntity) -> Unit,
+    private val haptics: () -> Boolean = { true },
+    private val palette: () -> KeyboardPalette? = { null },
+) : ListAdapter<CategoryAdapter.Row, CategoryAdapter.VH>(DIFF) {
 
     /**
      * One chip as it should be drawn. Selection is folded into the item for the
@@ -67,15 +71,16 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit, private val
             val selected = item.selected
             name.text = category.name
             val color = category.colorArgb
+            val skin = palette()
             root.background = ViewStyles.pressableChip(
                 colorArgb = color,
                 selected = selected,
                 // The chip sits on the spine, which is `paper` -- so that is what
                 // its outline has to stay visible against.
-                backgroundArgb = ContextCompat.getColor(itemView.context, R.color.paper),
+                backgroundArgb = skin?.paper ?: ContextCompat.getColor(itemView.context, R.color.paper),
                 metrics = ViewStyles.ChipMetrics(
                     cornerRadiusPx = dp(CHIP_CORNER_DP).toFloat(),
-                    strokeWidthPx = dp(category.borderWidthDp),
+                    strokeWidthPx = skin?.strokeWidth(dp(category.borderWidthDp)) ?: dp(category.borderWidthDp),
                     borderStyle = category.borderStyle,
                     // Read from the configuration, not the view: onBindViewHolder
                     // runs before the item is attached, so View.getLayoutDirection()
@@ -102,11 +107,13 @@ class CategoryAdapter(private val onClick: (CategoryEntity) -> Unit, private val
                         if (selected) {
                             CategoryColors.contrastText(color)
                         } else {
-                            ContextCompat.getColor(itemView.context, R.color.ink)
+                            skin?.ink ?: ContextCompat.getColor(itemView.context, R.color.ink)
                         },
                     ),
                 ),
             )
+
+            name.typeface = if (skin?.highContrast == true) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
 
             val iconModel = item.iconModel
             if (iconModel != null) {

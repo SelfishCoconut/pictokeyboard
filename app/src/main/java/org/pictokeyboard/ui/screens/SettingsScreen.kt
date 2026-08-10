@@ -111,6 +111,7 @@ fun SettingsScreen(
         onLanguage = viewModel::setLanguage,
         onAddSpace = viewModel::setAddSpace,
         onHaptics = viewModel::setHaptics,
+        onHighContrast = viewModel::setHighContrast,
         onSpeak = viewModel::setSpeak,
         onTtsRate = viewModel::setTtsRate,
         onTtsPitch = viewModel::setTtsPitch,
@@ -171,6 +172,7 @@ fun SettingsScreenContent(
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
     onHaptics: (Boolean) -> Unit,
+    onHighContrast: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
     onTtsPitch: (Float) -> Unit,
@@ -197,6 +199,7 @@ fun SettingsScreenContent(
                 onLanguage = onLanguage,
                 onAddSpace = onAddSpace,
                 onHaptics = onHaptics,
+                onHighContrast = onHighContrast,
                 onSpeak = onSpeak,
                 onTtsRate = onTtsRate,
                 onTtsPitch = onTtsPitch,
@@ -238,6 +241,7 @@ private fun SettingsScreenPreview() {
             onLanguage = {},
             onAddSpace = {},
             onHaptics = {},
+            onHighContrast = {},
             onSpeak = {},
             onTtsRate = {},
             onTtsPitch = {},
@@ -263,6 +267,7 @@ private fun SettingsScreenWithPinPreview() {
             onLanguage = {},
             onAddSpace = {},
             onHaptics = {},
+            onHighContrast = {},
             onSpeak = {},
             onTtsRate = {},
             onTtsPitch = {},
@@ -332,6 +337,7 @@ private fun ColumnScope.SettingsGroups(
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
     onHaptics: (Boolean) -> Unit,
+    onHighContrast: (Boolean) -> Unit,
     onSpeak: (Boolean) -> Unit,
     onTtsRate: (Float) -> Unit,
     onTtsPitch: (Float) -> Unit,
@@ -342,7 +348,7 @@ private fun ColumnScope.SettingsGroups(
         LanguageSection(settings.defaultLanguage, onLanguage)
     }
     SettingsGroup(stringResource(R.string.settings_group_keyboard)) {
-        KeyboardSection(settings, onAddSpace, onHaptics)
+        KeyboardSection(settings, onAddSpace, onHaptics, onHighContrast)
     }
     SettingsGroup(stringResource(R.string.settings_group_voice)) {
         SpeechSection(settings, onSpeak, onTtsRate, onTtsPitch)

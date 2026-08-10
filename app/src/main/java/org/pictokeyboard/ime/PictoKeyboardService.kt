@@ -1,6 +1,7 @@
 package org.pictokeyboard.ime
 
 import android.content.Context
+import android.graphics.Typeface
 import android.inputmethodservice.InputMethodService
 import android.util.Log
 import android.view.KeyEvent
@@ -90,6 +91,9 @@ class PictoKeyboardService : InputMethodService() {
     private var selectedCategoryId: String? = null
     private var pictoJob: Job? = null
     private var settings: Settings = Settings()
+
+    /** Rebuilt whenever settings or the night configuration change. */
+    private var palette: KeyboardPalette? = null
 
     /**
      * The board in use, and the source of every layout value the grid needs.
@@ -207,13 +211,22 @@ class PictoKeyboardService : InputMethodService() {
         // from the app long afterwards while this service is still alive. A
         // captured Boolean would hold whatever the setting was the last time the
         // keyboard was created, which for an IME can be days.
-        categoryAdapter = CategoryAdapter(onClick = ::onCategorySelected, haptics = { settings.hapticFeedback })
+        categoryAdapter = CategoryAdapter(
+            onClick = ::onCategorySelected,
+            haptics = { settings.hapticFeedback },
+            palette = { palette },
+        )
         pictoAdapter = PictoAdapter(
             onClick = ::onPictoTapped,
             onLongClick = ::sendPictoAsImage,
             haptics = { settings.hapticFeedback },
+            palette = { palette },
         )
-        boardTabAdapter = BoardTabAdapter(onClick = ::onBoardSelected, haptics = { settings.hapticFeedback })
+        boardTabAdapter = BoardTabAdapter(
+            onClick = ::onBoardSelected,
+            haptics = { settings.hapticFeedback },
+            palette = { palette },
+        )
 
         normalView.findViewById<RecyclerView>(R.id.list_categories).apply {
             layoutManager = LinearLayoutManager(context)
@@ -258,6 +271,53 @@ class PictoKeyboardService : InputMethodService() {
                 action()
             }
         }
+    }
+
+    /**
+     * Repaints the chrome the layout could not, for the current settings (#109).
+     *
+     * Everything the caregiver's own choices already drive -- tile frames,
+     * category hues -- is painted by the adapters from the same palette. What is
+     * left is the surface the layout hard-codes to `@color/...`: the keyboard's
+     * own background, its rules, the sentence bar and the keys.
+     *
+     * Done here rather than by swapping a theme because an IME's input view is
+     * created once and reused across every app the user types in. A theme
+     * overlay needs the hierarchy rebuilt, which could mean the setting the user
+     * just changed does not take effect until they unlock the phone somewhere
+     * else -- and the user changing this one is the least able to tolerate that.
+     */
+    private fun applyPalette() {
+        if (!::normalView.isInitialized) return
+        val skin = KeyboardPalette.of(normalView.context, settings.highContrast)
+        palette = skin
+
+        normalView.setBackgroundColor(skin.paper)
+        normalView.findViewById<View>(R.id.sentence_bar)?.setBackgroundColor(skin.paper)
+        normalView.findViewById<TextView>(R.id.sentence_text)?.apply {
+            setTextColor(skin.ink)
+            typeface = if (skin.highContrast) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+        }
+        normalView.findViewById<TextView>(R.id.empty_hint)?.setTextColor(skin.inkSoft)
+
+        // The two hairlines. `line` is decorative by design and becomes `ink` in
+        // high contrast, which is the point: a divider nobody needs to see
+        // becomes one that anybody can.
+        listOf(R.id.list_boards, R.id.keyboard_body).forEach { id ->
+            normalView.findViewById<View>(id)?.let { view ->
+                if (view.background is android.graphics.drawable.ColorDrawable) {
+                    view.setBackgroundColor(skin.paper)
+                }
+            }
+        }
+
+        ViewStyles.applyKeyColors(normalView, skin)
+
+        // The grid and spine are already bound; their rows must repaint with the
+        // new stroke widths and label weights rather than waiting for a scroll.
+        pictoAdapter.notifyDataSetChanged()
+        categoryAdapter.notifyDataSetChanged()
+        boardTabAdapter.notifyDataSetChanged()
     }
 
     /** Points [uiContext] at [language]. */
@@ -309,6 +369,7 @@ class PictoKeyboardService : InputMethodService() {
             // one-shot read racing that collector is how the grid ends up drawn
             // for one board and washed in another's colour.
             tts.setParams(settings.ttsRate, settings.ttsPitch)
+            applyPalette()
             // onCreateInputView is gated on onEvaluateInputViewShown() and this
             // is gated on mShowInputRequested -- different conditions, so with a
             // hardware keyboard attached you can reach onStartInputView with no

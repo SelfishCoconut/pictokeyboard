@@ -90,13 +90,25 @@ internal fun LanguageSection(language: String, onLanguage: (String) -> Unit) {
  * writes, in every board — so it stays.
  */
 @Composable
-internal fun KeyboardSection(settings: Settings, onAddSpace: (Boolean) -> Unit, onHaptics: (Boolean) -> Unit) {
+internal fun KeyboardSection(
+    settings: Settings,
+    onAddSpace: (Boolean) -> Unit,
+    onHaptics: (Boolean) -> Unit,
+    onHighContrast: (Boolean) -> Unit,
+) {
     SwitchRow(stringResource(R.string.settings_add_space), settings.addSpaceAfter, onAddSpace)
     // Global for the same reason: it is about how this person receives
     // confirmation, in every board.
     SwitchRow(stringResource(R.string.settings_haptics), settings.hapticFeedback, onHaptics)
     Text(
         stringResource(R.string.settings_haptics_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    // Reaches the keyboard too, which is the point -- see Tokens.kt.
+    SwitchRow(stringResource(R.string.settings_high_contrast), settings.highContrast, onHighContrast)
+    Text(
+        stringResource(R.string.settings_high_contrast_hint),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

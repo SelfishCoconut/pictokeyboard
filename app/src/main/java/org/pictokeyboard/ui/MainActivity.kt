@@ -42,6 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
+import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.screens.AboutScreen
 import org.pictokeyboard.ui.screens.AccountScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
@@ -107,16 +108,20 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            PictoKeyboardTheme {
-                ConfigApp(viewModel)
+            // Collected here rather than inside ConfigApp: the theme needs
+            // `highContrast` and sits above it, and collecting the same flow
+            // twice would give the palette and the content separate snapshots
+            // to disagree over for a frame.
+            val settings by viewModel.settings.collectAsStateWithLifecycle()
+            PictoKeyboardTheme(highContrast = settings.highContrast) {
+                ConfigApp(viewModel, settings)
             }
         }
     }
 }
 
 @Composable
-private fun ConfigApp(viewModel: ConfigViewModel) {
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
+private fun ConfigApp(viewModel: ConfigViewModel, settings: Settings) {
     ApplyAppLocale(settings.defaultLanguage)
     AppNavigation(viewModel, settings)
 }

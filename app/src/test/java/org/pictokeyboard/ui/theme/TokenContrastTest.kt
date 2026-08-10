@@ -21,6 +21,14 @@ import org.pictokeyboard.ui.screens.CategoryPalette
  */
 class TokenContrastTest {
 
+    /** Every palette the app can be in. New schemes join the invariants here. */
+    private val allSchemes = listOf(
+        "light" to LightTokens,
+        "dark" to DarkTokens,
+        "high contrast light" to HighContrastLightTokens,
+        "high contrast dark" to HighContrastDarkTokens,
+    )
+
     private fun ratio(foreground: Color, background: Color): Double =
         Wcag.contrastRatio(foreground.toArgb(), background.toArgb())
 
@@ -59,6 +67,60 @@ class TokenContrastTest {
         assertSchemeIsReadable("dark", DarkTokens)
     }
 
+    @Test
+    fun `the high contrast schemes are readable`() {
+        assertSchemeIsReadable("high contrast light", HighContrastLightTokens)
+        assertSchemeIsReadable("high contrast dark", HighContrastDarkTokens)
+    }
+
+    /**
+     * The point of the mode, stated as an assertion rather than a hope: turning
+     * it on may not make **any** pair worse than the palette it replaces.
+     *
+     * Easy to break without noticing. A "high contrast" red picked for looking
+     * serious, or a card colour nudged for depth, can quietly land below the
+     * scheme it is supposed to improve on — and the user who turned this on is
+     * the one least able to tell.
+     */
+    @Test
+    fun `high contrast never loses contrast against the scheme it replaces`() {
+        listOf(
+            Triple("light", LightTokens, HighContrastLightTokens),
+            Triple("dark", DarkTokens, HighContrastDarkTokens),
+        ).forEach { (scheme, normal, hc) ->
+            fun compare(pair: String, fg: (PictoColors) -> Color, bg: (PictoColors) -> Color) {
+                val before = ratio(fg(normal), bg(normal))
+                val after = ratio(fg(hc), bg(hc))
+                assertTrue(
+                    "$scheme $pair got worse in high contrast: %.2f:1 -> %.2f:1".format(before, after),
+                    after >= before,
+                )
+            }
+            compare("ink on paper", { it.ink }, { it.paper })
+            compare("inkSoft on paper", { it.inkSoft }, { it.paper })
+            compare("ink on card", { it.ink }, { it.card })
+            compare("inkSoft on card", { it.inkSoft }, { it.card })
+            compare("lineStrong on paper", { it.lineStrong }, { it.paper })
+            compare("line on paper", { it.line }, { it.paper })
+            compare("accent on paper", { it.accent }, { it.paper })
+            compare("danger on paper", { it.danger }, { it.paper })
+            compare("onAccent on accent", { it.onAccent }, { it.accent })
+            compare("onDanger on danger", { it.onDanger }, { it.danger })
+        }
+    }
+
+    /**
+     * `paper` and `ink` going *pure* is the headline promise of the mode, and it
+     * is the one a later "let's warm it up slightly" would silently undo.
+     */
+    @Test
+    fun `high contrast paper and ink are pure`() {
+        assertEquals(Color.White, HighContrastLightTokens.paper)
+        assertEquals(Color.Black, HighContrastLightTokens.ink)
+        assertEquals(Color.Black, HighContrastDarkTokens.paper)
+        assertEquals(Color.White, HighContrastDarkTokens.ink)
+    }
+
     /**
      * Picto tiles stay white in dark mode because ARASAAC artwork is black line
      * work. That makes the *content* colour on a tile scheme-invariant too: the
@@ -66,17 +128,32 @@ class TokenContrastTest {
      * the pair the design's own table omitted.
      */
     @Test
-    fun `tile content is readable in both schemes`() {
-        listOf("light" to LightTokens, "dark" to DarkTokens).forEach { (scheme, c) ->
+    fun `tile content is readable in every scheme`() {
+        allSchemes.forEach { (scheme, c) ->
             assertReadable("$scheme onTile on tile", c.onTile, c.tile, Wcag.BODY_TEXT)
             assertReadable("$scheme onTileSoft on tile", c.onTileSoft, c.tile, Wcag.BODY_TEXT)
         }
     }
 
+    /**
+     * High contrast must not reach the tile. It is the one surface whose colour
+     * is a legibility constraint rather than a contrast budget: darkening it to
+     * "improve contrast" would destroy the black line art it exists to carry,
+     * which is the opposite of what the person turning this on wants.
+     */
     @Test
-    fun `the tile stays white in both schemes`() {
-        assertEquals(Color.White, LightTokens.tile)
-        assertEquals(Color.White, DarkTokens.tile)
+    fun `the tile stays white in every scheme`() {
+        allSchemes.forEach { (scheme, c) ->
+            assertEquals("$scheme tile", Color.White, c.tile)
+        }
+    }
+
+    @Test
+    fun `pictoColors picks the palette its arguments describe`() {
+        assertEquals(LightTokens, pictoColors(dark = false, highContrast = false))
+        assertEquals(DarkTokens, pictoColors(dark = true, highContrast = false))
+        assertEquals(HighContrastLightTokens, pictoColors(dark = false, highContrast = true))
+        assertEquals(HighContrastDarkTokens, pictoColors(dark = true, highContrast = true))
     }
 
     /**

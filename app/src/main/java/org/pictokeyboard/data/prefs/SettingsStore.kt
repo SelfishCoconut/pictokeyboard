@@ -54,6 +54,14 @@ data class Settings(
      * setting that may be someone's only feedback everywhere else.
      */
     val hapticFeedback: Boolean = true,
+    /**
+     * Withdraws every contrast concession the palette makes (#109).
+     *
+     * Off by default: the soft palette is the right default and this is the
+     * right option, not the other way round. It reaches the keyboard as well as
+     * the app, because the person who needs it is holding the keyboard.
+     */
+    val highContrast: Boolean = false,
 )
 
 /**
@@ -80,6 +88,7 @@ class SettingsStore(private val context: Context) {
             hasPin = p[KEY_PIN_HASH] != null,
             blindMode = p[KEY_BLIND_MODE] ?: false,
             hapticFeedback = p[KEY_HAPTICS] ?: true,
+            highContrast = p[KEY_HIGH_CONTRAST] ?: false,
         )
     }
 
@@ -92,6 +101,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setTtsPitch(value: Float) = edit { it[KEY_TTS_PITCH] = value.coerceIn(0.5f, 2.0f) }
     suspend fun setBlindMode(value: Boolean) = edit { it[KEY_BLIND_MODE] = value }
     suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
+    suspend fun setHighContrast(value: Boolean) = edit { it[KEY_HIGH_CONTRAST] = value }
 
     // --- Layout values inherited from before boards existed ------------------
 
@@ -186,5 +196,6 @@ class SettingsStore(private val context: Context) {
         private val KEY_PIN_SALT = stringPreferencesKey("pin_salt")
         private val KEY_BLIND_MODE = booleanPreferencesKey("blind_mode")
         private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
+        private val KEY_HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
     }
 }

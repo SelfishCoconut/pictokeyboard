@@ -116,6 +116,95 @@ internal val DarkTokens = PictoColors(
 )
 
 /**
+ * The same roles, with every contrast concession withdrawn (#109).
+ *
+ * The default palette is deliberately soft — a warm off-white `paper`, a `line`
+ * at 1.19:1, an `inkSoft` for supporting copy. Each of those trades contrast for
+ * calm, which is the right default and the wrong only option. The users here
+ * have a markedly higher rate of co-occurring visual impairment than the general
+ * population, and until now the answer to "I cannot see this" was to change
+ * nothing.
+ *
+ * Three rules, applied without exception:
+ *
+ *  - **`paper` and `ink` go pure.** White and black, not near-white and
+ *    near-black, so every text pair on chrome sits at the maximum 21:1.
+ *  - **`line` becomes `ink`.** The decorative/structural split is a luxury of a
+ *    palette that can afford a hairline nobody needs to see. Here everything
+ *    that bounds anything is at full strength.
+ *  - **The `*Soft` tokens collapse into their full-strength siblings.** A
+ *    secondary text colour *is* a contrast concession; there is nothing to
+ *    soften it for.
+ *
+ * `tile` and `onTile` are the exception, and stay exactly as they are — they
+ * are already pure white and near-black, and they are scheme-invariant for the
+ * reason given on [PictoColors.tile]. Nothing here may darken a tile.
+ */
+internal val HighContrastLightTokens = PictoColors(
+    paper = Color(0xFFFFFFFF),
+    card = Color(0xFFFFFFFF),
+    tile = Color(0xFFFFFFFF),
+    onTile = Color(0xFF000000),
+    onTileSoft = Color(0xFF000000),
+    ink = Color(0xFF000000),
+    inkSoft = Color(0xFF000000),
+    line = Color(0xFF000000),
+    lineStrong = Color(0xFF000000),
+    accent = Color(0xFF000000),
+    onAccent = Color(0xFFFFFFFF),
+    // Still recognisably red -- "destructive" is carried by hue as well as by
+    // words, and deleting a board is not a place to drop a channel. Dark enough
+    // to clear body text on pure white by a wide margin.
+    danger = Color(0xFF8B0000),
+    onDanger = Color(0xFFFFFFFF),
+    isDark = false,
+)
+
+internal val HighContrastDarkTokens = PictoColors(
+    paper = Color(0xFF000000),
+    card = Color(0xFF000000),
+    // White on black chrome, exactly as in every other scheme. See the KDoc.
+    tile = Color(0xFFFFFFFF),
+    onTile = Color(0xFF000000),
+    onTileSoft = Color(0xFF000000),
+    ink = Color(0xFFFFFFFF),
+    inkSoft = Color(0xFFFFFFFF),
+    line = Color(0xFFFFFFFF),
+    lineStrong = Color(0xFFFFFFFF),
+    accent = Color(0xFFFFFFFF),
+    onAccent = Color(0xFF000000),
+    // Unchanged from the dark scheme, and that is the right answer rather than a
+    // missed edit. A darker, more "serious" red was tried first and the
+    // regression test caught it going 10.93:1 -> 9.20:1 -- high contrast making
+    // a pair *worse*, which is the one thing this mode may never do. The gain
+    // here comes from `paper` going pure black underneath it (10.93:1 -> 12.37:1),
+    // not from restyling a colour that was already the lightest red still
+    // reading as red.
+    danger = Color(0xFFFFB4AB),
+    onDanger = Color(0xFF000000),
+    isDark = true,
+)
+
+/** The four palettes, chosen by scheme and by whether high contrast is on. */
+fun pictoColors(dark: Boolean, highContrast: Boolean): PictoColors = when {
+    highContrast && dark -> HighContrastDarkTokens
+    highContrast -> HighContrastLightTokens
+    dark -> DarkTokens
+    else -> LightTokens
+}
+
+/**
+ * How much wider frames are drawn in high contrast.
+ *
+ * A category frame is an outline, and an outline that clears 3:1 can still be
+ * hard to see at 1dp for someone with low acuity — contrast and *size* are
+ * separate axes, and WCAG only speaks to the first. The caregiver's chosen width
+ * is multiplied rather than replaced, so a board set to a deliberate 8dp frame
+ * stays proportionally bolder than one at 2dp.
+ */
+const val HIGH_CONTRAST_STROKE_SCALE = 1.5f
+
+/**
  * The tokens with no Material 3 equivalent — [PictoColors.tile] and its content
  * colours. Everything that *does* map is also published through
  * `MaterialTheme.colorScheme`, so stock Material components inherit the palette

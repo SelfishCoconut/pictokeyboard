@@ -34,6 +34,7 @@ class BoardTabAdapter(
     private val onClick: (BoardEntity) -> Unit,
     /** A supplier for the reason given on [PictoAdapter]. */
     private val haptics: () -> Boolean = { true },
+    private val palette: () -> KeyboardPalette? = { null },
 ) : ListAdapter<BoardTabAdapter.Row, BoardTabAdapter.VH>(DIFF) {
 
     /**
@@ -65,7 +66,8 @@ class BoardTabAdapter(
         fun bind(item: Row) {
             val board = item.board
             val context = itemView.context
-            val paper = ContextCompat.getColor(context, R.color.paper)
+            val skin = palette()
+            val paper = skin?.paper ?: ContextCompat.getColor(context, R.color.paper)
             name.text = board.name
 
             // 3dp on the active tab, 1dp and faded on the rest. Thickness
@@ -89,7 +91,11 @@ class BoardTabAdapter(
             // inactive tab drawn on it would read as the raised one.
             root.setBackgroundColor(if (item.selected) paper else Color.TRANSPARENT)
             name.setTextColor(
-                ContextCompat.getColor(context, if (item.selected) R.color.ink else R.color.ink_soft),
+                if (item.selected) {
+                    skin?.ink ?: ContextCompat.getColor(context, R.color.ink)
+                } else {
+                    skin?.inkSoft ?: ContextCompat.getColor(context, R.color.ink_soft)
+                },
             )
 
             val model = item.iconModel
