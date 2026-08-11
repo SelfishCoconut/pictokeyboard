@@ -39,6 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.pictokeyboard.R
+import org.pictokeyboard.data.prefs.AppLanguages
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.screens.AboutScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
@@ -159,7 +160,10 @@ private fun ApplyAppLocale(language: String) {
 @Composable
 private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboard.data.prefs.Settings) {
     val board by viewModel.activeBoard.collectAsStateWithLifecycle()
-    val boardLanguage = board?.language ?: "es"
+    // Only until the active board arrives; a real board always names its own
+    // language. Falls back to the phone's rather than to Spanish for the same
+    // reason the seed does (#137).
+    val boardLanguage = board?.language ?: AppLanguages.systemDefault()
     var unlocked by remember { mutableStateOf(false) }
 
     if (settings.hasPin && !unlocked) {
