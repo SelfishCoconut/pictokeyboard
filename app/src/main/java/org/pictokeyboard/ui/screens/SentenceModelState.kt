@@ -15,4 +15,6 @@ data class SentenceModelState(
     val installed: Boolean = false,
     val download: DownloadState = DownloadState.Idle,
     val bytesOnDisk: Long = 0,
+    /** True while the model is being timed on this phone (#145). */
+    val benchmarking: Boolean = false,
 )

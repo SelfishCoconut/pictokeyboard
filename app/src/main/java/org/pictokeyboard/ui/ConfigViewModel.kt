@@ -24,10 +24,12 @@ import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
+import org.pictokeyboard.sentence.BenchmarkResult
 import org.pictokeyboard.sentence.DeviceCapability
 import org.pictokeyboard.sentence.DownloadState
 import org.pictokeyboard.sentence.ModelDownloader
 import org.pictokeyboard.sentence.ModelStore
+import org.pictokeyboard.sentence.SentenceBenchmark
 import org.pictokeyboard.ui.screens.SentenceModelState
 import java.io.InputStream
 import java.io.OutputStream
@@ -95,7 +97,35 @@ class ConfigViewModel : ViewModel() {
                     installed = state is DownloadState.Done,
                     bytesOnDisk = modelStore.bytesOnDisk(),
                 )
+                // Timed the moment there is something to time, so the caregiver
+                // finds out whether this phone is fast enough before they hand
+                // it to somebody rather than by watching them wait (#145).
+                if (state is DownloadState.Done) benchmarkModel()
             }
+        }
+    }
+
+    /**
+     * Runs the model once and records how long it took (#145).
+     *
+     * Offered again as a button, because a first run that landed while the phone
+     * was busy installing something else is a number worth being able to
+     * disbelieve. A run in progress is never started twice.
+     */
+    fun benchmarkModel() {
+        if (_sentenceModel.value.benchmarking || !modelStore.isDownloaded()) return
+        viewModelScope.launch {
+            _sentenceModel.value = _sentenceModel.value.copy(benchmarking = true)
+            val language = settingsStore.current().defaultLanguage
+            val result = SentenceBenchmark(locator.appContext).run(language)
+            // A failure is recorded as a zero rather than left blank: "we tried
+            // and it did not finish" is a different sentence from "never
+            // tried", and settings says both.
+            settingsStore.setSentenceSpeed(
+                loadMillis = (result as? BenchmarkResult.Measured)?.loadMillis?.toInt() ?: 0,
+                generateMillis = (result as? BenchmarkResult.Measured)?.generateMillis?.toInt() ?: 0,
+            )
+            _sentenceModel.value = _sentenceModel.value.copy(benchmarking = false)
         }
     }
 
@@ -116,6 +146,9 @@ class ConfigViewModel : ViewModel() {
         cancelModelDownload()
         modelStore.delete()
         settingsStore.setSentenceHelp(false)
+        // The measurement described weights that are no longer here, and a
+        // second download may well be a different build.
+        settingsStore.clearSentenceSpeed()
         _sentenceModel.value = readSentenceModel()
     }
 

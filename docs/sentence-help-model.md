@@ -110,6 +110,31 @@ redistribution. The app does not redistribute the weights — it downloads them
 from the publisher — but it does name the model, and Settings → About carries
 the model name, its source and its licence.
 
+## Speed, measured on the phone rather than assumed
+
+`DeviceCapability` checks a processor, some memory and some free disk, and none
+of those is speed. A phone can clear all three and still take eight seconds to
+produce a sentence — and eight seconds mid-conversation is not a feature, it is a
+person waiting while somebody else fills the silence.
+
+So `SentenceBenchmark` (#145) runs the model once on a fixed short phrase as soon
+as the download verifies, and Settings shows what it found:
+
+- **how long one sentence took**, with the weights already warm. This is the
+  figure #44's two-second budget is about, and the one paid every time.
+- **how long loading took**, paid once per keyboard session by the first sentence.
+- whether the run finished at all. *"The test did not finish"* is a different
+  sentence from *"this phone is slow"*, and they ask for different things. A
+  failed run is stored as a zero and said differently.
+
+**The number never disables anything.** A phone over the budget is told, not
+refused: a caregiver whose child has no other way to build a sentence may well
+decide four seconds is worth it, and that decision is not the app's to make.
+
+The feature is also labelled experimental where it is switched on. It was already
+off by default; what was missing was the sentence saying that this is new, that
+it may be slow, and that turning it off costs nothing.
+
 ## Still open
 
 - **#42 has not been built.** There is no eval set and no measured score for this
@@ -117,5 +142,11 @@ the model name, its source and its licence.
   licensing, availability and size — all of which are facts — plus a prediction
   about quality, which is not. The prompt is versioned so that when #42 exists,
   its scores have something to attach to.
-- Latency has not been measured on a mid-range device against #44's budget
-  (first token under 500 ms, full sentence under 2 s).
+  **#145 measures speed, not quality.** A candidate the validator throws away
+  still counts towards the timing, because the phone took exactly as long either
+  way. The two questions are deliberately separate.
+- No run against the real weights has happened yet on hardware anybody would use.
+  The benchmark's *failure* path is exercised end to end — a deliberately corrupt
+  347 MB file produces `INVALID_ARGUMENT: Invalid magic number`, `LiteRtEngine`
+  returns false rather than taking the process with it, and Settings says the test
+  did not finish — but no real number has been produced by this code yet.

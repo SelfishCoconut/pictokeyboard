@@ -432,6 +432,15 @@
     <string name="settings_sentence_no_memory">Este móvil no tiene memoria suficiente para ejecutar el modelo de frases.</string>
     <string name="settings_sentence_no_storage">No hay espacio suficiente para el modelo de frases. Necesita unos %1$d MB.</string>
 
+    <!-- Medirlo en el móvil en el que va a funcionar (#145) -->
+    <string name="settings_sentence_experimental">Experimental. Es nuevo y en algunos móviles va lento. Desactivarlo no cuesta nada, y el modelo se puede borrar para recuperar el espacio.</string>
+    <string name="settings_sentence_speed">Medido en este móvil: unos %1$s segundos por frase.</string>
+    <string name="settings_sentence_speed_slow">Más lento de lo que debería ser esta función, que son menos de 2 segundos. Sigue funcionando, pero alguien va a estar esperando.</string>
+    <string name="settings_sentence_speed_first">La primera frase después de abrir el teclado tarda unos %1$s segundos más, mientras se carga el modelo.</string>
+    <string name="settings_sentence_speed_failed">La prueba no ha terminado. Eso no es lo mismo que este móvil sea lento: inténtalo otra vez.</string>
+    <string name="settings_sentence_test">Medirlo en este móvil</string>
+    <string name="settings_sentence_testing">Midiendo…</string>
+
     <!-- Pedir ayuda (#144) -->
     <string name="settings_group_assistance">Pedir ayuda</string>
     <string name="settings_assistance_desc">Pone en el teclado una campana roja que llama a un número. Si lo dejas vacío, no hay campana.</string>

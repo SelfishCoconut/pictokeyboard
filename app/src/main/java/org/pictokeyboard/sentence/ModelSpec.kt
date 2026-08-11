@@ -80,4 +80,10 @@ object ModelSpec {
      * somebody waits mid-conversation.
      */
     const val MAX_ATTEMPTS = 3
+
+    /**
+     * #44's budget for a full sentence, and the line [SentenceBenchmark] reports
+     * against. Not enforced anywhere: a phone over it is told, not refused.
+     */
+    const val BUDGET_MILLIS = 2_000
 }

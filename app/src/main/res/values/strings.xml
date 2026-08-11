@@ -450,6 +450,15 @@
     <string name="settings_sentence_no_memory">This phone does not have enough memory to run the sentence model.</string>
     <string name="settings_sentence_no_storage">There is not enough space for the sentence model. It needs about %1$d MB.</string>
 
+    <!-- Timing it on the phone it will run on (#145) -->
+    <string name="settings_sentence_experimental">Experimental. This is new, and on some phones it is slow. Turning it off costs nothing, and the model can be deleted to get the space back.</string>
+    <string name="settings_sentence_speed">Timed on this phone: about %1$s seconds a sentence.</string>
+    <string name="settings_sentence_speed_slow">Slower than this feature is meant to be, which is under 2 seconds. It still works — but somebody will be waiting.</string>
+    <string name="settings_sentence_speed_first">The first sentence after the keyboard opens takes about %1$s seconds longer, while the model loads.</string>
+    <string name="settings_sentence_speed_failed">The test did not finish. That is not the same as this phone being slow — try it again.</string>
+    <string name="settings_sentence_test">Time it on this phone</string>
+    <string name="settings_sentence_testing">Timing it…</string>
+
     <!-- Calling for help (#144) -->
     <string name="settings_group_assistance">Call for help</string>
     <string name="settings_assistance_desc">Puts a red bell on the keyboard that calls one number. Leave this empty and there is no bell.</string>

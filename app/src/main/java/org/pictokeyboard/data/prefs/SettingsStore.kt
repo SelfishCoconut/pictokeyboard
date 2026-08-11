@@ -96,10 +96,31 @@ data class Settings(
      */
     val assistanceName: String = "",
     val assistanceNumber: String = "",
+    /**
+     * What sentence help actually cost on this phone, or null if it has never
+     * been timed here (#145).
+     *
+     * `DeviceCapability` checks a processor, some memory and some disk, and none
+     * of those is speed. This is the one figure that comes from running the
+     * thing rather than from reading a spec sheet.
+     */
+    val sentenceSpeed: SentenceSpeed? = null,
 ) {
 
     /** Whether the bell has anywhere to ring. */
     val hasAssistanceContact: Boolean get() = assistanceNumber.isNotBlank()
+}
+
+/**
+ * What one sentence cost on this phone, measured rather than predicted (#145).
+ *
+ * @param loadMillis paid once per keyboard session, by the first sentence only.
+ * @param generateMillis paid every time, and the figure #44's budget is about.
+ *   Zero means the test did not finish — which is **not** the same as this phone
+ *   being slow, and is said differently.
+ */
+data class SentenceSpeed(val loadMillis: Int, val generateMillis: Int) {
+    val measured: Boolean get() = generateMillis > 0
 }
 
 /**
@@ -134,6 +155,11 @@ class SettingsStore(private val context: Context) {
             sentenceHelp = p[KEY_SENTENCE_HELP] ?: false,
             assistanceName = p[KEY_ASSIST_NAME].orEmpty(),
             assistanceNumber = p[KEY_ASSIST_NUMBER].orEmpty(),
+            // Absent rather than zeroed when it has never run, so "not yet
+            // measured" and "measured and failed" stay separate answers.
+            sentenceSpeed = p[KEY_SPEED_GENERATE]?.let {
+                SentenceSpeed(loadMillis = p[KEY_SPEED_LOAD] ?: 0, generateMillis = it)
+            },
         )
     }
 
@@ -156,6 +182,21 @@ class SettingsStore(private val context: Context) {
      * that cannot ring and a number without a name is a call the user is not told
      * about, and neither is a state worth being able to persist.
      */
+    /**
+     * Records a benchmark run (#145). A [generateMillis] of zero records that
+     * the test did not finish, which settings says differently from "slow".
+     */
+    suspend fun setSentenceSpeed(loadMillis: Int, generateMillis: Int) = edit {
+        it[KEY_SPEED_LOAD] = loadMillis
+        it[KEY_SPEED_GENERATE] = generateMillis
+    }
+
+    /** Forgets the measurement, because deleting the weights invalidates it. */
+    suspend fun clearSentenceSpeed() = edit {
+        it.remove(KEY_SPEED_LOAD)
+        it.remove(KEY_SPEED_GENERATE)
+    }
+
     suspend fun setAssistanceContact(name: String, number: String) = edit {
         it[KEY_ASSIST_NAME] = name.trim()
         it[KEY_ASSIST_NUMBER] = number.trim()
@@ -258,5 +299,7 @@ class SettingsStore(private val context: Context) {
         private val KEY_SENTENCE_HELP = booleanPreferencesKey("sentence_help")
         private val KEY_ASSIST_NAME = stringPreferencesKey("assistance_name")
         private val KEY_ASSIST_NUMBER = stringPreferencesKey("assistance_number")
+        private val KEY_SPEED_LOAD = intPreferencesKey("sentence_load_millis")
+        private val KEY_SPEED_GENERATE = intPreferencesKey("sentence_generate_millis")
     }
 }
