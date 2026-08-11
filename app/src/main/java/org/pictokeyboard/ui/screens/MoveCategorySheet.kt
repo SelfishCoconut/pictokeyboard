@@ -22,7 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +30,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
@@ -158,17 +158,24 @@ private fun DestinationBoardRow(summary: BoardSummary, onClick: () -> Unit) {
  * tapping **Undo** writes it straight back. Nothing is remembered after the
  * snackbar goes, which is the point — an undo that survives the message that
  * offered it is a second, invisible piece of state to get wrong.
+ *
+ * [scope] is a parameter, and must belong to something that outlives this sheet.
+ * Picking a destination dismisses the sheet, which takes this composable out of
+ * the composition — so a `rememberCoroutineScope()` here would be cancelled in
+ * the same frame that starts the move, and the snackbar it was asked to show
+ * would never appear. The undo would be unreachable while every test still
+ * passed, because the move itself works fine; it is only the way back that goes.
  */
 @Composable
 internal fun MoveCategoryFlow(
     category: CategoryEntity,
     boards: List<BoardSummary>,
     snackbars: SnackbarHostState,
+    scope: CoroutineScope,
     onDismiss: () -> Unit,
     onMoveCategory: (CategoryEntity, String, (CategoryEntity) -> Unit) -> Unit,
     onUndoMove: (CategoryEntity) -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     // `LocalResources`, not `LocalContext.current.getString`. The snackbar's
     // text is built inside a coroutine after the move lands, and reading it
     // through the context there is what `LocalContextGetResourceValueCall`

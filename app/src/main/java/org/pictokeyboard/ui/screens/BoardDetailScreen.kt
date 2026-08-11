@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -338,11 +339,17 @@ private fun BoardDetailOverlays(
         )
     }
 
+    // Owned here rather than inside the sheet, because the sheet dismisses
+    // itself the moment a destination is picked and takes its own scope with it.
+    // The undo snackbar has to outlive the thing that triggered it.
+    val undoScope = rememberCoroutineScope()
+
     moving?.let { category ->
         MoveCategoryFlow(
             category = category,
             boards = otherBoards,
             snackbars = snackbars,
+            scope = undoScope,
             onDismiss = onStopMoving,
             onMoveCategory = onMoveCategory,
             onUndoMove = onUndoMove,
