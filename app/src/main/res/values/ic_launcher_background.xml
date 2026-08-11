@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FF6750A4</color>
+    <!-- The app's accent, from ui/theme/Tokens.kt. It was the Material default
+         purple until #119 made the app white and blue; the icon is not built
+         from the theme tokens, so it kept a colour the app no longer wears
+         anywhere. Keep this in step with PictoColors.accent by hand. -->
+    <color name="ic_launcher_background">#FF1A56A8</color>
 </resources>

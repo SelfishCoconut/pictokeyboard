@@ -43,7 +43,11 @@ android {
     defaultConfig {
         applicationId = "org.pictokeyboard"
         minSdk = 26
-        targetSdk = 35
+        // Play requires 36 of any new app submitted from 2026-08-31. The
+        // behaviour change that comes with it is mandatory edge-to-edge, which
+        // this app already opts into (MainActivity.enableEdgeToEdge), so the
+        // bump costs nothing it was not already paying.
+        targetSdk = 36
         // Play burns a versionCode permanently on upload -- including on an
         // upload that was then rejected -- so it must never repeat. CI passes
         // the run number, which is monotonic. A local build gets 1, which is

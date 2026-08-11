@@ -150,6 +150,37 @@ class PictoKeyboardService : InputMethodService() {
         observeBoards()
     }
 
+    /**
+     * The grid is shown even when a hardware keyboard is attached.
+     *
+     * The default hides a soft keyboard whenever the system thinks the user has
+     * a physical one, on the reasonable assumption that a person with keys under
+     * their fingers does not need keys on their screen. That assumption does not
+     * survive contact with this app's users. The person here does not type on
+     * the hardware keyboard at all — they may not be able to — and very often
+     * the "keyboard" the system has detected is not one: switch interfaces,
+     * head-pointer and eye-gaze receivers and adapted keypads all present as
+     * ordinary HID keyboards, and connecting one is *more* likely for an AAC user
+     * than for anybody else.
+     *
+     * Left to the default, plugging in the device that lets somebody operate the
+     * phone is what takes their pictograms away. The words are their voice; the
+     * recovery is a system setting several screens deep that a caregiver would
+     * have to know exists. So the grid stays.
+     *
+     * Every general-purpose keyboard does the same thing for its own reasons.
+     * The cost is a keyboard on screen that somebody with a real keyboard did not
+     * want, and they can dismiss it with the close key that is already there.
+     */
+    override fun onEvaluateInputViewShown(): Boolean {
+        // Called for its own sake, not for its answer. The base implementation is
+        // annotated @CallSuper because it lazily installs the observer that
+        // watches the "show on-screen keyboard" setting; skipping it leaves that
+        // machinery uninitialised. Its verdict is then discarded on purpose.
+        super.onEvaluateInputViewShown()
+        return true
+    }
+
     override fun onCreateInputView(): View {
         // cloneInContext, not LayoutInflater.from(uiContext): the clone keeps the
         // service's theme while resolving strings against the chosen language.

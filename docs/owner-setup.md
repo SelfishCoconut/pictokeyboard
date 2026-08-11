@@ -10,9 +10,10 @@ actually worked rather than only looked like it did.
 | # | Step | State |
 |---|---|---|
 | 1 | GitHub Pages set to *GitHub Actions* | **done** |
-| 2 | `database` and `functions` removed from the required checks | **yours — do this once** |
+| 2 | `database` and `functions` removed from the required checks | **done** (2026-08-11) |
 | 3 | Play Console answers | **yours** — at listing time |
 | 4 | Release signing key registered | **yours** — before the first upload |
+| 5 | Play Console account, and the closed test it requires | **yours** — start this first, it takes weeks |
 
 The site is published and both pages load:
 
@@ -27,33 +28,30 @@ The site is published and both pages load:
 
 ---
 
-## 2. Remove `database` and `functions` from the required checks
+## 2. Remove `database` and `functions` from the required checks — done
 
-**Do this first, before merging anything else**, or `main` becomes unmergeable.
+Kept here because the *shape* of the problem recurs: **a required status check is
+named after its job, so renaming or removing a job in a workflow strands the
+check**, and a required check that never reports blocks every pull request
+forever with nothing red to fix. `instrumented.yml` carries the same warning
+next to its API-level matrix for that reason.
 
-Those two jobs ran the Supabase migrations and the account-deletion Edge
-Function. Both are gone, so neither will ever report a result again — and a
-required status check that never reports does not fail the branch protection, it
-*blocks* it. Every pull request from here on would sit at "Expected — Waiting for
-status to be reported" forever, with no way to merge and nothing red to fix.
+The rule, whenever a required job changes name: **untick it in Settings first,
+then change the workflow.** In that order.
 
-**Settings ▸ Branches ▸ `main` ▸ Require status checks to pass**, then untick:
-
-- `database`
-- `functions`
-
-Nine checks should remain: `quality`, `build`, `unit`, `compliance`, `codeql`,
-`secret scan`, `dependency audit`, `emulator (API 26)`, `emulator (API 35)`.
-
-**How to tell it worked:** open any pull request and confirm the checks list
-shows nine entries and no "Expected" rows. If two rows sit at *Expected* and
-never move, this step has not been done.
+Nine checks are required now: `quality`, `build`, `unit`, `compliance`,
+`codeql`, `secret scan`, `dependency audit`, `emulator (API 26)`,
+`emulator (API 35)`.
 
 ```sh
-# Or from the command line, which is faster and shows the real state:
+# What is actually required, which is the only answer that counts:
 gh api repos/SelfishCoconut/pictokeyboard/branches/main/protection \
   --jq '.required_status_checks.contexts'
 ```
+
+`emulator (API 36)` now runs too and is deliberately **not** required, so that
+API 35 can be retired from the matrix and from this list together, in that
+order, whenever you want to.
 
 ---
 
@@ -61,7 +59,9 @@ gh api repos/SelfishCoconut/pictokeyboard/branches/main/protection \
 
 The answers are worked out in [`play-data-safety.md`](./play-data-safety.md),
 derived from the code rather than from memory, with the commands that produce
-them.
+them. Every word of the listing itself — both languages, the categorisation, the
+content-rating and target-audience answers — is written out in
+[`play-listing.md`](./play-listing.md), ready to paste.
 
 **The URLs Play asks for:**
 
@@ -104,3 +104,30 @@ in the code where it is enforced, is in `play-data-safety.md`.
 - **Update the privacy policy when sentence help ships (#46).** The model runs
   on the device and nothing is sent anywhere, but the policy currently does not
   mention a model existing at all. One paragraph, both languages, same release.
+
+---
+
+## 5. The Play Console account — the long pole
+
+**Start this before anything else on this page.** Everything else here is an
+afternoon; this one is measured in weeks, and no amount of finished code shortens
+it.
+
+A developer account is a one-off 25 USD registration. The part that costs time is
+what comes after it: an account registered as an **individual** (rather than an
+organisation) must run a **closed test with at least 12 testers who stay opted in
+for 14 continuous days** before it may even apply for production access. The
+14 days restart if the tester count drops below 12, so recruit more than twelve.
+
+Two consequences worth planning around:
+
+- **Twelve real Google accounts.** Family, colleagues, the speech therapists this
+  app was built with. An emulator does not count and neither does a second
+  account of your own.
+- **The clock cannot start until there is a signed build to test**, which means
+  §4's signing key is the real prerequisite, not the store listing text.
+
+Registering as an organisation avoids the 12-tester requirement but needs a
+D-U-N-S number and takes its own time to verify. For one person shipping one
+app, the closed test is usually the shorter road — it just has to be started
+early.

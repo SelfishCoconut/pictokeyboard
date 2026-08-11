@@ -43,10 +43,18 @@ jobs:
       fail-fast: false
       matrix:
         # Lowest supported API and the current target -- the two that actually
-        # break. Anything in between rarely surfaces a unique failure. Keep the
-        # second entry in step with targetSdk: API 35 is where the edge-to-edge
-        # enforcement we now opt into actually applies.
-        api-level: [26, 35]
+        # break. Anything in between rarely surfaces a unique failure.
+        #
+        # 36 is the new target, for Play's 2026-08-31 floor. 35 stays for now for
+        # a reason that is about this repository rather than about Android: the
+        # job name is the status check name, so dropping 35 here leaves
+        # `emulator (API 35)` required on main and never reported, and a required
+        # check that never reports blocks every pull request forever. That is the
+        # exact failure #119 spent a day recovering from.
+        #
+        # To drop it: untick `emulator (API 35)` in Settings > Branches FIRST,
+        # then remove it here. In that order, and not in the other one.
+        api-level: [26, 35, 36]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
