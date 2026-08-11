@@ -23,7 +23,7 @@ internal const val KEYBOARD_STRIP_DP = 96
  * behaviour, made in the one place a caregiver goes to check behaviour.
  *
  * [chromeDp] is what the keyboard will stack above and below the board for this
- * particular board — the sentence bar and the action row always, the tab strip
+ * particular board — the phrase keys and the action row always, the tab strip
  * only when the caregiver has more than one board to switch between. Passing it
  * is what keeps the preview honest about the height the grid actually gets.
  *

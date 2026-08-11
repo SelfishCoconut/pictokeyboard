@@ -8,7 +8,7 @@ import android.widget.FrameLayout
  * A FrameLayout whose height is a fixed fraction of its measured width.
  *
  * It was square — the obvious shape for square artwork, and what the grid drew
- * until the board strip and the sentence bar arrived above it (#36). Chrome has
+ * until the board strip and the phrase keys arrived above it (#36). Chrome has
  * to be paid for out of something, and a quarter off each tile's height buys a
  * whole extra row of words in the same space. The pictogram inside still fits
  * its own aspect, so it loses height and never shape.

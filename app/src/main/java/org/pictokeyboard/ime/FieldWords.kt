@@ -120,27 +120,27 @@ object FieldWords {
     }
 
     /**
-     * Which sentence-bar word each field word belongs to, or null if the bar and
-     * the field have drifted apart.
+     * Which recorded word each field word belongs to, or null if the keyboard's
+     * record and the field have drifted apart.
      *
-     * The bar is a mirror of what this keyboard committed, and the field may hold
+     * The record holds what this keyboard committed, and the field may hold
      * anything besides — text typed with another keyboard, a quoted reply, a
-     * draft. So the bar's words are looked for as a **run** inside the field's,
-     * and only an exact match counts. The *last* matching run wins, because a
-     * phrase that repeats a word (`yo quiero yo`) ends where the user is working.
+     * draft. So the recorded words are looked for as a **run** inside the
+     * field's, and only an exact match counts. The *last* matching run wins,
+     * because a phrase that repeats a word (`yo quiero yo`) ends where the user
+     * is working.
      *
-     * A bar word can hold more than one field word — a picto may be labelled
-     * `me gusta` — so bar words are split before matching and several field
-     * indices can point at the same bar index. That is the whole reason this
-     * returns a map instead of an offset.
+     * One recorded word can hold more than one field word — a picto may be
+     * labelled `me gusta` — so they are split before matching and several field
+     * indices can point at the same recorded index. That is the whole reason
+     * this returns a map instead of an offset.
      *
      * Null is the honest answer whenever no run matches: after a rephrase the
-     * field holds the model's sentence and the bar still holds the typed words,
-     * and pretending to know which is which would put the highlight on the wrong
-     * word — or delete it.
+     * field holds the model's sentence and the record still holds the typed
+     * words, and pretending to know which is which would delete the wrong one.
      */
-    fun align(fieldWords: List<String>, barWords: List<String>): Map<Int, Int>? {
-        val flat = barWords.flatMapIndexed { index, word ->
+    fun align(fieldWords: List<String>, phraseWords: List<String>): Map<Int, Int>? {
+        val flat = phraseWords.flatMapIndexed { index, word ->
             word.split(WHITESPACE).filter { it.isNotEmpty() }.map { it to index }
         }
         if (flat.isEmpty() || flat.size > fieldWords.size) return null

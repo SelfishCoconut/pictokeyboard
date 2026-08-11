@@ -25,181 +25,149 @@
         android:visibility="gone" />
 
     <!--
-        The sentence bar: a mirror of what has been written, never a buffer.
+        The phrase's own keys, in three groups: reach a word, act on the whole
+        phrase, and call somebody.
 
-        Every picto still commits to the host field the instant it is tapped, so
-        nothing can be stranded here unsent. What the bar adds is a view of the
-        phrase for a person whose host app puts its field somewhere they cannot
-        read, or who cannot read it at all and needs 🔊 to hear it back.
+        The strip of text that used to sit above them is gone (#148). It showed
+        `yo · niño · papá` directly over a field already reading `yo niño papá`
+        — a second copy of what the user was looking at, for 30dp taken from the
+        grid, which is the whole product. What it was really carrying now lives
+        where it belongs: the phrase is in the host's field, the word the arrows
+        are on is the host's own selection, and 🔊 reads the phrase aloud for
+        anybody who cannot use either.
+
+        Every key is layout_weight="1" with minWidth overridden to zero, so the
+        row divides evenly however many of them are showing. Two are usually
+        not: Beautify needs a model on disk and the bell needs a number in
+        settings, and each is gone rather than greyed — a key that cannot do
+        anything is worse than no key on a surface this small.
     -->
     <LinearLayout
         android:id="@+id/sentence_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/kb_sentence_bar_height"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="2dp">
 
         <!--
-            The phrase gets the whole width since #143. It used to share the strip
-            with four keys, and adding the arrows to that row would have left it
-            about nine characters wide on a 360dp phone — for text that is the
-            only readable copy of the sentence for a user whose host app puts its
-            field somewhere they cannot see.
+            Walk the phrase (#143). Each press selects a word in the host's
+            own field and says it out loud, so the highlight and the voice
+            agree, and backspace then takes that word rather than the last.
         -->
-        <HorizontalScrollView
-            android:id="@+id/sentence_scroll"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/kb_phrase_height"
-            android:fillViewport="true"
-            android:scrollbars="none">
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_prev_word"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_prev_word"
+            android:minWidth="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_prev_word"
+            app:tint="@color/key_text_recessive" />
 
-            <TextView
-                android:id="@+id/sentence_text"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:fontFamily="@font/atkinson_hyperlegible"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="8dp"
-                android:textColor="@color/ink"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </HorizontalScrollView>
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_next_word"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_next_word"
+            android:minWidth="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_next_word"
+            app:tint="@color/key_text_recessive" />
 
         <!--
-            The phrase's own keys, in three groups: reach a word, act on the whole
-            phrase, and call somebody.
-
-            Every key is layout_weight="1" with minWidth overridden to zero, so
-            the row divides evenly however many of them are showing. Two are
-            usually not: Beautify needs a model on disk and the bell needs a
-            number in settings, and each is gone rather than greyed — a key that
-            cannot do anything is worse than no key on a surface this small.
+            Backspace lives here rather than in the action row, beside the
+            words it removes. It was one of four identical grey keys along the
+            bottom, which is where word-level undo went to be undiscoverable.
         -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/kb_sentence_keys_height"
-            android:orientation="horizontal"
-            android:paddingHorizontal="4dp"
-            android:paddingVertical="2dp">
+        <Button
+            android:id="@+id/key_backspace"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_backspace"
+            android:minWidth="0dp"
+            android:text="@string/kb_backspace_icon" />
 
-            <!--
-                Walk the phrase (#143). Each press selects a word in the host's
-                own field and says it out loud, so the highlight and the voice
-                agree, and backspace then takes that word rather than the last.
-            -->
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/key_prev_word"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_prev_word"
-                android:minWidth="0dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_prev_word"
-                app:tint="@color/key_text_recessive" />
+        <!--
+            Beautify (#46). Gone entirely, not merely disabled, unless
+            sentence help is switched on and a model is actually present.
 
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/key_next_word"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_next_word"
-                android:minWidth="0dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_next_word"
-                app:tint="@color/key_text_recessive" />
+            Nothing runs until it is pressed. The words already reached the
+            field the instant each picto was tapped; this only offers to say
+            them better, and undo puts back exactly what was typed.
+        -->
+        <Button
+            android:id="@+id/key_beautify"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_beautify"
+            android:minWidth="0dp"
+            android:text="@string/kb_beautify_icon"
+            android:visibility="gone" />
 
-            <!--
-                Backspace lives here rather than in the action row, beside the
-                words it removes. It was one of four identical grey keys along the
-                bottom, which is where word-level undo went to be undiscoverable.
-            -->
-            <Button
-                android:id="@+id/key_backspace"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_backspace"
-                android:minWidth="0dp"
-                android:text="@string/kb_backspace_icon" />
+        <!--
+            Vectors rather than 🔊 and ✕, so they take the key's text colour
+            and invert with its pressed state. A colour emoji renders in its
+            own palette, and on this surface the only saturated colour is
+            meant to be the category hue, which carries meaning.
+        -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_speak"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_speak_all"
+            android:minWidth="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_speak"
+            app:tint="@color/key_text_recessive" />
 
-            <!--
-                Beautify (#46). Gone entirely, not merely disabled, unless
-                sentence help is switched on and a model is actually present.
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_clear"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/kb_clear_sentence"
+            android:minWidth="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_clear_sentence"
+            app:tint="@color/key_text_recessive" />
 
-                Nothing runs until it is pressed. The words already reached the
-                field the instant each picto was tapped; this only offers to say
-                them better, and undo puts back exactly what was typed.
-            -->
-            <Button
-                android:id="@+id/key_beautify"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_beautify"
-                android:minWidth="0dp"
-                android:text="@string/kb_beautify_icon"
-                android:visibility="gone" />
+        <!--
+            Call for help (#144). The only red key, at the far end and with a
+            gap in front of it, because it is the only control on this
+            keyboard that reaches somebody who is not in the room and it
+            should not be the thing a thumb finds by accident on its way to ✕.
 
-            <!--
-                Vectors rather than 🔊 and ✕, so they take the key's text colour
-                and invert with its pressed state. A colour emoji renders in its
-                own palette, and on this surface the only saturated colour is
-                meant to be the category hue, which carries meaning.
-            -->
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/key_speak"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_speak_all"
-                android:minWidth="0dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_speak"
-                app:tint="@color/key_text_recessive" />
-
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/key_clear"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:contentDescription="@string/kb_clear_sentence"
-                android:minWidth="0dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_clear_sentence"
-                app:tint="@color/key_text_recessive" />
-
-            <!--
-                Call for help (#144). The only red key, at the far end and with a
-                gap in front of it, because it is the only control on this
-                keyboard that reaches somebody who is not in the room and it
-                should not be the thing a thumb finds by accident on its way to ✕.
-
-                Gone unless the caregiver has entered a number. Its colours come
-                from KeyboardPalette like every other key's, so high contrast
-                reaches it too.
-            -->
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/key_assistance"
-                style="@style/KbKey.Recessive"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_key_assistance"
-                android:contentDescription="@string/kb_assistance"
-                android:minWidth="0dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_assistance"
-                android:visibility="gone"
-                app:tint="@color/on_danger" />
-        </LinearLayout>
-    </LinearLayout>
+            Gone unless the caregiver has entered a number. Its colours come
+            from KeyboardPalette like every other key's, so high contrast
+            reaches it too.
+        -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/key_assistance"
+            style="@style/KbKey.Recessive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_key_assistance"
+            android:contentDescription="@string/kb_assistance"
+            android:minWidth="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_assistance"
+            android:visibility="gone"
+            app:tint="@color/on_danger" />
+</LinearLayout>
 
     <!--
         Body: the category spine on the left, the picto grid on the right.

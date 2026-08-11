@@ -79,7 +79,7 @@ data class Settings(
      * pay that because they installed a keyboard.
      *
      * Off is also the state in which the keyboard is simplest: no extra button in
-     * the sentence bar, nothing to wait for, nothing that can be wrong.
+     * the phrase's key row, nothing to wait for, nothing that can be wrong.
      */
     val sentenceHelp: Boolean = false,
     /**
