@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    API 26 to 30, where `dataExtractionRules` does not exist yet and
+    `fullBackupContent` is the only control available. See
+    `data_extraction_rules.xml` for why nothing goes to the cloud; keep the two
+    in step.
+
+    The one difference is forced rather than chosen: this format cannot separate
+    cloud backup from phone-to-phone transfer, so on these versions excluding the
+    cloud excludes the transfer with it. Below API 31 an exported `.pkb` file is
+    genuinely the only way to move a board to a new handset — which is what the
+    store listing tells the caregiver, and on these versions it is the whole
+    truth rather than most of it.
+-->
+<full-backup-content>
+    <exclude domain="root" />
+    <exclude domain="file" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+    <exclude domain="external" />
+</full-backup-content>

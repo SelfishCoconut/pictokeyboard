@@ -33,7 +33,7 @@ is not true. *Education* is where AAC apps sit.
 A picture keyboard that types and speaks. Built by you, for one person.
 ```
 
-`70 characters.`
+`71 characters.` *(limit 80)*
 
 ### Full description (4000 characters max)
 
@@ -80,11 +80,17 @@ There is also a high contrast mode — pure black and white, thicker borders and
 heavier text — for low vision, and it applies to the keyboard as well as to the
 setup screens.
 
-NO ACCOUNT, AND NOTHING LEAVES THE PHONE
+NO ACCOUNT, AND NOWHERE TO SEND YOUR DATA
 
-There is no sign-up, no login and no server. Boards are stored on the device and
-nowhere else. The app collects nothing, sends nothing and has nothing to
-collect it to.
+There is no sign-up, no login and no server. Boards, photographs, spoken words
+and the app's own settings stay on the device — they are never copied to a cloud
+account, not ours and not anyone's. We collect nothing about you because there
+is nowhere for it to go.
+
+The app reaches the internet for exactly one thing: ARASAAC, to search their
+symbol library and download the pictures you pick. That request carries your
+search word and nothing else — no name, no account, no identifier, and nothing
+that was ever typed on the keyboard.
 
 To move a board to another phone, or to give one to another family, export it as
 a file and send it however you already talk to them — WhatsApp, email, Drive,
@@ -107,7 +113,7 @@ BY-NC-SA. PictoKeyboard is free and will stay free — the licence is
 non-commercial, and so is this app.
 ```
 
-`~2450 characters.`
+`3161 characters.` *(limit 4000)*
 
 ## Español
 
@@ -117,7 +123,7 @@ non-commercial, and so is this app.
 Un teclado de pictogramas que escribe y habla. Hecho por ti, para una persona.
 ```
 
-`77 caracteres.`
+`78 caracteres.` *(límite 80)*
 
 ### Descripción completa (máximo 4000 caracteres)
 
@@ -165,11 +171,17 @@ También hay un modo de alto contraste — blanco y negro puros, bordes más
 marcados y texto más grueso — para baja visión, y se aplica tanto al teclado
 como a las pantallas de configuración.
 
-SIN CUENTA, Y NADA SALE DEL MÓVIL
+SIN CUENTA, Y SIN NINGÚN SITIO ADONDE MANDAR TUS DATOS
 
-No hay registro, ni inicio de sesión, ni servidor. Los tableros se guardan en el
-dispositivo y en ningún otro sitio. La aplicación no recoge nada, no envía nada
-y no tiene adónde enviarlo.
+No hay registro, ni inicio de sesión, ni servidor. Los tableros, las fotografías,
+las palabras que se pronuncian y los ajustes se quedan en el dispositivo: nunca
+se copian a ninguna cuenta en la nube, ni nuestra ni de nadie. No recogemos nada
+tuyo porque no hay adónde llevarlo.
+
+La aplicación sale a internet para una sola cosa: ARASAAC, para buscar en su
+biblioteca de símbolos y descargar las imágenes que elijas. Esa petición lleva la
+palabra que buscas y nada más: ni nombre, ni cuenta, ni identificador, ni nada de
+lo que se haya escrito con el teclado.
 
 Para llevar un tablero a otro móvil, o dárselo a otra familia, expórtalo como
 archivo y mándalo por donde ya habléis: WhatsApp, correo, Drive, Nearby Share.
@@ -191,7 +203,7 @@ BY-NC-SA. PictoKeyboard es gratuito y seguirá siéndolo: la licencia es no
 comercial, y esta aplicación también.
 ```
 
-`~2500 caracteres.`
+`3363 caracteres.` *(límite 4000)*
 
 ## Graphics
 

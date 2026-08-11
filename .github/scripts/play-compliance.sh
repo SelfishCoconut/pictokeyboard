@@ -74,6 +74,22 @@ grep -q 'android:debuggable="true"' "$MANIFEST" \
 grep -q 'usesCleartextTraffic="true"' "$MANIFEST" \
   && warning "usesCleartextTraffic=\"true\" permits unencrypted HTTP. Justify it or remove it."
 
+# --- backup ----------------------------------------------------------------
+# Auto Backup is on by default and its default rules include filesDir and the
+# databases directory, so an app that says nothing here ships every board, every
+# photograph and the usage tally to the user's Drive without ever mentioning it.
+# That is not a Play rejection by itself -- it is a rejection when the privacy
+# policy or the listing says the data stays on the device, which is the whole
+# reason this check exists.
+if grep -q 'android:allowBackup="false"' "$MANIFEST"; then
+  ok "backup is off entirely"
+elif grep -q 'android:dataExtractionRules=' "$MANIFEST" \
+  && grep -q 'android:fullBackupContent=' "$MANIFEST"; then
+  ok "backup is governed by explicit rules for both API ranges"
+else
+  err "Auto Backup has no rules. Set android:dataExtractionRules (API 31+) AND android:fullBackupContent (26-30), or android:allowBackup=\"false\". Default rules upload filesDir and every database to the user's Drive -- which contradicts a privacy policy that says otherwise."
+fi
+
 # --- permissions -----------------------------------------------------------
 echo "-- declared permissions (each must be justified in Data Safety):"
 perms=$(grep -oP '(?<=uses-permission android:name=")[^"]+' "$MANIFEST" || true)

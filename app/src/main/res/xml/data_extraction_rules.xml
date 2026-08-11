@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    API 31 and above. `backup_rules.xml` says the same thing for 26 to 30, which
+    is why the two exist; keep them in step.
+
+    Android splits "copy this to the cloud" from "copy this to the user's next
+    phone", and this app wants opposite answers to those two questions.
+
+    A custom pictogram is a photograph of somebody's kitchen, their bus stop,
+    their grandmother, and the database next to it is every word they can say.
+    That is not something to put in a Drive backup on the app's initiative and
+    without telling anybody — and the privacy policy and the store listing both
+    promise it stays on the device.
+
+    Phone-to-phone transfer is a different act with a different destination. It
+    is the user moving their own data to their own next phone, in one motion,
+    directly, at the moment they choose. Turning it off alongside the cloud would
+    cost the population this app is for the most: a board is hours of a
+    caregiver's work, and losing it when a handset breaks costs somebody their
+    voice.
+-->
+<data-extraction-rules>
+    <!--
+        Every domain the app writes to, named individually because there is no
+        wildcard and an unlisted domain is an included one. `external` is listed
+        despite the app not using external storage, so that starting to use it
+        cannot quietly opt those files in.
+    -->
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+
+    <!--
+        Deliberately empty: no rules means everything transfers. The element is
+        written out rather than omitted so that the asymmetry above reads as a
+        decision instead of a gap somebody later fills in.
+    -->
+    <device-transfer />
+</data-extraction-rules>

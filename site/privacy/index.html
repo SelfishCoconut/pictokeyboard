@@ -20,7 +20,7 @@
   <p>This policy is short because the app does very little, and everything in it
      is checkable against the source code, which is public.</p>
 
-  <p class="muted">Last updated: <time datetime="2026-08-06">6 August 2026</time></p>
+  <p class="muted">Last updated: <time datetime="2026-08-11">11 August 2026</time></p>
 
   <div class="safe">
     <strong>What the person types never leaves the phone.</strong>
@@ -54,17 +54,23 @@
      be sent, which is a stronger promise than a policy saying we would not send
      it.</p>
 
-  <h3>ARASAAC, for pictogram images</h3>
+  <h3>ARASAAC, for searching and fetching pictograms</h3>
   <p>The pictograms come from <a href="https://arasaac.org">ARASAAC</a>, the
-     Aragonese Centre of Augmentative and Alternative Communication. When the app
-     needs a pictogram image it has not already stored, it requests it from
-     ARASAAC's servers.</p>
-  <p>That request tells ARASAAC which pictogram was asked for and, as with any
-     web request, carries the device's IP address. It does not tell them who is
-     using the app or what was typed — the app sends no identifier of any kind
-     with these requests. Images are cached on the phone afterwards, so the same
-     pictogram is not fetched twice. ARASAAC is an independent public body and
-     its own terms apply to its service.</p>
+     Aragonese Centre of Augmentative and Alternative Communication. The app
+     contacts them for two things, both while a board is being built:</p>
+  <ul>
+    <li><strong>Searching their library.</strong> The word you type into the
+        pictogram search box is sent to ARASAAC so they can look it up — the
+        same way any dictionary search works. This is the search box on the
+        setup screens; it is not anything typed with the keyboard.</li>
+    <li><strong>Fetching an image</strong> the app has not already stored. That
+        request names the pictogram wanted. Images are cached on the phone
+        afterwards, so the same one is never fetched twice.</li>
+  </ul>
+  <p>Both carry the device's IP address, as any web request does. Neither
+     carries an account, a device identifier, or anything typed with the
+     keyboard — there is no identifier of any kind to send. ARASAAC is an
+     independent public body and its own terms apply to its service.</p>
 
   <p>We do not sell data, we do not share it with advertisers, and there are no
      third-party recipients beyond the one named above. We hold no account of
@@ -97,6 +103,19 @@
     app as a <code>.pkb</code> file and keep it somewhere safe — that file is the
     only copy there will be.
   </div>
+
+  <h3>Android's automatic backup is switched off</h3>
+  <p>Android offers apps an automatic backup to the user's Google Drive, and it
+     is on by default. PictoKeyboard turns it off. Boards, settings, the usage
+     tally and above all the photographs you have added — somebody's kitchen,
+     their bus stop, their grandmother — are not copied to Drive or to any other
+     cloud account.</p>
+  <p>On Android 12 and later, one exception is deliberately kept: when you set up
+     a new phone and transfer your data across from the old one, PictoKeyboard
+     travels with it. That is a direct handover between two devices you own, at a
+     moment you chose, and nothing goes to a server on the way. It is not a
+     backup you can fall back on, though — a phone that is already lost or broken
+     cannot transfer anything, which is why the exported file above matters.</p>
 
   <h2>Permissions the app asks for</h2>
   <ul>
