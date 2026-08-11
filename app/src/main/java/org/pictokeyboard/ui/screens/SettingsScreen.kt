@@ -1,8 +1,8 @@
 package org.pictokeyboard.ui.screens
 
+import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -37,13 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.pictokeyboard.R
-import org.pictokeyboard.data.pkb.PkbFailure
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.ScreenPreviews
 import org.pictokeyboard.ui.theme.Spacing
-import java.time.LocalDate
 
 /**
  * Stateful wrapper: owns the view model, the file pickers and the toasts, so
@@ -60,45 +58,22 @@ fun SettingsScreen(
     val context = LocalContext.current
     var message by remember { mutableStateOf<BackupMessage?>(null) }
 
-    // Writes through the system file picker so the backup can land in Drive or
-    // Files, and not only on the phone that is about to break.
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(PKB_MIME),
-    ) { uri ->
-        val out = uri?.let { context.contentResolver.openOutputStream(it) } ?: return@rememberLauncherForActivityResult
-        viewModel.exportEverything(out) { result ->
-            message = result.fold(
-                onSuccess = {
-                    BackupMessage(R.string.settings_export_done, BackupCounts(it.boards, it.pictos, it.media))
-                },
-                onFailure = { BackupMessage(R.string.settings_export_failed) },
-            )
-        }
-    }
-
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        viewModel.importEverything(
-            // Opened twice: the archive reads the manifest before it will write
-            // a single photograph, so a file from a newer app imports none of
-            // itself rather than half of it.
-            source = { requireNotNull(context.contentResolver.openInputStream(uri)) },
-        ) { result ->
-            message = result.fold(
-                onSuccess = {
-                    BackupMessage(R.string.settings_import_done, BackupCounts(it.boards, it.pictos, it.media))
-                },
-                onFailure = { BackupMessage(it.importFailureText()) },
-            )
-        }
-    }
-
+    val backup = rememberBackupActions(viewModel) { message = it }
     val sentenceModel by viewModel.sentenceModel.collectAsStateWithLifecycle()
+
+    // Whether the keyboard's bell dials or only opens the dialler (#144). Read
+    // into state rather than on every recomposition so that granting it from the
+    // dialog below updates the screen the caregiver is looking at.
+    var canDialDirectly by remember { mutableStateOf(context.canPlaceCalls()) }
+    val callPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { canDialDirectly = it }
 
     SettingsScreenContent(
         settings = settings,
+        canDialDirectly = canDialDirectly,
+        onAssistanceContact = viewModel::setAssistanceContact,
+        onRequestCallPermission = { callPermission.launch(Manifest.permission.CALL_PHONE) },
         sentenceModel = sentenceModel,
         onSentenceHelp = viewModel::setSentenceHelp,
         onDownloadModel = viewModel::downloadModel,
@@ -117,39 +92,50 @@ fun SettingsScreen(
         onSetPin = { pin, onDone -> viewModel.setPin(pin, onDone) },
         onRemovePin = viewModel::removePin,
         backupMessage = message,
-        onExport = { exportLauncher.launch(defaultBackupName()) },
-        onImport = { importLauncher.launch(arrayOf(PKB_MIME, "application/zip", "*/*")) },
+        onExport = backup.save,
+        onImport = backup.restore,
     )
 }
 
-/** Dated, so a caregiver keeping several backups can tell them apart. */
-private fun defaultBackupName(): String =
-    "pictokeyboard-${LocalDate.now()}.pkb"
-
 /**
- * Every reason an import can stop, in words the caregiver can act on. The
- * archive reports these as types precisely so this mapping can exist — an
- * English message out of an exception would reach a Spanish user untranslated.
- */
-private fun Throwable.importFailureText(): Int = when (this) {
-    is PkbFailure.NewerFormat -> R.string.settings_import_failed_newer
-    is PkbFailure.UnsafeEntry -> R.string.settings_import_failed_unsafe
-    else -> R.string.settings_import_failed
-}
-
-/**
- * How a backup turned out, held as a resource id and its arguments rather than
- * as finished text.
+ * The two groups that reach outside this app: a model that has to be downloaded,
+ * and a bell that places a call.
  *
- * Deliberately not a toast. A toast is gone before a caregiver reading the
- * screen with TalkBack reaches it, and the result of the only backup they have
- * is exactly the thing that must not evaporate. It is rendered as a live region
- * next to the buttons instead, and it stays there.
+ * Together because that is what they have in common, and apart from the rest
+ * because the rest are switches with no consequences beyond the keyboard.
  */
-data class BackupMessage(@StringRes val text: Int, val counts: BackupCounts? = null)
-
-/** What a backup moved, in the order the sentence names them. */
-data class BackupCounts(val boards: Int, val pictos: Int, val media: Int)
+@Composable
+private fun SentenceAndAssistanceGroups(
+    settings: Settings,
+    sentenceModel: SentenceModelState,
+    canDialDirectly: Boolean,
+    onSentenceHelp: (Boolean) -> Unit,
+    onDownloadModel: () -> Unit,
+    onCancelModelDownload: () -> Unit,
+    onDeleteModel: () -> Unit,
+    onAssistanceContact: (String, String) -> Unit,
+    onRequestCallPermission: () -> Unit,
+) {
+    SettingsGroup(stringResource(R.string.settings_group_sentence)) {
+        SentenceHelpSection(
+            enabled = settings.sentenceHelp,
+            model = sentenceModel,
+            onEnabled = onSentenceHelp,
+            onDownload = onDownloadModel,
+            onCancel = onCancelModelDownload,
+            onDelete = onDeleteModel,
+        )
+    }
+    SettingsGroup(stringResource(R.string.settings_group_assistance)) {
+        AssistanceSection(
+            name = settings.assistanceName,
+            number = settings.assistanceNumber,
+            canDialDirectly = canDialDirectly,
+            onContact = onAssistanceContact,
+            onRequestPermission = onRequestCallPermission,
+        )
+    }
+}
 
 /** Stateless settings screen. Everything it needs arrives as a value or a callback. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,6 +143,9 @@ data class BackupCounts(val boards: Int, val pictos: Int, val media: Int)
 fun SettingsScreenContent(
     settings: Settings,
     onBack: (() -> Unit)?,
+    canDialDirectly: Boolean = false,
+    onAssistanceContact: (String, String) -> Unit = { _, _ -> },
+    onRequestCallPermission: () -> Unit = {},
     sentenceModel: SentenceModelState = SentenceModelState(),
     onSentenceHelp: (Boolean) -> Unit = {},
     onDownloadModel: () -> Unit = {},
@@ -200,16 +189,17 @@ fun SettingsScreenContent(
                 onBlindMode = onBlindMode,
                 onOpenAbout = onOpenAbout,
             )
-            SettingsGroup(stringResource(R.string.settings_group_sentence)) {
-                SentenceHelpSection(
-                    enabled = settings.sentenceHelp,
-                    model = sentenceModel,
-                    onEnabled = onSentenceHelp,
-                    onDownload = onDownloadModel,
-                    onCancel = onCancelModelDownload,
-                    onDelete = onDeleteModel,
-                )
-            }
+            SentenceAndAssistanceGroups(
+                settings = settings,
+                sentenceModel = sentenceModel,
+                canDialDirectly = canDialDirectly,
+                onSentenceHelp = onSentenceHelp,
+                onDownloadModel = onDownloadModel,
+                onCancelModelDownload = onCancelModelDownload,
+                onDeleteModel = onDeleteModel,
+                onAssistanceContact = onAssistanceContact,
+                onRequestCallPermission = onRequestCallPermission,
+            )
             SettingsGroup(stringResource(R.string.settings_group_security)) {
                 PinSection(
                     hasPin = settings.hasPin,

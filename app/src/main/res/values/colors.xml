@@ -36,4 +36,12 @@
 
     <color name="accent">#FF1A56A8</color>
     <color name="on_accent">#FFFFFFFF</color>
+
+    <!--
+        Destructive actions, error text, and the one key on the keyboard that
+        calls somebody (#144). The layout default only; KeyboardPalette repaints
+        it from the same token so high contrast reaches it too.
+    -->
+    <color name="danger">#FFA02B22</color>
+    <color name="on_danger">#FFFFFFFF</color>
 </resources>

@@ -34,6 +34,22 @@
     <string name="kb_beautify_unavailable">Sentence help is not ready.</string>
     <string name="kb_beautify_changed">The text changed, so nothing was replaced.</string>
 
+    <!-- Walking the phrase a word at a time (#143) -->
+    <string name="kb_prev_word">Previous word</string>
+    <string name="kb_next_word">Next word</string>
+    <string name="kb_no_words">No words to move through.</string>
+    <!-- Spoken and shown when a word is picked out, so the highlight is not the only cue. -->
+    <string name="kb_word_a11y">Selected: %1$s</string>
+
+    <!-- Calling for help (#144) -->
+    <string name="kb_assistance">Call for help</string>
+    <string name="kb_assistance_calling">Calling %1$s. Press the bell again to stop.</string>
+    <!-- Spoken rather than shown, so it finishes before the call starts. -->
+    <string name="kb_assistance_calling_spoken">Calling %1$s</string>
+    <string name="kb_assistance_stop">Stop the call</string>
+    <string name="kb_assistance_stopped">Call stopped.</string>
+    <string name="kb_assistance_failed">The call could not be started.</string>
+
     <string name="img_not_ready">Picture still downloading — try again in a moment.</string>
     <string name="img_unsupported">This field can\'t receive images.</string>
     <!-- Baked onto ARASAAC pictos shared as image/sticker so attribution travels with them. -->
@@ -433,4 +449,16 @@
     <string name="settings_sentence_no_processor">This phone\'s processor cannot run the sentence model.</string>
     <string name="settings_sentence_no_memory">This phone does not have enough memory to run the sentence model.</string>
     <string name="settings_sentence_no_storage">There is not enough space for the sentence model. It needs about %1$d MB.</string>
+
+    <!-- Calling for help (#144) -->
+    <string name="settings_group_assistance">Call for help</string>
+    <string name="settings_assistance_desc">Puts a red bell on the keyboard that calls one number. Leave this empty and there is no bell.</string>
+    <string name="settings_assistance_name">Who it calls</string>
+    <string name="settings_assistance_name_hint">A name the person using the keyboard will recognise. It is read out before the call starts.</string>
+    <string name="settings_assistance_number">Phone number</string>
+    <string name="settings_assistance_countdown">The keyboard says who it is calling and waits a few seconds first, so a bell pressed by accident can be stopped with a second press.</string>
+    <string name="settings_assistance_allow">Allow PictoKeyboard to make calls</string>
+    <string name="settings_assistance_allow_why">Without this the bell opens the phone app with the number already in it, and somebody still has to press the call button — which is the part the person using this keyboard may not be able to do.</string>
+    <string name="settings_assistance_allowed">Calls are allowed. The bell dials on its own.</string>
+    <string name="settings_assistance_remove">Remove the contact</string>
 </resources>

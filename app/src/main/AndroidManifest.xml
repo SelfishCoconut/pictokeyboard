@@ -12,11 +12,37 @@
         android:name="android.hardware.camera.any"
         android:required="false" />
 
+    <!--
+        The keyboard's bell (#144). Asked for at runtime, and only once the
+        caregiver has actually entered a number: an install that never sets an
+        assistance contact is never asked about the phone at all.
+
+        Refusing it is a supported answer rather than a broken feature. Without
+        the grant the bell opens the dialler with the number already in it, and
+        somebody in the room finishes the call — which is worse than dialling
+        outright, because pressing the call button is exactly the step the person
+        using this keyboard may not be able to take, but it is far better than a
+        bell that does nothing.
+    -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!--
+        A phone is not a given: this app runs on tablets, and a device with no
+        dialler must be told so rather than left with a bell that silently fails.
+    -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <!-- Needed to see whether any camera app exists before offering the option;
          without it package visibility hides them all and the check says no. -->
     <queries>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
         </intent>
     </queries>
 
