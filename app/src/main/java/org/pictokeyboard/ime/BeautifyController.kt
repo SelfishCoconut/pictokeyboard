@@ -3,6 +3,7 @@ package org.pictokeyboard.ime
 import android.content.Context
 import android.view.inputmethod.InputConnection
 import org.pictokeyboard.R
+import org.pictokeyboard.sentence.ModelStore
 import org.pictokeyboard.sentence.TypedWord
 import org.pictokeyboard.sentence.llm.BeautifyOutcome
 import org.pictokeyboard.sentence.llm.SentenceClient
@@ -44,12 +45,18 @@ class BeautifyController(
     /**
      * Binds or releases the model process as the setting changes.
      *
-     * Unbinding is what lets Android reclaim several hundred megabytes when the
-     * feature is switched off, which is the other half of #48's promise that
-     * turning it off is easy and means something.
+     * **Gated on the weights actually being on disk, not just on the setting.**
+     * Binding starts `:llm`, and that process costs about 115 MB resident before
+     * a single weight is loaded -- it is the runtime's native library mapped in.
+     * Somebody who has switched the feature on but not yet downloaded the model
+     * would otherwise pay all of that for a button that cannot appear.
+     *
+     * Unbinding is what lets Android reclaim it when the feature is switched off,
+     * which is the other half of #48's promise that turning it off is easy and
+     * means something.
      */
     fun setEnabled(enabled: Boolean) {
-        if (enabled) {
+        if (enabled && ModelStore(context).isDownloaded()) {
             val existing = client ?: SentenceClient(context).also { client = it }
             existing.bind()
         } else {
