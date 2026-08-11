@@ -213,16 +213,25 @@ object ViewStyles {
         // to ink rather than to the accent: flipping to the same blue as every
         // other key would read as "this is a normal key now", which is the one
         // thing it must never say. See drawable/bg_key_assistance.xml.
+        //
+        // `state_activated` is the countdown, and it is not decoration: since
+        // #148 took the phrase row it is the only cue that lasts the whole four
+        // seconds a call can still be stopped in.
         root.findViewById<ImageView>(R.id.key_assistance)?.let { key ->
             key.background = StateListDrawable().apply {
                 addState(intArrayOf(android.R.attr.state_pressed), solid(skin.ink, radius))
+                addState(intArrayOf(android.R.attr.state_activated), solid(skin.ink, radius))
                 addState(StateSet.WILD_CARD, solid(skin.danger, radius))
             }
             ImageViewCompat.setImageTintList(
                 key,
                 ColorStateList(
-                    arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
-                    intArrayOf(skin.paper, skin.onDanger),
+                    arrayOf(
+                        intArrayOf(android.R.attr.state_pressed),
+                        intArrayOf(android.R.attr.state_activated),
+                        intArrayOf(),
+                    ),
+                    intArrayOf(skin.paper, skin.paper, skin.onDanger),
                 ),
             )
         }

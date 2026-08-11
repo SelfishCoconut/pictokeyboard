@@ -11,21 +11,18 @@
     <dimen name="kb_hairline">1dp</dimen>
 
     <!--
-        The sentence area, which is two rows rather than one since #143.
+        The phrase's keys: the arrows, backspace, speak, clear, and whichever of
+        Beautify and the bell are configured.
 
-        It used to be a single 48dp strip with the phrase competing for width
-        against four keys. Adding the two arrows would have left the phrase about
-        90dp on a 360dp phone — nine characters of the sentence a user may not be
-        able to read anywhere else — while every key shrank below a thumb.
+        One row again since #148, which took the strip of text that used to sit
+        above them: it was a second copy of what the host's own field was already
+        showing. The 30dp went back to the grid rather than to the chrome.
 
-        Split, the phrase gets the full width and the keys get an even share of
-        their own row, which makes them *wider* than before (about 62dp with the
-        usual five, 44dp with all seven) rather than narrower. The cost is 30dp
-        of chrome, and it is charged to the 60% ceiling like the rest of it.
+        The keys divide this row evenly, so the count they are drawn at depends
+        on how many are showing — about 62dp with the usual five, 44dp with all
+        seven.
     -->
-    <dimen name="kb_sentence_bar_height">78dp</dimen>
-    <dimen name="kb_phrase_height">30dp</dimen>
-    <dimen name="kb_sentence_keys_height">48dp</dimen>
+    <dimen name="kb_sentence_bar_height">48dp</dimen>
 
     <!--
         The word under a tile: 14sp of bold Atkinson plus its 4dp margin and the

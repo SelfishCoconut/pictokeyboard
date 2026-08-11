@@ -320,7 +320,7 @@ private fun MiniTile(
             modifier = Modifier
                 .fillMaxWidth()
                 // 4:3, the shape the keyboard's own tiles took on when the board
-                // strip and the sentence bar started costing height (#36).
+                // strip and the phrase keys started costing height (#36).
                 .aspectRatio(1f / KeyboardMetrics.TILE_ASPECT)
                 // `tile`, so the artwork stays legible in dark mode too.
                 .background(colors.tile, RoundedCornerShape(TILE_CORNER))

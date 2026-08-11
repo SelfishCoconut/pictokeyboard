@@ -31,7 +31,7 @@ data class BlindHost(
  * The eyes-free keyboard: a second keyboard, driven entirely by gestures.
  *
  * It shares the service's board data and its voice and nothing else — no grid,
- * no spine, no sentence bar, no keys. Swipes change category and pictogram, a
+ * no spine, no keys at all. Swipes change category and pictogram, a
  * tap says the current one, a double tap writes it, a long press takes the last
  * word back. The surface exists only so there is something to gesture on and
  * something to look at for a user with some sight left.

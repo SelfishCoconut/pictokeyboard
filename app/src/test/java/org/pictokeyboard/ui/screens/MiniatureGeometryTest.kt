@@ -20,7 +20,7 @@ class MiniatureGeometryTest {
 
     private val screen = KeyboardMetrics.Screen(widthPx = 400, heightPx = 800)
 
-    /** Roughly the sentence bar and action row, with no board strip. */
+    /** Roughly the phrase keys and action row, with no board strip. */
     private val chrome = 110
 
     private fun geometry(

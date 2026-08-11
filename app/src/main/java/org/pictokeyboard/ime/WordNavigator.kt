@@ -18,28 +18,29 @@ import android.view.inputmethod.InputConnection
  * it is what makes backspace delete the right characters: the field is told
  * which ones, rather than the keyboard guessing how many.
  *
- * The sentence bar is kept in step through [FieldWords.align], which refuses to
- * guess. When the bar and the field have drifted apart — after a rephrase, most
- * obviously — the bar yields, because it is a mirror and a mirror that has lost
- * track must say so.
+ * The keyboard's record of the phrase ([Sentence]) is kept in step through
+ * [FieldWords.align], which refuses to guess. When the record and the field have
+ * drifted apart — after a rephrase, most obviously — the record yields, because
+ * it describes the field rather than the other way round, and a record that has
+ * lost track must say so rather than have 🔊 read back a phrase nobody wrote.
  *
- * @param barWords what the sentence bar currently shows, read on demand: the
- *   phrase changes under this class between one press and the next.
+ * @param phraseWords the words the keyboard believes it committed, read on
+ *   demand: the phrase changes under this class between one press and the next.
  */
-class WordNavigator(private val connection: () -> InputConnection?, private val barWords: () -> List<String>) {
+class WordNavigator(private val connection: () -> InputConnection?, private val phraseWords: () -> List<String>) {
 
     /** The word selected in the field, or null when the arrows are not in use. */
     var selected: WordSpan? = null
         private set
 
-    /** Which sentence-bar word [selected] is, when the two still agree. */
-    var barIndex: Int? = null
+    /** Which recorded word [selected] is, when the two still agree. */
+    var phraseIndex: Int? = null
         private set
 
-    /** True when the last read produced a bar-to-field mapping at all. */
+    /** True when the last read produced a record-to-field mapping at all. */
     private var aligned = false
 
-    /** True when the highlighted bar word is exactly this one field word. */
+    /** True when the highlighted recorded word is exactly this one field word. */
     private var exact = false
 
     /**
@@ -62,7 +63,7 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
      * the position: that is exactly the moment the user reaches for the picto
      * they actually meant.
      */
-    val hasPlace: Boolean get() = selected != null || barIndex != null
+    val hasPlace: Boolean get() = selected != null || phraseIndex != null
 
     /** A new field: forget the phrase, and take its starting caret. */
     fun onStartInput(info: EditorInfo?) {
@@ -95,13 +96,13 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
     }
 
     /**
-     * Removes the selected word, and says what that did to the bar.
+     * Removes the selected word, and says what that did to the record.
      *
      * The caret is deliberately left in the hole rather than sent to the end:
      * the next picto the user taps belongs where the wrong one was, which is the
      * repair the arrows exist to make possible. [insert] picks it up from there.
      */
-    fun deleteSelected(): BarEffect? {
+    fun deleteSelected(): PhraseEffect? {
         val span = selected ?: return null
         val ic = connection() ?: return null
         val window = readWindow() ?: return null
@@ -114,8 +115,8 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
         selected = null
         selStart = range.start
         selEnd = range.start
-        barIndex = (effect as? BarEffect.Removed)?.index
-        exact = barIndex != null
+        phraseIndex = (effect as? PhraseEffect.Removed)?.index
+        exact = phraseIndex != null
         return effect
     }
 
@@ -128,9 +129,9 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
      * add-a-space setting, because that setting is about appending to the end of
      * a phrase and this is not that.
      *
-     * Returns null when the bar cannot follow, which the caller must treat as
-     * the bar having lost track rather than as nothing having happened — the
-     * field is written either way.
+     * Returns null when the record cannot follow, which the caller must treat
+     * as the record having lost track rather than as nothing having happened —
+     * the field is written either way.
      */
     fun insert(text: String): Int? {
         val ic = connection() ?: return null
@@ -159,10 +160,10 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
         // leaving the caret there.
         val landed = when {
             !aligned -> null
-            highlighted != null -> barIndex?.plus(1)
-            else -> barIndex
+            highlighted != null -> phraseIndex?.plus(1)
+            else -> phraseIndex
         }
-        barIndex = landed
+        phraseIndex = landed
         exact = landed != null
         return landed
     }
@@ -186,7 +187,7 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
 
     private fun forget() {
         selected = null
-        barIndex = null
+        phraseIndex = null
         aligned = false
         exact = false
     }
@@ -200,40 +201,40 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
         selected = span
         selStart = span.start
         selEnd = span.end
-        val map = FieldWords.align(spans.map(window::textOf), barWords())
+        val map = FieldWords.align(spans.map(window::textOf), phraseWords())
         aligned = map != null
-        barIndex = map?.get(spans.indexOf(span))
-        exact = barIndex != null && map?.count { it.value == barIndex } == 1
-        return barIndex
+        phraseIndex = map?.get(spans.indexOf(span))
+        exact = phraseIndex != null && map?.count { it.value == phraseIndex } == 1
+        return phraseIndex
     }
 
-    /** What deleting the current selection does to the bar. */
-    private fun removalEffect(): BarEffect = when {
-        !aligned -> BarEffect.Lost
-        // A word of the field the bar never claimed — text from another
-        // keyboard, a quoted reply. The phrase is unaffected and saying it was
+    /** What deleting the current selection does to the record. */
+    private fun removalEffect(): PhraseEffect = when {
+        !aligned -> PhraseEffect.Lost
+        // A word of the field the record never claimed — text from another
+        // keyboard, a quoted reply. The phrase is unaffected, and saying it was
         // would throw away a phrase that is still correct.
-        barIndex == null -> BarEffect.Untouched
-        // One bar word covering several field words: a picto labelled `me
-        // gusta`, half of which is about to go. Half a picto is not a word the
-        // bar can show, so the bar gives up rather than lie.
-        !exact -> BarEffect.Lost
-        else -> BarEffect.Removed(requireNotNull(barIndex))
+        phraseIndex == null -> PhraseEffect.Untouched
+        // One recorded word covering several field words: a picto labelled
+        // `me gusta`, half of which is about to go. Half a picto is not a word
+        // 🔊 could say, so the record gives up rather than lie.
+        !exact -> PhraseEffect.Lost
+        else -> PhraseEffect.Removed(requireNotNull(phraseIndex))
     }
 }
 
-/** A word the arrows arrived at, and where it is in the sentence bar. */
-data class Stepped(val text: String, val barIndex: Int?)
+/** A word the arrows arrived at, and where it is in the recorded phrase. */
+data class Stepped(val text: String, val phraseIndex: Int?)
 
-/** What an edit under the arrows did to the sentence bar. */
-sealed interface BarEffect {
+/** What an edit under the arrows did to the recorded phrase. */
+sealed interface PhraseEffect {
 
-    /** The bar word at [index] went with it. */
-    data class Removed(val index: Int) : BarEffect
+    /** The recorded word at [index] went with it. */
+    data class Removed(val index: Int) : PhraseEffect
 
-    /** The field word was never the bar's, so the phrase still stands. */
-    data object Untouched : BarEffect
+    /** The field word was never the keyboard's, so the phrase still stands. */
+    data object Untouched : PhraseEffect
 
-    /** The bar can no longer say what the field holds, and must be emptied. */
-    data object Lost : BarEffect
+    /** The record can no longer say what the field holds, and must be emptied. */
+    data object Lost : PhraseEffect
 }

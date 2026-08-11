@@ -18,7 +18,7 @@ class KeyboardMetricsTest {
     private val screen = KeyboardMetrics.Screen(widthPx = 1080, heightPx = 1920)
     private val strip = 288
 
-    /** Roughly the tabs + sentence bar + action row on that phone. */
+    /** Roughly the tabs + phrase keys + action row on that phone. */
     private val chrome = 400
 
     private fun body(
@@ -97,7 +97,7 @@ class KeyboardMetricsTest {
     fun `chrome comes out of the ceiling, not out of the grid`() {
         // The rule #36 states: the keyboard grows, the grid does not shrink. A
         // board that already fits keeps every row when the tab strip and the
-        // sentence bar appear above it -- the keyboard just asks for more screen.
+        // phrase keys appear above it -- the keyboard just asks for more screen.
         val fits = body(columns = 4, rows = 4)
         assertEquals(fits, body(columns = 4, rows = 4, chromePx = chrome))
     }
