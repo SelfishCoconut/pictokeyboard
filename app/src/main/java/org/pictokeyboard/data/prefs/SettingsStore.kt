@@ -32,8 +32,16 @@ data class Settings(
      * No longer the language of the vocabulary — that is `BoardEntity.language`,
      * per board. A caregiver may well run the app in Spanish while building an
      * English board for school.
+     *
+     * Defaulted from the phone rather than to a constant (#137). This value is
+     * not only a placeholder: it is what both `ConfigViewModel.settings` and the
+     * keyboard show until DataStore has read from disk, and `MainActivity` hands
+     * it straight to `setApplicationLocales` — which **restarts the activity**.
+     * A constant that disagreed with the stored value would therefore cost a
+     * visible flash of the wrong language and a second recreate on every cold
+     * start, so the placeholder has to be the same answer the store will give.
      */
-    val defaultLanguage: String = "es",
+    val defaultLanguage: String = AppLanguages.systemDefault(),
     val addSpaceAfter: Boolean = true,
     val speakOnTap: Boolean = true,
     val ttsRate: Float = 1.0f,
@@ -80,7 +88,11 @@ class SettingsStore(private val context: Context) {
 
     val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
-            defaultLanguage = p[KEY_LANGUAGE] ?: "es",
+            // Absent until the caregiver picks one, so an install that has never
+            // been told otherwise follows the phone (#137) rather than sitting
+            // on a hardcoded "es". Writing a resolved value here instead would
+            // freeze the very first launch's answer forever.
+            defaultLanguage = p[KEY_LANGUAGE] ?: AppLanguages.systemDefault(),
             addSpaceAfter = p[KEY_ADD_SPACE] ?: true,
             speakOnTap = p[KEY_SPEAK] ?: true,
             ttsRate = p[KEY_TTS_RATE] ?: 1.0f,
