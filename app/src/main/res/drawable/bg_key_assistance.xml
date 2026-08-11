@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The alarm key (#144). Filled rather than outlined, unlike every other key on
+    this keyboard.
+
+    A key that calls a person has to be findable without reading, without
+    counting along the row, and by somebody who has looked at this keyboard for
+    the first time thirty seconds ago. Colour alone would not do that — half the
+    reason the rest of the surface is grey is that colour is reserved for
+    category meaning — so this one is separated on three channels at once: it is
+    the only filled key, the only red key, and the only key with a gap in front
+    of it.
+
+    The pressed face goes darker rather than flipping to the accent. Flipping to
+    blue would read as "this is now a normal key", which is the opposite of what
+    a press on this one means.
+
+    KeyboardPalette repaints all of it at runtime, so this is the frame's default
+    only — see ViewStyles.applyKeyColors.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ink" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/danger" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</selector>

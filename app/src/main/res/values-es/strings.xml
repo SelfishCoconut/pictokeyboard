@@ -29,6 +29,20 @@
     <string name="kb_beautify_unavailable">La ayuda con la frase no está lista.</string>
     <string name="kb_beautify_changed">El texto ha cambiado, así que no se ha sustituido nada.</string>
 
+    <!-- Recorrer la frase palabra a palabra (#143) -->
+    <string name="kb_prev_word">Palabra anterior</string>
+    <string name="kb_next_word">Palabra siguiente</string>
+    <string name="kb_no_words">No hay palabras por las que moverse.</string>
+    <string name="kb_word_a11y">Seleccionada: %1$s</string>
+
+    <!-- Pedir ayuda (#144) -->
+    <string name="kb_assistance">Pedir ayuda</string>
+    <string name="kb_assistance_calling">Llamando a %1$s. Pulsa la campana otra vez para parar.</string>
+    <string name="kb_assistance_calling_spoken">Llamando a %1$s</string>
+    <string name="kb_assistance_stop">Parar la llamada</string>
+    <string name="kb_assistance_stopped">Llamada cancelada.</string>
+    <string name="kb_assistance_failed">No se ha podido iniciar la llamada.</string>
+
     <string name="img_not_ready">La imagen aún se está descargando, inténtalo de nuevo.</string>
     <string name="img_unsupported">Este campo no admite imágenes.</string>
 
@@ -417,4 +431,16 @@
     <string name="settings_sentence_no_processor">El procesador de este móvil no puede ejecutar el modelo de frases.</string>
     <string name="settings_sentence_no_memory">Este móvil no tiene memoria suficiente para ejecutar el modelo de frases.</string>
     <string name="settings_sentence_no_storage">No hay espacio suficiente para el modelo de frases. Necesita unos %1$d MB.</string>
+
+    <!-- Pedir ayuda (#144) -->
+    <string name="settings_group_assistance">Pedir ayuda</string>
+    <string name="settings_assistance_desc">Pone en el teclado una campana roja que llama a un número. Si lo dejas vacío, no hay campana.</string>
+    <string name="settings_assistance_name">A quién llama</string>
+    <string name="settings_assistance_name_hint">Un nombre que reconozca quien usa el teclado. Se dice en voz alta antes de empezar la llamada.</string>
+    <string name="settings_assistance_number">Número de teléfono</string>
+    <string name="settings_assistance_countdown">El teclado dice a quién va a llamar y espera unos segundos, para que una campana pulsada sin querer pueda pararse con una segunda pulsación.</string>
+    <string name="settings_assistance_allow">Permitir que PictoKeyboard haga llamadas</string>
+    <string name="settings_assistance_allow_why">Sin este permiso la campana abre la aplicación de teléfono con el número puesto, y alguien tiene que pulsar el botón de llamar — que es justo lo que quien usa este teclado puede no poder hacer.</string>
+    <string name="settings_assistance_allowed">Las llamadas están permitidas. La campana marca sola.</string>
+    <string name="settings_assistance_remove">Quitar el contacto</string>
 </resources>

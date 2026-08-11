@@ -69,6 +69,17 @@ class ConfigViewModel : ViewModel() {
     }
 
     /**
+     * Who the keyboard's bell rings (#144).
+     *
+     * Written on every keystroke rather than behind a Save button, so that a
+     * caregiver who types a number and walks away has still set it. There is no
+     * half-configured state to protect: an empty number simply means no bell.
+     */
+    fun setAssistanceContact(name: String, number: String) = viewModelScope.launch {
+        settingsStore.setAssistanceContact(name, number)
+    }
+
+    /**
      * Starts, or resumes, the weights download.
      *
      * Held in a job rather than launched loose so [cancelModelDownload] has

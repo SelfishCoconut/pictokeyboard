@@ -82,7 +82,25 @@ data class Settings(
      * the sentence bar, nothing to wait for, nothing that can be wrong.
      */
     val sentenceHelp: Boolean = false,
-)
+    /**
+     * Who the keyboard's bell calls, and what to call them (#144).
+     *
+     * Empty by default, and empty is not a disabled feature — it is the absence
+     * of one. No number means no bell on the keyboard and no call permission
+     * ever asked for, so an install that never wants this is never bothered
+     * about the phone.
+     *
+     * A number and a name rather than a contact id: looking one up would mean
+     * asking for the address book, which is a great deal to hand a keyboard in
+     * exchange for eleven digits somebody can type once.
+     */
+    val assistanceName: String = "",
+    val assistanceNumber: String = "",
+) {
+
+    /** Whether the bell has anywhere to ring. */
+    val hasAssistanceContact: Boolean get() = assistanceNumber.isNotBlank()
+}
 
 /**
  * Layout values written by a version of the app that had no boards. Every field
@@ -114,6 +132,8 @@ class SettingsStore(private val context: Context) {
             hapticFeedback = p[KEY_HAPTICS] ?: true,
             highContrast = p[KEY_HIGH_CONTRAST] ?: false,
             sentenceHelp = p[KEY_SENTENCE_HELP] ?: false,
+            assistanceName = p[KEY_ASSIST_NAME].orEmpty(),
+            assistanceNumber = p[KEY_ASSIST_NUMBER].orEmpty(),
         )
     }
 
@@ -128,6 +148,18 @@ class SettingsStore(private val context: Context) {
     suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
     suspend fun setHighContrast(value: Boolean) = edit { it[KEY_HIGH_CONTRAST] = value }
     suspend fun setSentenceHelp(value: Boolean) = edit { it[KEY_SENTENCE_HELP] = value }
+
+    /**
+     * Both halves of the assistance contact, written together.
+     *
+     * One call rather than two setters because a name without a number is a bell
+     * that cannot ring and a number without a name is a call the user is not told
+     * about, and neither is a state worth being able to persist.
+     */
+    suspend fun setAssistanceContact(name: String, number: String) = edit {
+        it[KEY_ASSIST_NAME] = name.trim()
+        it[KEY_ASSIST_NUMBER] = number.trim()
+    }
 
     // --- Layout values inherited from before boards existed ------------------
 
@@ -224,5 +256,7 @@ class SettingsStore(private val context: Context) {
         private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
         private val KEY_HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
         private val KEY_SENTENCE_HELP = booleanPreferencesKey("sentence_help")
+        private val KEY_ASSIST_NAME = stringPreferencesKey("assistance_name")
+        private val KEY_ASSIST_NUMBER = stringPreferencesKey("assistance_number")
     }
 }

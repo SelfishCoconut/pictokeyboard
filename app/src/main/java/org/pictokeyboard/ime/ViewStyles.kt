@@ -208,6 +208,24 @@ object ViewStyles {
             key.background = primary()
             key.setTextColor(primaryContent)
         }
+
+        // The alarm key is filled rather than outlined, and its pressed face goes
+        // to ink rather than to the accent: flipping to the same blue as every
+        // other key would read as "this is a normal key now", which is the one
+        // thing it must never say. See drawable/bg_key_assistance.xml.
+        root.findViewById<ImageView>(R.id.key_assistance)?.let { key ->
+            key.background = StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_pressed), solid(skin.ink, radius))
+                addState(StateSet.WILD_CARD, solid(skin.danger, radius))
+            }
+            ImageViewCompat.setImageTintList(
+                key,
+                ColorStateList(
+                    arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+                    intArrayOf(skin.paper, skin.onDanger),
+                ),
+            )
+        }
     }
 
     private fun solid(argb: Int, cornerRadiusPx: Float): GradientDrawable =
@@ -250,9 +268,18 @@ object ViewStyles {
     private const val KEY_CORNER_DP = 10f
     private const val KEY_STROKE_DP = 1.5f
 
-    /** Every key drawn with the recessive face; space is the one primary key. */
+    /**
+     * Every key drawn with the recessive face; space is the one primary key and
+     * the alarm bell is the one filled one.
+     *
+     * Beautify was missing from this list, so on high contrast it kept the
+     * layout's default grey while the keys either side of it repainted.
+     */
     private val RECESSIVE_KEYS = listOf(
+        R.id.key_prev_word,
+        R.id.key_next_word,
         R.id.key_backspace,
+        R.id.key_beautify,
         R.id.key_speak,
         R.id.key_clear,
         R.id.key_switch,

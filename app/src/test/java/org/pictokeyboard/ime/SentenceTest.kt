@@ -1,6 +1,7 @@
 package org.pictokeyboard.ime
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.pictokeyboard.tts.TtsManager
@@ -78,5 +79,60 @@ class SentenceTest {
         val second = first.plus("comer", "es")
         assertEquals("yo", first.display())
         assertEquals("yo · comer", second.display())
+    }
+
+    // --- Editing the middle, which the arrows made possible (#143) ----------
+
+    @Test
+    fun `a word can be taken out of the middle`() {
+        assertEquals("yo · galleta", sentence("yo", "quiero", "galleta").removeAt(1).display())
+    }
+
+    @Test
+    fun `removing a word nobody has leaves the phrase alone`() {
+        // The index comes from aligning this phrase against a field another app
+        // can rewrite between one press and the next, so it can go stale. A
+        // stale index must be a no-op rather than a crash inside somebody's
+        // chat window.
+        val phrase = sentence("yo", "quiero")
+        assertEquals(phrase, phrase.removeAt(7))
+        assertEquals(phrase, phrase.removeAt(-1))
+    }
+
+    @Test
+    fun `a word can be put back where the wrong one was`() {
+        val repaired = sentence("yo", "quiero", "galleta").removeAt(2).insertAt(2, "agua", "es")
+        assertEquals("yo · quiero · agua", repaired.display())
+    }
+
+    @Test
+    fun `an inserted word keeps its own language`() {
+        val mixed = sentence("yo").insertAt(1, "water", "en")
+        assertEquals(TtsManager.Part("water", "en"), mixed.parts()[1])
+    }
+
+    @Test
+    fun `an out-of-range insert lands at the nearest end rather than failing`() {
+        assertEquals("yo · agua", sentence("yo").insertAt(9, "agua", "es").display())
+        assertEquals("agua · yo", sentence("yo").insertAt(-3, "agua", "es").display())
+    }
+
+    @Test
+    fun `the highlight range covers exactly the word, not its separators`() {
+        val phrase = sentence("yo", "quiero", "galleta")
+        val display = phrase.display()
+        assertEquals("yo", display.substring(requireNotNull(phrase.range(0))))
+        assertEquals("quiero", display.substring(requireNotNull(phrase.range(1))))
+        assertEquals("galleta", display.substring(requireNotNull(phrase.range(2))))
+    }
+
+    @Test
+    fun `there is no range for a word that is not there`() {
+        assertNull(sentence("yo").range(4))
+    }
+
+    @Test
+    fun `the words alone are what the field is aligned against`() {
+        assertEquals(listOf("yo", "quiero"), sentence("yo", "quiero").texts())
     }
 }

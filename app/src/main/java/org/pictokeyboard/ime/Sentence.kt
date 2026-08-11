@@ -33,8 +33,47 @@ data class Sentence(val words: List<TtsManager.Part> = emptyList()) {
      */
     fun dropLast(): Sentence = if (words.isEmpty()) this else Sentence(words.dropLast(1))
 
+    /**
+     * Drops the word at [index], mirroring a delete made with the arrows (#143).
+     *
+     * Unlike [dropLast] this can take a word out of the middle, which is the
+     * only reason the arrows are worth having. Out-of-range is a no-op rather
+     * than a crash: the caller's index comes from aligning this list against a
+     * field that another app can rewrite between one press and the next.
+     */
+    fun removeAt(index: Int): Sentence =
+        if (index in words.indices) Sentence(words.filterIndexed { i, _ -> i != index }) else this
+
+    /** Puts a word in at [index], for a picto tapped while the arrows are in use. */
+    fun insertAt(index: Int, text: String, language: String): Sentence =
+        if (text.isBlank()) {
+            this
+        } else {
+            Sentence(
+                words.toMutableList().apply {
+                    add(index.coerceIn(0, size), TtsManager.Part(text.trim(), language))
+                },
+            )
+        }
+
     /** Empties the bar. The field is deliberately left alone — see [Sentence]. */
     fun cleared(): Sentence = Sentence()
+
+    /** Just the words, for aligning this phrase against the field's own. */
+    fun texts(): List<String> = words.map { it.text }
+
+    /**
+     * Where the word at [index] sits inside [display], so it can be highlighted.
+     *
+     * Computed rather than stored because [display] is built on demand and the
+     * separator is this class's business: a caller that measured the string
+     * itself would have to know how wide a middot is.
+     */
+    fun range(index: Int): IntRange? {
+        if (index !in words.indices) return null
+        val start = words.take(index).sumOf { it.text.length + SEPARATOR.length }
+        return start until start + words[index].text.length
+    }
 
     val isEmpty: Boolean get() = words.isEmpty()
 
