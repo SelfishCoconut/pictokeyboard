@@ -79,6 +79,7 @@ fun SettingsScreen(
         onDownloadModel = viewModel::downloadModel,
         onCancelModelDownload = viewModel::cancelModelDownload,
         onDeleteModel = viewModel::deleteModel,
+        onBenchmarkModel = viewModel::benchmarkModel,
         onBack = onBack,
         onOpenAbout = onOpenAbout,
         onLanguage = viewModel::setLanguage,
@@ -113,6 +114,7 @@ private fun SentenceAndAssistanceGroups(
     onDownloadModel: () -> Unit,
     onCancelModelDownload: () -> Unit,
     onDeleteModel: () -> Unit,
+    onBenchmarkModel: () -> Unit,
     onAssistanceContact: (String, String) -> Unit,
     onRequestCallPermission: () -> Unit,
 ) {
@@ -120,10 +122,12 @@ private fun SentenceAndAssistanceGroups(
         SentenceHelpSection(
             enabled = settings.sentenceHelp,
             model = sentenceModel,
+            speed = settings.sentenceSpeed,
             onEnabled = onSentenceHelp,
             onDownload = onDownloadModel,
             onCancel = onCancelModelDownload,
             onDelete = onDeleteModel,
+            onBenchmark = onBenchmarkModel,
         )
     }
     SettingsGroup(stringResource(R.string.settings_group_assistance)) {
@@ -151,6 +155,7 @@ fun SettingsScreenContent(
     onDownloadModel: () -> Unit = {},
     onCancelModelDownload: () -> Unit = {},
     onDeleteModel: () -> Unit = {},
+    onBenchmarkModel: () -> Unit = {},
     onOpenAbout: () -> Unit,
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
@@ -197,6 +202,7 @@ fun SettingsScreenContent(
                 onDownloadModel = onDownloadModel,
                 onCancelModelDownload = onCancelModelDownload,
                 onDeleteModel = onDeleteModel,
+                onBenchmarkModel = onBenchmarkModel,
                 onAssistanceContact = onAssistanceContact,
                 onRequestCallPermission = onRequestCallPermission,
             )
