@@ -17,6 +17,18 @@
     <string name="kb_sentence_empty">Todavía no has escrito nada</string>
     <string name="kb_sentence_a11y">Escrito hasta ahora: %1$s</string>
     <string name="kb_empty_hint">Aún no hay categorías. Abre los ajustes para configurar el tablero.</string>
+    <!-- Ayuda con la frase (#46, #48). -->
+    <string name="kb_beautify">Decirlo mejor</string>
+    <string name="kb_beautify_icon">\u2728</string>
+    <string name="kb_beautify_undo">Deshacer y recuperar mis palabras</string>
+    <string name="kb_beautify_undo_icon">\u21ba</string>
+    <string name="kb_beautify_working">Trabajando</string>
+    <string name="kb_beautify_applied">Frase reescrita. Pulsa otra vez para recuperar tus palabras.</string>
+    <string name="kb_beautify_undone">Tus palabras han vuelto.</string>
+    <string name="kb_beautify_nothing">Se queda como lo escribiste.</string>
+    <string name="kb_beautify_unavailable">La ayuda con la frase no está lista.</string>
+    <string name="kb_beautify_changed">El texto ha cambiado, así que no se ha sustituido nada.</string>
+
     <string name="img_not_ready">La imagen aún se está descargando, inténtalo de nuevo.</string>
     <string name="img_unsupported">Este campo no admite imágenes.</string>
 
@@ -387,4 +399,22 @@
     <string name="category_move_body">Sus símbolos van con ella. El tablero en el que está ahora conserva todo lo demás.</string>
     <string name="category_moved">%1$s se ha movido a %2$s</string>
     <string name="undo">Deshacer</string>
+    <!-- Ayuda con la frase (#48) -->
+    <string name="settings_group_sentence">Ayuda con la frase</string>
+    <string name="settings_sentence_help">Decirlo mejor</string>
+    <string name="settings_sentence_help_desc">Añade al teclado un botón que reescribe las palabras tocadas como una frase. Nunca añade una palabra que no hayas tocado, y una pulsación devuelve tus palabras.</string>
+    <string name="settings_sentence_help_privacy">Las frases se escriben en este móvil, con un modelo guardado en él. Nada de lo que escribes se envía a ningún sitio.</string>
+    <string name="settings_sentence_model">Modelo: %1$s</string>
+    <string name="settings_sentence_model_size">%1$d MB de descarga, una sola vez.</string>
+    <string name="settings_sentence_download">Descargar el modelo</string>
+    <string name="settings_sentence_resume">Reanudar la descarga</string>
+    <string name="settings_sentence_delete">Eliminar el modelo (%1$d MB)</string>
+    <string name="settings_sentence_progress">%1$d de %2$d MB</string>
+    <string name="settings_sentence_verifying">Comprobando la descarga\u2026</string>
+    <string name="settings_sentence_failed_network">La descarga se ha detenido. Se conserva lo descargado: inténtalo de nuevo cuando tengas conexión.</string>
+    <string name="settings_sentence_failed_disk">No queda espacio suficiente en el móvil.</string>
+    <string name="settings_sentence_failed_corrupt">La descarga no ha llegado íntegra y se ha descartado. Inténtalo de nuevo.</string>
+    <string name="settings_sentence_no_processor">El procesador de este móvil no puede ejecutar el modelo de frases.</string>
+    <string name="settings_sentence_no_memory">Este móvil no tiene memoria suficiente para ejecutar el modelo de frases.</string>
+    <string name="settings_sentence_no_storage">No hay espacio suficiente para el modelo de frases. Necesita unos %1$d MB.</string>
 </resources>

@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.TextView
@@ -38,6 +39,7 @@ import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ime.PressFeedback.confirmPress
+import org.pictokeyboard.sentence.TypedWord
 import org.pictokeyboard.tts.TtsManager
 import org.pictokeyboard.ui.theme.CategoryColors
 
@@ -129,6 +131,24 @@ class PictoKeyboardService : InputMethodService() {
      * vanished when the user turned their phone would be worse than no bar.
      */
     private var sentence = Sentence()
+
+    /**
+     * Beautify's own state: the binder to the model process, and the exact
+     * characters this keyboard put in the field (#46).
+     *
+     * Beside [sentence] rather than inside it because [Sentence] is what the
+     * *bar* shows -- words, trimmed, for display and speech -- while the
+     * controller has to track the literal string in the host's editor, spacing
+     * and all, or a swap cannot be checked before it is made.
+     */
+    private val beautify by lazy {
+        BeautifyController(
+            context = this,
+            connection = { currentInputConnection },
+            onStateChanged = ::renderBeautifyKey,
+            announce = ::announce,
+        )
+    }
 
     /**
      * How much of the keyboard the navigation bar is sitting on, in pixels.
@@ -341,6 +361,7 @@ class PictoKeyboardService : InputMethodService() {
             R.id.key_space to { commit(" ") },
             R.id.key_backspace to { backspace() },
             R.id.key_enter to { onEnter() },
+            R.id.key_beautify to { beautify.press(typedWords()) },
             R.id.key_speak to { speakSentence() },
             R.id.key_clear to { clearSentence() },
         ).forEach { (id, action) ->
@@ -417,6 +438,9 @@ class PictoKeyboardService : InputMethodService() {
         super.onStartInput(info, restarting)
         if (!restarting) {
             sentence = sentence.cleared()
+            // A generation for the field the user just left must never land in
+            // the one they just entered (#46).
+            beautify.onTargetChanged()
             renderSentence()
         }
     }
@@ -447,6 +471,12 @@ class PictoKeyboardService : InputMethodService() {
             // one-shot read racing that collector is how the grid ends up drawn
             // for one board and washed in another's colour.
             tts.setParams(settings.ttsRate, settings.ttsPitch)
+            // Binds or releases the model process, and shows or hides the key.
+            // Done on every open so switching the setting off in the app takes
+            // effect the next time the keyboard appears, without the caregiver
+            // having to restart anything.
+            beautify.setEnabled(settings.sentenceHelp)
+            renderBeautifyKey()
             applyPalette()
             // onCreateInputView is gated on onEvaluateInputViewShown() and this
             // is gated on mShowInputRequested -- different conditions, so with a
@@ -695,9 +725,48 @@ class PictoKeyboardService : InputMethodService() {
         // staging area that could hold a sentence back.
         commit(toInsert)
         sentence = sentence.plus(text, picto.language)
+        beautify.onCommitted(toInsert)
         renderSentence()
         if (settings.speakOnTap) tts.speak(text, picto.language)
         recordUsage(picto)
+    }
+
+    // --- Beautify (#46) -----------------------------------------------------
+
+    /** The phrase as the model needs it: each word still carrying its own language. */
+    private fun typedWords(): List<TypedWord> =
+        sentence.parts().map { TypedWord(it.text, it.language) }
+
+    /**
+     * Says what happened, out loud and to TalkBack.
+     *
+     * A rephrase changes text the user may not be able to read back, so the fact
+     * that it happened cannot be conveyed only by the field changing.
+     */
+    private fun announce(resId: Int) {
+        if (!::sentenceView.isInitialized) return
+        val message = uiContext.getString(resId)
+        sentenceView.announceForAccessibility(message)
+        android.widget.Toast.makeText(uiContext, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    /** Hidden when there is no model, and Undo once a rephrase is in place. */
+    private fun renderBeautifyKey() {
+        if (!::normalView.isInitialized) return
+        val key = normalView.findViewById<Button>(R.id.key_beautify) ?: return
+
+        val available = settings.sentenceHelp && beautify.isAvailable
+        key.visibility = if (available) View.VISIBLE else View.GONE
+        key.isEnabled = !beautify.working
+        val label = when {
+            beautify.working -> R.string.kb_beautify_working
+            beautify.edit.canUndo -> R.string.kb_beautify_undo
+            else -> R.string.kb_beautify
+        }
+        key.contentDescription = uiContext.getString(label)
+        key.text = uiContext.getString(
+            if (beautify.edit.canUndo) R.string.kb_beautify_undo_icon else R.string.kb_beautify_icon,
+        )
     }
 
     // --- The sentence bar ---------------------------------------------------
@@ -718,6 +787,7 @@ class PictoKeyboardService : InputMethodService() {
      */
     private fun clearSentence() {
         sentence = sentence.cleared()
+        beautify.onPhraseCleared()
         renderSentence()
     }
 
@@ -809,6 +879,7 @@ class PictoKeyboardService : InputMethodService() {
             // honest answer: a mirror that has lost track must say so rather
             // than keep showing a phrase the field no longer holds.
             sentence = sentence.cleared()
+            beautify.onPhraseCleared()
             renderSentence()
             return
         }
@@ -817,6 +888,7 @@ class PictoKeyboardService : InputMethodService() {
         if (count > 0) {
             ic.deleteSurroundingText(count, 0)
             sentence = sentence.dropLast()
+            beautify.onDeleted(count)
             renderSentence()
         }
     }
@@ -953,6 +1025,10 @@ class PictoKeyboardService : InputMethodService() {
 
     override fun onDestroy() {
         scope.cancel()
+        // Released explicitly: an unbound service is what lets Android reclaim
+        // the model's process, and leaking the binding would keep several
+        // hundred megabytes alive after the keyboard is gone.
+        beautify.release()
         tts.shutdown()
         super.onDestroy()
     }
