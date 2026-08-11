@@ -3,9 +3,20 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Four pictogram tiles in the AAC frame colours -->
+    <!-- White faces first, so each tile reads as a pictogram tile rather than as
+         a hole punched through to the background. It is also what the grid
+         actually looks like: ARASAAC artwork is black line work on white, and a
+         tile is white in every theme the app has. -->
+    <path android:fillColor="#FFFFFF" android:pathData="M32,32 h18 v18 h-18 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M58,32 h18 v18 h-18 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M32,58 h18 v18 h-18 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M58,58 h18 v18 h-18 z" />
+
+    <!-- Frames in the colours of the first four seeded categories: Personas,
+         Acciones, Comida, Sentimientos. No blue frame — it is the one colour
+         that would lose its edge against the blue ground behind it. -->
     <path android:fillColor="#FFC107" android:pathData="M30,30 h22 v22 h-22 z M32,32 v18 h18 v-18 z" />
     <path android:fillColor="#4CAF50" android:pathData="M56,30 h22 v22 h-22 z M58,32 v18 h18 v-18 z" />
-    <path android:fillColor="#2196F3" android:pathData="M30,56 h22 v22 h-22 z M32,58 v18 h18 v-18 z" />
+    <path android:fillColor="#FF9800" android:pathData="M30,56 h22 v22 h-22 z M32,58 v18 h18 v-18 z" />
     <path android:fillColor="#F44336" android:pathData="M56,56 h22 v22 h-22 z M58,58 v18 h18 v-18 z" />
 </vector>
