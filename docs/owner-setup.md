@@ -12,8 +12,7 @@ actually worked rather than only looked like it did.
 | 1 | GitHub Pages set to *GitHub Actions* | **done** |
 | 2 | `database` and `functions` removed from the required checks | **done** (2026-08-11) |
 | 3 | Play Console answers | **yours** — at listing time |
-| 4 | Upload key minted, and a signed build proven | **done** (2026-08-11) |
-| 4 | The same key given to CI as four secrets | **yours** — one command |
+| 4 | Upload key, and the secrets CI reads | **yours** — two commands, [`signing.md`](./signing.md) |
 | 5 | Privacy policy, when sentence help ships | not yet — same release as #46 |
 | 6 | Play Console account, and the closed test it requires | **yours** — start this first, it takes weeks |
 
@@ -110,47 +109,42 @@ Play checks the upload signature, strips it, and re-signs with the app signing
 key it holds. That is the whole point of the scheme: the key that can never be
 replaced is one you cannot lose, because you never have it.
 
-### What is already done
+### Doing it
 
-`scripts/make-upload-key.sh` has been run. The key is at
-`~/.pictokeyboard/upload.jks`, alias `upload`, password in
-`~/.pictokeyboard/upload-key.password` — RSA 4096, valid to **2053**, comfortably
-past the 2033-10-22 floor Play enforces on upload certificates.
-
-```
-SHA-256  84:B8:93:13:70:DB:61:46:2F:A8:0B:FB:F8:1D:C1:36:BE:18:97:98:9E:A3:A3:C4:5F:78:EE:2E:F3:AA:1F:66
-SHA-1    5C:63:EF:84:54:23:03:57:C8:A4:46:0A:9A:EC:81:20:50:50:7C:C9
-```
-
-It has produced a signed AAB and APK locally, verified with `apksigner`, so the
-chain from Gradle to artefact is known to work rather than assumed to.
-
-> **Back up both files somewhere that is not this machine.** Losing them is
-> survivable — an upload key can be reset — but the reset is a support request
-> and a wait.
-
-### What only you can do
-
-**1. Give CI the key.** Four secrets, and the script sets all four:
+Step by step, with everything it can go wrong on:
+**[`signing.md`](./signing.md)** — a runbook meant to be followed alone.
 
 ```sh
-./scripts/make-upload-key.sh --push-only
+./scripts/make-upload-key.sh --rotate --prompt --push   # mint it, your password, tell CI
+./scripts/sign-release.sh                               # prove it signs
 ```
 
-The names matter: `release.yml` reads **`KEYSTORE_BASE64`** and derives
-`KEYSTORE_FILE` from it as the path it decoded to. (An earlier version of this
-document listed `KEYSTORE_FILE` as a secret to set. It is not one, and setting
-it did nothing.)
+A key minted earlier is on this machine at `~/.pictokeyboard/upload.jks`. It was
+made during an agent session, so `--rotate` above replaces it with one that was
+not; the old one is archived rather than deleted, and doing this costs nothing
+until Play has accepted an upload. After that it stops being a script and
+becomes a support request — `signing.md` §2 is the one to read before rotating
+anything.
 
-**2. Upload, and let Google generate the app signing key.** In the Console:
-create the app, start a release on the closed-test track, and in **App signing**
-change nothing — the default is Google generating and holding the key, which is
-what you want. Then upload the AAB. Enrolment is complete at that moment.
+Fingerprints are deliberately not written down here. They change when the key
+changes, and a document with a stale fingerprint in it is worse than one with
+none. Ask the key:
 
-Afterwards the Console shows both certificates back to you. The upload one must
-match the SHA-256 above; that fingerprint is also pinned in CI as the repository
-variable `UPLOAD_KEY_SHA256`, so a build signed by the wrong key fails before it
-can spend a `versionCode`.
+```sh
+./scripts/make-upload-key.sh --show
+```
+
+### Then, in the Console
+
+Create the app, start a release on the closed-test track, and under **App
+signing** change nothing — the default is Google generating and holding the app
+signing key, which is what you want. Upload the AAB. Enrolment is complete at
+that moment; there is no separate button for it.
+
+Afterwards the Console shows both certificates back. The upload one must match
+what `--show` prints, and that fingerprint is also pinned in CI as the
+repository variable `UPLOAD_KEY_SHA256` — so a build signed by the wrong key
+fails before it can spend a `versionCode`.
 
 ### One decision this repository forces
 

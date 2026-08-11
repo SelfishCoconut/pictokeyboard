@@ -52,7 +52,7 @@ jobs:
           if [ -n "$missing" ]; then
             if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
               echo "::error::Cannot sign $GITHUB_REF_NAME. Missing secret(s):$missing"
-              echo "::error::See docs/owner-setup.md - scripts/make-upload-key.sh --push sets all four."
+              echo "::error::Run scripts/make-upload-key.sh --push-only to set them. Runbook: docs/signing.md"
               exit 1
             fi
             echo "::warning::Missing secret(s):$missing -- building unsigned. Nothing will be published."
