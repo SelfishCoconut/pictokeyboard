@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Everything that must be true of site/ before it is published.
 
-These pages are the privacy policy and the account-deletion route: the two
-documents Play checks, and the only way to delete an account without the app.
-They are also plain HTML with no framework, which means nothing else would ever
-notice if one of these went wrong -- there is no compiler, no type checker, and
+These pages are the privacy policy, in both languages: the document Play checks.
+They are plain HTML with no framework, which means nothing else would ever
+notice if one of them went wrong -- there is no compiler, no type checker, and
 no test that loads them.
+
+The account-deletion route and its shared JavaScript module were removed with
+the accounts themselves (#119), and the `messages` and `elements` checks went
+with them: both existed to police one module serving two languages, and there is
+no module left. What remains is what applies to a static document.
 
 Run locally with:  python3 .github/scripts/check-site.py
 
@@ -13,10 +17,6 @@ Each check exists because of a specific way this could fail quietly:
 
   links     A dead link in a privacy policy is a compliance problem, and a dead
             link between languages strands somebody on a page they cannot read.
-  messages  The deletion page's logic is shared by every language and reads its
-            wording from `window.PK_MESSAGES`. A key defined in English but not
-            in Spanish does not render as a blank -- it renders as the word
-            "undefined", on the page someone is using to delete their account.
   structure Unlabelled inputs and skipped heading levels are invisible to
             someone reading the page and decisive for someone using a screen
             reader. This app exists for people who rely on assistive technology.
@@ -29,7 +29,6 @@ import sys
 from pathlib import Path
 
 SITE = Path('site')
-MODULE = SITE / 'assets' / 'delete-account.js'
 STYLESHEET = SITE / 'assets' / 'style.css'
 
 problems: list[str] = []
@@ -53,44 +52,6 @@ def check_links() -> None:
                 report('links', page, f'broken link {href!r}')
 
 
-def check_messages() -> None:
-    used = set(re.findall(r'\btext\.(\w+)', MODULE.read_text()))
-    if not used:
-        report('messages', MODULE, 'no messages found -- has the module changed shape?')
-        return
-    for page in pages():
-        block = re.search(r'window\.PK_MESSAGES\s*=\s*\{(.*?)\n\s*\}', page.read_text(), re.S)
-        if not block:
-            continue
-        # Keys only. A colon inside a translated sentence is not a key.
-        defined = set(re.findall(r'^\s*(\w+)\s*:', block.group(1), re.M))
-        for missing in sorted(used - defined):
-            report('messages', page, f'missing message {missing!r}')
-
-
-def check_elements() -> None:
-    """Every id the shared module touches exists on every page that loads it.
-
-    The module is one file serving both languages, and it wires listeners by id
-    at load time. A control present in English and missing in Spanish is not a
-    missing button on the Spanish page -- `$('x').addEventListener` throws, the
-    rest of the module never runs, and *deletion itself* stops working in that
-    language while looking perfectly fine.
-
-    Nothing else would catch it: the page is static, there is no browser in CI,
-    and the flow test drives Supabase rather than the DOM.
-    """
-    needed = set(re.findall(r"\$\('([\w-]+)'\)", MODULE.read_text()))
-    if not needed:
-        report('elements', MODULE, 'no element ids found -- has the module changed shape?')
-        return
-    for page in pages():
-        text = page.read_text()
-        if MODULE.name not in text:
-            continue
-        present = set(re.findall(r'id="([\w-]+)"', text))
-        for missing in sorted(needed - present):
-            report('elements', page, f'the module uses #{missing}, which this page does not have')
 
 
 def check_structure() -> None:
@@ -192,7 +153,7 @@ def main() -> int:
         print('site/ not found -- run this from the repository root', file=sys.stderr)
         return 2
 
-    for check in (check_links, check_messages, check_elements, check_structure, check_contrast):
+    for check in (check_links, check_structure, check_contrast):
         check()
 
     if problems:
@@ -202,7 +163,7 @@ def main() -> int:
         return 1
 
     print(f'site/ is clean: {len(pages())} pages checked '
-          '(links, messages, elements, structure, contrast)')
+          '(links, structure, contrast)')
     return 0
 
 

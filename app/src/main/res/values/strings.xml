@@ -328,12 +328,16 @@
 
     <!-- Boards tab (#32) -->
     <string name="nav_boards">Boards</string>
-    <string name="nav_discover">Discover</string>
     <string name="boards_title">Boards</string>
     <string name="boards_in_use">In use</string>
     <string name="boards_use_this">Use this board</string>
     <string name="boards_duplicate">Duplicate</string>
-    <string name="boards_export">Export</string>
+    <string name="boards_share">Share a copy</string>
+    <string name="boards_share_chooser">Send %1$s</string>
+    <string name="boards_share_failed">That board could not be packed up. Try again.</string>
+    <string name="boards_import">Open a board someone sent you</string>
+    <string name="boards_import_done">Added. Your other boards are untouched.</string>
+    <string name="boards_import_failed">That file could not be opened. It may be damaged, or made by a newer version of PictoKeyboard.</string>
     <string name="boards_delete">Delete</string>
     <string name="boards_more">More options for %1$s</string>
     <string name="boards_copy_name">%1$s (copy)</string>
@@ -343,12 +347,9 @@
     <string name="boards_card_a11y">%1$s, %2$d categories, %3$d pictograms</string>
     <string name="boards_card_a11y_in_use">%1$s, in use, %2$d categories, %3$d pictograms</string>
     <string name="boards_empty_title">No boards yet</string>
-    <string name="boards_empty_body">A board is one set of words for one situation — home, school, an appointment. Find one to start from in Discover.</string>
-    <string name="boards_empty_action">Browse Discover</string>
+    <string name="boards_empty_body">A board is one set of words for one situation — home, school, an appointment. Build one, or open a board another caregiver sent you.</string>
+    <string name="boards_empty_action">Open a board file</string>
     <string name="boards_setup_banner">Finish setting up the keyboard</string>
-    <string name="discover_title">Discover</string>
-    <string name="discover_coming_soon">Boards and categories to install, ready-made.</string>
-    <string name="discover_coming_soon_body">A catalogue ships with the app so there is somewhere to start on day one. It is not built yet.</string>
     <string name="about_help_heading">Help</string>
     <string name="settings_group_about">About</string>
     <string name="settings_about_row">About and credits</string>
@@ -379,46 +380,10 @@
     <string name="try_it_placeholder">Tap a symbol to write it</string>
     <string name="try_it_not_ready">PictoKeyboard is not the keyboard in use yet, so this box would open a different one.</string>
     <string name="try_it_done">Done</string>
-    <string name="account_title">Account</string>
-    <string name="account_signed_out_title">Keep your boards safe</string>
-    <string name="account_signed_out_body">Sign in and your boards come back on a new phone. The keyboard works exactly the same either way — an account is never needed to speak.</string>
-    <string name="account_email">Email</string>
-    <string name="account_password">Password</string>
-    <string name="account_sign_in">Sign in</string>
-    <string name="account_sign_up">Create an account</string>
-    <string name="account_forgot">Forgotten your password?</string>
-    <string name="account_check_your_email">Check your email to confirm your account.</string>
-    <string name="account_recovery_sent">Check your email for a link to set a new password.</string>
-    <string name="account_google">Continue with Google</string>
-    <string name="account_signed_in_as">Signed in as %1$s</string>
-    <string name="account_signed_in">Signed in</string>
-    <string name="account_sign_out">Sign out</string>
-    <string name="account_delete">Delete my account</string>
-    <string name="account_delete_title">Delete this account?</string>
-    <!-- Leads with what is *not* destroyed. Someone reading "delete" while
-         holding a phone full of their child's vocabulary has every reason to
-         assume the boards go too, and this sentence is the only thing that
-         tells them otherwise. -->
-    <string name="account_delete_body">Every board, photo and recording on this phone stays exactly where it is. This removes the account itself — your email address and display name — and it cannot be undone. Boards you have published stay in the catalogue, without your name on them.</string>
-    <!-- Named as the thing it does, not "OK". A destructive confirmation that
-         says "OK" is one an anxious caregiver can press without reading. -->
-    <string name="account_delete_confirm">Delete the account</string>
-    <string name="account_delete_hint">Want a copy of your boards first? Export everything from Settings, then delete.</string>
-    <string name="account_deleted">That account is gone. Your boards are still on this phone.</string>
-    <string name="account_sign_out_note">Your boards stay on this phone. Signing out never deletes anything.</string>
-    <string name="account_error_credentials">That email and password do not go together. Check both and try again.</string>
-    <string name="account_error_email_not_confirmed">Confirm your email first — there is a link in the message we sent when the account was made.</string>
-    <string name="account_error_email_taken">That email already has an account. Sign in instead.</string>
-    <string name="account_error_weak_password">That password is too easy to guess. Try a longer one.</string>
-    <string name="account_error_invalid_email">That email address was not accepted. Check it for typos.</string>
-    <string name="account_error_too_many">Too many tries. Wait a few minutes and try again.</string>
-    <string name="account_error_signup_disabled">New accounts are switched off at the moment.</string>
-    <!-- Names both ways forward, because a phone with no Google account is
-         often a managed or school device where adding one is not the
-         caregiver's to do. -->
-    <string name="account_error_no_google_account">There is no Google account on this phone. Add one in the phone\'s settings, or sign in with an email address instead.</string>
-    <string name="account_error_server">Something went wrong at our end. Try again in a moment.</string>
-    <string name="account_error_offline">No answer from the server. Check your connection and try again.</string>
-    <string name="account_working">Working…</string>
-    <string name="account_nothing_syncs_yet">Signing in does not back anything up yet — that arrives in a later version.</string>
+    <!-- Moving a category between boards (#119) -->
+    <string name="category_move">Move to another board</string>
+    <string name="category_move_title">Move %1$s</string>
+    <string name="category_move_body">Its symbols go with it. The board it is on now keeps everything else.</string>
+    <string name="category_moved">%1$s moved to %2$s</string>
+    <string name="undo">Undo</string>
 </resources>

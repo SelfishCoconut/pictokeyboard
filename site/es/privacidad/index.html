@@ -51,9 +51,12 @@
      escrito de ninguna clase.</p>
 
   <h2>Información que sí sale del teléfono</h2>
-  <p>Hay exactamente dos destinos.</p>
+  <p>Hay exactamente un destino, y no somos nosotros. PictoKeyboard no tiene
+     servidor, ni cuenta, ni inicio de sesión: no hay ningún sitio al que enviar
+     tu información, que es una promesa más firme que una política diciendo que
+     no la enviaríamos.</p>
 
-  <h3>1. ARASAAC, para las imágenes de los pictogramas</h3>
+  <h3>ARASAAC, para las imágenes de los pictogramas</h3>
   <p>Los pictogramas provienen de <a href="https://arasaac.org">ARASAAC</a>, el
      Centro Aragonés para la Comunicación Aumentativa y Alternativa. Cuando la
      aplicación necesita una imagen que aún no tiene guardada, se la pide a los
@@ -66,55 +69,44 @@
      organismo público independiente y a su servicio se aplican sus propios
      términos.</p>
 
-  <h3>2. Nuestro servidor de cuentas, solo si se crea una cuenta</h3>
-  <p>La cuenta es opcional. El teclado funciona por completo sin ella y la
-     aplicación no insiste. Si un cuidador decide crear una, se envía a nuestro
-     servidor, alojado en <a href="https://supabase.com">Supabase</a>:</p>
-  <ul>
-    <li>el <strong>correo electrónico</strong> usado para registrarse, y una
-        contraseña cifrada de forma segura; o</li>
-    <li>un <strong>identificador de cuenta de Google</strong> y el correo
-        electrónico, si se usa «Continuar con Google». No recibimos —ni pedimos—
-        acceso a nada más de la cuenta de Google.</li>
-  </ul>
-  <p>Eso es todo. En el momento de escribir esto, <strong>no se envía ningún
-     contenido de los tableros a nuestro servidor</strong>: la función de
-     publicación que lo haría todavía no existe, y esta política se actualizará
-     antes de que llegue.</p>
   <p>No vendemos datos, no los compartimos con anunciantes y no hay más
-     destinatarios que los dos nombrados arriba.</p>
+     destinatarios que el nombrado arriba. No guardamos ninguna cuenta tuya
+     porque no existe ninguna.</p>
+
+  <div class="safe">
+    <strong>Compartir un tablero lo haces tú, no nosotros.</strong>
+    Un tablero se puede exportar como un único archivo <code>.pkb</code> y
+    enviarse con lo que ya usas: un mensaje, un correo, una tarjeta de memoria.
+    Va de tu teléfono a la persona que tú elijas, y nunca pasa por nosotros.
+  </div>
 
   <h2>Menores</h2>
   <p>PictoKeyboard está pensado para que lo maneje una persona adulta en nombre
      de quien lo usa, y por eso las pantallas de configuración están detrás de un
-     PIN. No recogemos a sabiendas información personal de menores. La cuenta es
-     del cuidador, no de la persona que habla con el teclado: nunca pedimos su
-     nombre, su edad, su diagnóstico ni ningún otro dato sobre ella.</p>
+     PIN. No recogemos a sabiendas información personal de menores: nunca
+     pedimos el nombre, la edad, el diagnóstico ni ningún otro dato de la persona
+     que habla con el teclado, y no hay ningún sitio al que enviarlo.</p>
 
-  <h2>Eliminar tu cuenta y tus datos</h2>
-  <p>Puedes eliminar tu cuenta cuando quieras, y ocurre de inmediato. No hay
-     periodo de gracia ni lista de espera.</p>
-  <ul>
-    <li><strong>En la aplicación</strong>: Ajustes → Cuenta → Eliminar mi cuenta.</li>
-    <li><strong>Desde la web, sin instalar la aplicación</strong>:
-        <a href="../eliminar-cuenta/">Eliminar mi cuenta</a>.</li>
-  </ul>
-  <p>Al eliminarla se borran tu cuenta y el correo electrónico o el identificador
-     de Google asociado, de forma permanente.</p>
+  <h2>Eliminar tus datos</h2>
+  <p>Todo lo que guarda la aplicación —tableros, pictogramas, fotografías,
+     ajustes y el recuento de uso— está en el teléfono y en ningún otro sitio.
+     Desinstalar PictoKeyboard, o borrar sus datos desde los ajustes de Android,
+     lo elimina todo. No hay nada que pedirnos ni ninguna cuenta que cerrar,
+     porque no hay nada tuyo en ningún sitio salvo en el dispositivo que tienes
+     en la mano.</p>
 
   <div class="safe">
-    <strong>Tus tableros no se ven afectados.</strong>
-    Están en el teléfono, nunca estuvieron en nuestro servidor y se quedan tal
-    como están. Si quieres una copia de todo antes, la aplicación puede exportar
-    todos tus tableros y fotografías en un único archivo <code>.pkb</code>: es
-    más fácil mientras la cuenta todavía existe.
+    <strong>Esto corta por los dos lados: nadie te hace una copia de seguridad.</strong>
+    Un teléfono perdido o reiniciado se lleva los tableros con él. Expórtalos
+    desde la aplicación como un archivo <code>.pkb</code> y guárdalo en un sitio
+    seguro: ese archivo será la única copia que haya.
   </div>
 
   <h2>Permisos que pide la aplicación</h2>
   <ul>
     <li><strong>Internet</strong> y <strong>estado de la red</strong>: para
-        descargar las imágenes de los pictogramas de ARASAAC y para llegar al
-        servidor de cuentas si se usa una cuenta.</li>
+        descargar las imágenes de los pictogramas de ARASAAC mientras se crea un
+        tablero. Una vez guardadas, el teclado funciona sin conexión alguna.</li>
   </ul>
   <p>Esa es la lista completa. En particular, la aplicación
      <strong>no pide permiso de cámara</strong>: cuando se añade una fotografía a
@@ -140,7 +132,6 @@
 
 <footer>
   <a href="../../privacy/" lang="en">English</a> ·
-  <a href="../eliminar-cuenta/">Eliminar mi cuenta</a> ·
   <a href="../">PictoKeyboard</a> ·
   <a href="https://github.com/SelfishCoconut/pictokeyboard">Código fuente</a>
 </footer>

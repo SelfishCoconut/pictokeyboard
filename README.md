@@ -52,8 +52,13 @@ text field.
   feedback, toggled with a two‑finger double‑tap.
 - **PIN‑protected setup**, configurable grid (columns / rows / captions),
   adjustable speech rate & pitch.
-- **JSON export/import** of the whole board with stable UUIDs (designed so a
-  future psychologist web backend can sync the same data shape).
+- **Boards travel as files.** Export a board — or the whole device — as a single
+  `.pkb`, photographs included, and send it through the share sheet to any app:
+  WhatsApp, Gmail, Drive, Nearby Share. Importing adds, and never overwrites
+  what is already there.
+- **Move a category between boards**, with its symbols, and undo it in one tap.
+- **No account, no server, no sign‑in.** Nothing to create, nothing to leak,
+  nothing standing between someone and their words.
 
 ## Screenshots
 
@@ -89,12 +94,13 @@ flowchart TD
     IME --> REPO
     REPO["📚 PictoRepository<br/>single source of truth"]
 
-    REPO --> DB[("🗄️ Room DB<br/>categories · pictos")]
+    REPO --> DB[("🗄️ Room DB<br/>boards · categories · pictos")]
     REPO --> PREFS[("⚙️ DataStore<br/>language · grid · PIN")]
     REPO --> CACHE[("🖼️ Offline image cache")]
-    REPO --> BACKUP["🔁 JSON export / import<br/>stable UUIDs"]
+    REPO --> BACKUP["📦 .pkb export / import<br/>board graph + media"]
     REPO --> ARASAAC["🌐 ARASAAC client"]
 
+    BACKUP -.->|"share sheet"| SHARE["📤 Another caregiver's phone"]
     ARASAAC -.->|"setup only, then cached"| API["api.arasaac.org"]
 ```
 
@@ -106,7 +112,9 @@ ime/         InputMethodService + category/picto RecyclerView adapters + TTS
 data/db      Room: Category & Picto entities, DAOs, AppDatabase
 data/prefs   DataStore settings (language, grid, TTS, salted‑hash PIN)
 data/arasaac Retrofit ARASAAC client + offline image cache
-data/backup  JSON export/import (stable UUIDs, sync‑ready)
+data/pkb     .pkb export/import — a ZIP holding the board graph and the
+             photographs it refers to, addressed by the SHA‑256 of their bytes
+data/backup  the legacy one‑board JSON, kept so old backups still import
 data/repo    PictoRepository (single source of truth, seeding)
 ui/          Jetpack Compose setup app (onboarding, categories, pictos,
              ARASAAC search, settings, about/credits)
@@ -115,8 +123,13 @@ di/          ServiceLocator (lightweight manual DI shared by Activity + IME)
 
 </details>
 
-> The web portal for psychologists is **out of scope for now**; the JSON backup
-> format and stable IDs are the seam it will plug into later.
+> **This is the offline edition, and it is `main`.** A marketplace — publishing
+> boards to a catalogue, browsing other caregivers' boards, and the accounts
+> those need — was built as far as its account layer and then taken out (#119).
+> It lives on the [`marketplace`](https://github.com/SelfishCoconut/pictokeyboard/tree/marketplace)
+> branch with its issues, under the *Marketplace edition* milestone. Sharing a
+> board with another caregiver is a file and the share sheet here, which needs
+> no backend and no sign‑up.
 
 ## Build & install
 
@@ -173,14 +186,17 @@ shown in the app's **About & credits** screen.
 ## Privacy
 
 **What you type never leaves the phone.** No analytics, no crash reporting, no
-advertising, no tracking. Your boards, pictograms and photographs stay on the
-device. The keyboard honours `IME_FLAG_NO_PERSONALIZED_LEARNING` and never
-records anything from a password field.
+advertising, no tracking, **no account and no server**. Your boards, pictograms
+and photographs stay on the device. The keyboard honours
+`IME_FLAG_NO_PERSONALIZED_LEARNING` and never records anything from a password
+field.
 
-An account is optional and only ever stores an email address (or a Google
-account id). You can delete it at any time — from the app, or from the web
-without installing anything.
+The only outbound request the app makes is to ARASAAC, for a pictogram image
+during setup, carrying no identifier of any kind. `AppHasNoAccountsTest` fails
+the build if any source file so much as imports an authentication stack.
+
+The other side of that: **nothing is backed up for you.** A phone that is lost
+or reset takes the boards with it, so export a `.pkb` and keep it somewhere.
 
 - Privacy policy: https://selfishcoconut.github.io/pictokeyboard/privacy/
-- Delete my account: https://selfishcoconut.github.io/pictokeyboard/delete-account/
 - En español: https://selfishcoconut.github.io/pictokeyboard/es/

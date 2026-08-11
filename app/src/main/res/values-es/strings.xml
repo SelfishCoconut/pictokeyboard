@@ -312,12 +312,16 @@
 
     <!-- Pestaña Tableros (#32) -->
     <string name="nav_boards">Tableros</string>
-    <string name="nav_discover">Descubre</string>
     <string name="boards_title">Tableros</string>
     <string name="boards_in_use">En uso</string>
     <string name="boards_use_this">Usar este tablero</string>
     <string name="boards_duplicate">Duplicar</string>
-    <string name="boards_export">Exportar</string>
+    <string name="boards_share">Compartir una copia</string>
+    <string name="boards_share_chooser">Enviar %1$s</string>
+    <string name="boards_share_failed">No se ha podido preparar ese tablero. Inténtalo otra vez.</string>
+    <string name="boards_import">Abrir un tablero que te han enviado</string>
+    <string name="boards_import_done">Añadido. Tus otros tableros siguen igual.</string>
+    <string name="boards_import_failed">No se ha podido abrir ese archivo. Puede estar dañado o hecho con una versión más nueva de PictoKeyboard.</string>
     <string name="boards_delete">Eliminar</string>
     <string name="boards_more">Más opciones de %1$s</string>
     <string name="boards_copy_name">%1$s (copia)</string>
@@ -327,12 +331,9 @@
     <string name="boards_card_a11y">%1$s, %2$d categorías, %3$d pictogramas</string>
     <string name="boards_card_a11y_in_use">%1$s, en uso, %2$d categorías, %3$d pictogramas</string>
     <string name="boards_empty_title">Aún no hay tableros</string>
-    <string name="boards_empty_body">Un tablero es un conjunto de palabras para una situación: casa, colegio, una cita. Encuentra uno para empezar en Descubre.</string>
-    <string name="boards_empty_action">Ver Descubre</string>
+    <string name="boards_empty_body">Un tablero es un conjunto de palabras para una situación: casa, colegio, una cita. Crea uno o abre un tablero que te haya enviado otra persona.</string>
+    <string name="boards_empty_action">Abrir un archivo de tablero</string>
     <string name="boards_setup_banner">Termina de configurar el teclado</string>
-    <string name="discover_title">Descubre</string>
-    <string name="discover_coming_soon">Tableros y categorías listos para instalar.</string>
-    <string name="discover_coming_soon_body">La aplicación incluye un catálogo para tener por dónde empezar desde el primer día. Todavía no está hecho.</string>
     <string name="about_help_heading">Ayuda</string>
     <string name="settings_group_about">Acerca de</string>
     <string name="settings_about_row">Acerca de y créditos</string>
@@ -363,44 +364,10 @@
     <string name="try_it_placeholder">Toca un símbolo para escribirlo</string>
     <string name="try_it_not_ready">PictoKeyboard todavía no es el teclado en uso, así que esta casilla abriría otro.</string>
     <string name="try_it_done">Listo</string>
-    <string name="account_title">Cuenta</string>
-    <string name="account_signed_out_title">Guarda tus tableros</string>
-    <string name="account_signed_out_body">Inicia sesión y tus tableros vuelven en un teléfono nuevo. El teclado funciona igual de las dos formas: nunca hace falta una cuenta para hablar.</string>
-    <string name="account_email">Correo electrónico</string>
-    <string name="account_password">Contraseña</string>
-    <string name="account_sign_in">Iniciar sesión</string>
-    <string name="account_sign_up">Crear una cuenta</string>
-    <string name="account_forgot">¿Has olvidado la contraseña?</string>
-    <string name="account_check_your_email">Mira tu correo para confirmar la cuenta.</string>
-    <string name="account_recovery_sent">Mira tu correo: te hemos enviado un enlace para poner una contraseña nueva.</string>
-    <string name="account_google">Continuar con Google</string>
-    <string name="account_signed_in_as">Sesión iniciada como %1$s</string>
-    <string name="account_signed_in">Sesión iniciada</string>
-    <string name="account_sign_out">Cerrar sesión</string>
-    <string name="account_sign_out_note">Tus tableros se quedan en este teléfono. Cerrar sesión no borra nada.</string>
-    <string name="account_error_credentials">Ese correo y esa contraseña no coinciden. Revisa los dos e inténtalo de nuevo.</string>
-    <string name="account_error_email_not_confirmed">Primero confirma tu correo: te enviamos un enlace al crear la cuenta.</string>
-    <string name="account_error_email_taken">Ese correo ya tiene una cuenta. Inicia sesión.</string>
-    <string name="account_error_weak_password">Esa contraseña es demasiado fácil de adivinar. Prueba con una más larga.</string>
-    <string name="account_error_invalid_email">No se ha aceptado esa dirección de correo. Revisa si tiene alguna errata.</string>
-    <string name="account_error_too_many">Demasiados intentos. Espera unos minutos e inténtalo de nuevo.</string>
-    <string name="account_error_signup_disabled">Ahora mismo no se pueden crear cuentas nuevas.</string>
-    <string name="account_delete">Eliminar mi cuenta</string>
-    <string name="account_delete_title">¿Eliminar esta cuenta?</string>
-    <!-- Empieza por lo que *no* se borra: quien lee "eliminar" con el móvil
-         lleno del vocabulario de su hijo da por hecho que los tableros también
-         se van, y esta frase es lo único que dice lo contrario. -->
-    <string name="account_delete_body">Todos los tableros, fotos y grabaciones de este móvil se quedan donde están. Esto elimina la cuenta en sí — tu correo electrónico y tu nombre visible — y no se puede deshacer. Los tableros que hayas publicado siguen en el catálogo, ya sin tu nombre.</string>
-    <!-- Nombra lo que hace, no "Aceptar": una confirmación destructiva que dice
-         "Aceptar" es una que se pulsa sin leerla. -->
-    <string name="account_delete_confirm">Eliminar la cuenta</string>
-    <string name="account_delete_hint">¿Quieres antes una copia de tus tableros? Expórtalo todo desde Ajustes y luego elimina la cuenta.</string>
-    <string name="account_deleted">Esa cuenta ya no existe. Tus tableros siguen en este móvil.</string>
-    <!-- Nombra las dos salidas: en un móvil gestionado por el centro, añadir una
-         cuenta de Google no suele estar en manos del cuidador. -->
-    <string name="account_error_no_google_account">No hay ninguna cuenta de Google en este móvil. Añade una en los ajustes del teléfono o inicia sesión con un correo electrónico.</string>
-    <string name="account_error_server">Algo ha fallado por nuestra parte. Inténtalo de nuevo en un momento.</string>
-    <string name="account_error_offline">No hay respuesta del servidor. Comprueba la conexión e inténtalo de nuevo.</string>
-    <string name="account_working">Trabajando…</string>
-    <string name="account_nothing_syncs_yet">Iniciar sesión todavía no guarda copia de nada: eso llega en una versión posterior.</string>
+    <!-- Mover una categoría entre tableros (#119) -->
+    <string name="category_move">Mover a otro tablero</string>
+    <string name="category_move_title">Mover %1$s</string>
+    <string name="category_move_body">Sus símbolos van con ella. El tablero en el que está ahora conserva todo lo demás.</string>
+    <string name="category_moved">%1$s se ha movido a %2$s</string>
+    <string name="undo">Deshacer</string>
 </resources>

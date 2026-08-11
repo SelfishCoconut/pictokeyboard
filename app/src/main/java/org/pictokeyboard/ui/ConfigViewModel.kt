@@ -137,6 +137,28 @@ class ConfigViewModel : ViewModel() {
         repo.reorderCategories(ordered)
     }
 
+    /**
+     * Moves [category] onto another board, handing back the row as it was (#119).
+     *
+     * The callback carries the undo rather than the screen remembering it. A
+     * caregiver moving a category is looking at a list that is about to lose a
+     * row, and the only moment the *old* board and position are knowable is
+     * before the write — so the write is what hands them over, and
+     * [restoreCategory] is the whole of the reversal.
+     */
+    fun moveCategoryToBoard(
+        category: CategoryEntity,
+        targetBoardId: String,
+        onMoved: (CategoryEntity) -> Unit,
+    ) = viewModelScope.launch {
+        onMoved(repo.moveCategoryToBoard(category, targetBoardId))
+    }
+
+    /** Undoes a [moveCategoryToBoard], with the row it handed back. */
+    fun restoreCategory(category: CategoryEntity) = viewModelScope.launch {
+        repo.restoreCategory(category)
+    }
+
     /** Most-used words (highest first) used to preview/build the Suggested category. */
     suspend fun topUsed(limit: Int = 24): List<UsageEntity> = repo.topUsed(limit)
 
@@ -350,27 +372,36 @@ class ConfigViewModel : ViewModel() {
 
     suspend fun verifyPin(pin: String): Boolean = settingsStore.verifyPin(pin)
 
-    // --- Backup ------------------------------------------------------------
-
-    /** Exports [boardId], or the board in use when no board is named. */
-    suspend fun exportJson(boardId: String? = null): String {
-        val board = boardId?.let { repo.board(it) } ?: repo.activeBoard() ?: return ""
-        return backup.export(language = board.language, boardId = board.id)
-    }
-
-    // --- The whole-device backup (#88) ---------------------------------------
+    // --- Backup (#88, #119) --------------------------------------------------
 
     /**
      * Writes every board, symbol, photograph and voice setting into [out].
      *
-     * Distinct from [exportJson], which is one board as JSON and has no photos
-     * in it. This is the backup: nothing goes to a server, so if a caregiver
-     * never runs this they have none.
+     * Nothing in this app goes to a server, so a caregiver who never runs this
+     * has no backup at all.
      */
     fun exportEverything(out: OutputStream, onResult: (Result<PkbImportSummary>) -> Unit) =
         viewModelScope.launch {
             onResult(out.use { pkb.exportTo(it) })
         }
+
+    /**
+     * Writes one board — its categories, its symbols and their photographs —
+     * into [out], as the same `.pkb` archive.
+     *
+     * This replaced a JSON export that carried no media, so handing somebody a
+     * board built from photographs of their own kitchen sent them the labels
+     * and none of the pictures. The failure was silent, which is the worst
+     * shape for it: the file arrived, opened, and was quietly worth less than
+     * it looked.
+     */
+    fun exportBoard(
+        boardId: String,
+        out: OutputStream,
+        onResult: (Result<PkbImportSummary>) -> Unit,
+    ) = viewModelScope.launch {
+        onResult(out.use { pkb.exportTo(it, boardId) })
+    }
 
     /** Adds the contents of a `.pkb` to this device. Never replaces what is here. */
     fun importEverything(

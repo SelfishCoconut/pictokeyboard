@@ -49,9 +49,12 @@
      content of any kind.</p>
 
   <h2>Information that does leave the phone</h2>
-  <p>There are exactly two destinations.</p>
+  <p>There is exactly one destination, and it is not us. PictoKeyboard has no
+     server, no account and no sign-in: there is nowhere for your information to
+     be sent, which is a stronger promise than a policy saying we would not send
+     it.</p>
 
-  <h3>1. ARASAAC, for pictogram images</h3>
+  <h3>ARASAAC, for pictogram images</h3>
   <p>The pictograms come from <a href="https://arasaac.org">ARASAAC</a>, the
      Aragonese Centre of Augmentative and Alternative Communication. When the app
      needs a pictogram image it has not already stored, it requests it from
@@ -63,55 +66,43 @@
      pictogram is not fetched twice. ARASAAC is an independent public body and
      its own terms apply to its service.</p>
 
-  <h3>2. Our account server, only if an account is created</h3>
-  <p>An account is optional. The keyboard works fully without one, and the app
-     does not nag. If a caregiver chooses to create one, the following is sent to
-     our server, which runs on <a href="https://supabase.com">Supabase</a>:</p>
-  <ul>
-    <li>the <strong>email address</strong> used to sign up, and a securely hashed
-        password; or</li>
-    <li>a <strong>Google account identifier</strong> and email address, if
-        “Continue with Google” is used instead. We do not receive, and never ask
-        for, access to anything else in the Google account.</li>
-  </ul>
-  <p>That is all of it. At the time of writing <strong>no board content is sent
-     to our server at all</strong> — the publishing feature that would do so is
-     not built yet, and this policy will be updated before it ships. An account
-     today exists so that it is ready when board backup arrives.</p>
   <p>We do not sell data, we do not share it with advertisers, and there are no
-     third-party recipients beyond the two named above.</p>
+     third-party recipients beyond the one named above. We hold no account of
+     yours because there are none to hold.</p>
+
+  <div class="safe">
+    <strong>Sharing a board is something you do, not something we do.</strong>
+    A board can be exported as a single <code>.pkb</code> file and sent through
+    whatever you already use — a message, an email, a memory card. It goes from
+    your phone to the person you chose, and never through us.
+  </div>
 
   <h2>Children</h2>
   <p>PictoKeyboard is meant to be operated by an adult on behalf of the person
      using it, and the setup screens sit behind a PIN for that reason. We do not
-     knowingly collect personal information from children. An account belongs to
-     the caregiver, not to the person speaking with the keyboard — we never ask
-     for that person's name, age, diagnosis, or any other detail about them.</p>
+     knowingly collect personal information from children — we never ask for the
+     name, age, diagnosis or any other detail of the person speaking with the
+     keyboard, and there is nowhere for such a thing to be sent.</p>
 
-  <h2>Deleting your account and your data</h2>
-  <p>You can delete your account at any time, and it happens immediately. There
-     is no grace period and no waiting list.</p>
-  <ul>
-    <li><strong>In the app</strong>: Settings → Account → Delete my account.</li>
-    <li><strong>From the web, without installing the app</strong>:
-        <a href="../delete-account/">Delete my account</a>.</li>
-  </ul>
-  <p>Deleting removes your account record and the email address or Google
-     identifier attached to it, permanently.</p>
+  <h2>Deleting your data</h2>
+  <p>Everything the app holds — boards, pictograms, photographs, settings and the
+     usage tally — is on the phone and nowhere else. Uninstalling PictoKeyboard,
+     or clearing its data in Android's app settings, removes all of it. There is
+     no request to make of us and no account to close, because there is nothing
+     of yours anywhere but the device in your hand.</p>
 
   <div class="safe">
-    <strong>Your boards are not affected.</strong>
-    They are on the phone, they were never on our server, and they stay exactly
-    as they are. If you want a copy of everything first, the app can export all
-    your boards and photographs as a single <code>.pkb</code> file — easier to do
-    while the account still exists.
+    <strong>That cuts both ways: nothing is backed up for you.</strong>
+    A phone that is lost or reset takes the boards with it. Export them from the
+    app as a <code>.pkb</code> file and keep it somewhere safe — that file is the
+    only copy there will be.
   </div>
 
   <h2>Permissions the app asks for</h2>
   <ul>
     <li><strong>Internet</strong> and <strong>network state</strong> — to fetch
-        pictogram images from ARASAAC, and to reach the account server if an
-        account is used.</li>
+        pictogram images from ARASAAC while a board is being built. Once they are
+        stored the keyboard works with no connection at all.</li>
   </ul>
   <p>That is the complete list. In particular the app requests
      <strong>no camera permission</strong>: when a photograph is added to a
@@ -136,7 +127,6 @@
 
 <footer>
   <a href="../es/privacidad/" lang="es">Español</a> ·
-  <a href="../delete-account/">Delete my account</a> ·
   <a href="../">PictoKeyboard</a> ·
   <a href="https://github.com/SelfishCoconut/pictokeyboard">Source code</a>
 </footer>
