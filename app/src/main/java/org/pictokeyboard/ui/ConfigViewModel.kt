@@ -296,6 +296,30 @@ class ConfigViewModel : ViewModel() {
     }
 
     /**
+     * Creates an empty board called [name] and reports its id.
+     *
+     * The id goes back to the caller so the screen can open the board it just
+     * made: a caregiver who asks for a new board wants to put words in it, and
+     * leaving them on the list to find it themselves is a step that exists only
+     * because of how the code is arranged.
+     *
+     * The board takes the interface language as its vocabulary language, which
+     * is a starting point rather than a claim — the Layout tab can change it,
+     * and a caregiver building an English board in a Spanish app is exactly the
+     * case that setting exists for.
+     */
+    fun addBoard(name: String, onCreated: (String) -> Unit = {}) = viewModelScope.launch {
+        val board = repo.addBoard(name = name, language = settingsStore.current().defaultLanguage)
+        onCreated(board.id)
+    }
+
+    /** [duplicateBoard] with the name chosen by the caregiver rather than derived. */
+    fun copyBoard(board: BoardEntity, name: String, onCreated: (String) -> Unit = {}) =
+        viewModelScope.launch {
+            onCreated(repo.duplicateBoard(board, name).id)
+        }
+
+    /**
      * Deletes [board] and everything on it.
      *
      * Refuses the last board rather than leaving the keyboard with nothing to

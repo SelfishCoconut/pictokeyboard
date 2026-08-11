@@ -11,7 +11,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -127,6 +130,23 @@ class PictoKeyboardService : InputMethodService() {
      */
     private var sentence = Sentence()
 
+    /**
+     * How much of the keyboard the navigation bar is sitting on, in pixels.
+     *
+     * Targeting SDK 35 or above puts the input view edge to edge, and the
+     * navigation bar then draws *over* its bottom strip rather than below it.
+     * That strip is the action row — space, enter and the globe — so the row a
+     * thumb reaches for first was the row the phone's own buttons had covered.
+     *
+     * Kept as state rather than read on demand because it arrives from the
+     * framework asynchronously, after the view is already laid out, and because
+     * [chromeHeightPx] has to include it: the padding is height the grid does
+     * not get, exactly like the sentence bar above it. Zero on gesture
+     * navigation and on every release before 15, where the window is placed
+     * above the bar and there is nothing to pay for.
+     */
+    private var navigationBarInsetPx = 0
+
     // --- Blind (eyes-free) mode state --------------------------------------
     private var blindMode = false
     private var blindLoaded = false
@@ -232,7 +252,34 @@ class PictoKeyboardService : InputMethodService() {
 
         viewLanguage = currentAppLanguage()
         applyMode()
+        keepClearOfNavigationBar(container)
         return container
+    }
+
+    /**
+     * Pads [root] out from under the navigation bar, and pays for it.
+     *
+     * The listener rather than a one-off read: insets are dispatched after the
+     * view is attached, they change when the phone is rotated or the user
+     * switches between gesture and three-button navigation, and an IME's view
+     * outlives all of those. Returning the insets unconsumed leaves the rest of
+     * the hierarchy free to read them too.
+     *
+     * [applyBodyHeight] is called again because the padding is chrome: without
+     * it the keyboard would simply grow by the height of the navigation bar and
+     * break the 60% ceiling that stops a tall board eating the screen.
+     */
+    private fun keepClearOfNavigationBar(root: View) {
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            if (bottom != navigationBarInsetPx) {
+                navigationBarInsetPx = bottom
+                view.updatePadding(bottom = bottom)
+                applyBodyHeight()
+            }
+            insets
+        }
+        ViewCompat.requestApplyInsets(root)
     }
 
     /** The three lists the keyboard draws: boards across, categories down, pictos in the grid. */
@@ -466,13 +513,17 @@ class PictoKeyboardService : InputMethodService() {
      * Read from the same dimensions the layout is built from rather than
      * hardcoded, so a change to the sentence bar's height cannot silently cost
      * the grid a row.
+     *
+     * [navigationBarInsetPx] is in here for the same reason the others are: it
+     * is height the keyboard occupies and the board does not get.
      */
     private fun chromeHeightPx(): Int {
         val tabs = if (showBoardTabs) resources.getDimensionPixelSize(R.dimen.kb_tab_height) else 0
         return tabs +
             resources.getDimensionPixelSize(R.dimen.kb_sentence_bar_height) +
             resources.getDimensionPixelSize(R.dimen.kb_action_row_height) +
-            resources.getDimensionPixelSize(R.dimen.kb_hairline)
+            resources.getDimensionPixelSize(R.dimen.kb_hairline) +
+            navigationBarInsetPx
     }
 
     /** Shows the keyboard for the active mode and hides the other. */

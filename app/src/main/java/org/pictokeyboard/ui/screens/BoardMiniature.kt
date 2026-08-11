@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
@@ -196,6 +198,13 @@ private fun MiniBoard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                // The keyboard's grid scrolls; this one cannot, so it cuts off
+                // instead. Without the clip the rows that do not fit are not
+                // dropped but squeezed towards zero height, and their contents
+                // draw over each other (#134) -- a preview showing a defect the
+                // keyboard does not have, on the screen a caregiver goes to to
+                // check the keyboard.
+                .clipToBounds()
                 // The signature wash, at the same 6% the keyboard uses.
                 .background(Color(CategoryColors.wash(selected.colorArgb)))
                 .padding(Spacing.xs),
@@ -267,7 +276,14 @@ private fun MiniGrid(
     rows: Int,
     showLabels: Boolean,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+    // Measured against the height it wants rather than the height it has, and
+    // aligned to the top so the overflow falls off the bottom edge for the clip
+    // above to remove. A plain Column would instead hand the last rows whatever
+    // few pixels remained and let them collapse into one another.
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        modifier = Modifier.wrapContentHeight(Alignment.Top, unbounded = true),
+    ) {
         pictos.take(columns * rows).chunked(columns).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),

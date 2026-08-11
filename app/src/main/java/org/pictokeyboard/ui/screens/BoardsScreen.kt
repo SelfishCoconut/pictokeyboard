@@ -2,14 +2,19 @@ package org.pictokeyboard.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -62,6 +67,8 @@ fun BoardsScreen(
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
     onImportBoard: () -> Unit,
+    onCreateBoard: (String) -> Unit,
+    onCopyBoard: (BoardEntity, String) -> Unit,
 ) {
     BoardsScreenContent(
         summaries = summaries,
@@ -74,6 +81,8 @@ fun BoardsScreen(
         onEnableKeyboard = onEnableKeyboard,
         onSelectKeyboard = onSelectKeyboard,
         onImportBoard = onImportBoard,
+        onCreateBoard = onCreateBoard,
+        onCopyBoard = onCopyBoard,
     )
 }
 
@@ -90,10 +99,16 @@ internal fun BoardsScreenContent(
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
     onImportBoard: () -> Unit,
+    onCreateBoard: (String) -> Unit,
+    onCopyBoard: (BoardEntity, String) -> Unit,
 ) {
     // Which board's Try it sheet is open, if any. Held here rather than on the
     // card so the sheet outlives the dropdown menu that asked for it.
     var trying by remember { mutableStateOf<BoardEntity?>(null) }
+    // How far through making a board the caregiver is, or null for "not making
+    // one". One value rather than a flag per step, so "choosing a source and
+    // naming it at once" cannot be expressed.
+    var newBoard by remember { mutableStateOf<NewBoardStep?>(null) }
 
     Scaffold(
         topBar = {
@@ -104,50 +119,37 @@ internal fun BoardsScreenContent(
                 ),
             )
         },
+        floatingActionButton = {
+            // Extended rather than an icon alone: "+" on a list of boards could
+            // mean a board, a category or a word, and the caregiver reading it
+            // is usually mid-task and not fluent in the app.
+            ExtendedFloatingActionButton(
+                onClick = { newBoard = NewBoardStep.ChoosingSource },
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                text = { Text(stringResource(R.string.boards_new)) },
+            )
+        },
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = Spacing.lg,
-                end = Spacing.lg,
-                top = Spacing.sm,
-                bottom = Spacing.xl,
-            ),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-        ) {
-            // Only while there is something to do. Once the keyboard is enabled
-            // and selected this disappears for good rather than collapsing to a
-            // tick that goes on taking space at the top of the app forever.
-            if (!status.ready) {
-                item(key = "setup") {
-                    SetupStepsCard(status = status, onEnable = onEnableKeyboard, onSelect = onSelectKeyboard)
-                }
-            }
-
-            if (summaries.isEmpty()) {
-                item(key = "empty") { BoardsEmptyState(onImportBoard = onImportBoard) }
-            } else {
-                items(summaries, key = { it.board.id }) { summary ->
-                    BoardCard(
-                        summary = summary,
-                        onOpen = { onOpenBoard(summary) },
-                        onUse = { onUseBoard(summary.board) },
-                        // The keyboard shows the board in use, so trying one
-                        // hands it over first. Same rule as opening a board to
-                        // edit it: you work on the board that is live.
-                        onTryIt = {
-                            onUseBoard(summary.board)
-                            trying = summary.board
-                        },
-                        onDuplicate = { onDuplicateBoard(summary.board) },
-                        onExport = { onExportBoard(summary.board) },
-                        onDelete = { onDeleteBoard(summary.board) },
-                    )
-                }
-            }
-        }
+        BoardsList(
+            summaries = summaries,
+            status = status,
+            padding = padding,
+            onOpenBoard = onOpenBoard,
+            onUseBoard = onUseBoard,
+            // The keyboard shows the board in use, so trying one hands it over
+            // first. Same rule as opening a board to edit it: you work on the
+            // board that is live.
+            onTryBoard = { board ->
+                onUseBoard(board)
+                trying = board
+            },
+            onDuplicateBoard = onDuplicateBoard,
+            onExportBoard = onExportBoard,
+            onDeleteBoard = onDeleteBoard,
+            onEnableKeyboard = onEnableKeyboard,
+            onSelectKeyboard = onSelectKeyboard,
+            onImportBoard = onImportBoard,
+        )
     }
 
     trying?.let { board ->
@@ -158,6 +160,118 @@ internal fun BoardsScreenContent(
             onSelectKeyboard = onSelectKeyboard,
             onDismiss = { trying = null },
         )
+    }
+
+    NewBoardFlow(
+        step = newBoard,
+        summaries = summaries,
+        onStep = { newBoard = it },
+        onCreateBoard = onCreateBoard,
+        onCopyBoard = onCopyBoard,
+    )
+}
+
+/** The cards themselves, and the setup banner above them while it is still owed. */
+@Composable
+private fun BoardsList(
+    summaries: List<BoardSummary>,
+    status: KeyboardStatus,
+    padding: PaddingValues,
+    onOpenBoard: (BoardSummary) -> Unit,
+    onUseBoard: (BoardEntity) -> Unit,
+    onTryBoard: (BoardEntity) -> Unit,
+    onDuplicateBoard: (BoardEntity) -> Unit,
+    onExportBoard: (BoardEntity) -> Unit,
+    onDeleteBoard: (BoardEntity) -> Unit,
+    onEnableKeyboard: () -> Unit,
+    onSelectKeyboard: () -> Unit,
+    onImportBoard: () -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+        contentPadding = PaddingValues(
+            start = Spacing.lg,
+            end = Spacing.lg,
+            top = Spacing.sm,
+            bottom = Spacing.xl,
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+    ) {
+        // Only while there is something to do. Once the keyboard is enabled
+        // and selected this disappears for good rather than collapsing to a
+        // tick that goes on taking space at the top of the app forever.
+        if (!status.ready) {
+            item(key = "setup") {
+                SetupStepsCard(status = status, onEnable = onEnableKeyboard, onSelect = onSelectKeyboard)
+            }
+        }
+
+        if (summaries.isEmpty()) {
+            item(key = "empty") { BoardsEmptyState(onImportBoard = onImportBoard) }
+        } else {
+            items(summaries, key = { it.board.id }) { summary ->
+                BoardCard(
+                    summary = summary,
+                    onOpen = { onOpenBoard(summary) },
+                    onUse = { onUseBoard(summary.board) },
+                    onTryIt = { onTryBoard(summary.board) },
+                    onDuplicate = { onDuplicateBoard(summary.board) },
+                    onExport = { onExportBoard(summary.board) },
+                    onDelete = { onDeleteBoard(summary.board) },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * How far through making a board the caregiver is.
+ *
+ * [Naming.source] is null on the from-scratch route, which is why the step
+ * carries a nullable board rather than the screen holding one: `null` alone
+ * cannot tell "make an empty one" apart from "nobody has asked for a board".
+ */
+private sealed interface NewBoardStep {
+    data object ChoosingSource : NewBoardStep
+    data class Naming(val source: BoardEntity?) : NewBoardStep
+}
+
+/** Whichever of the two steps [step] names, or nothing when it is null. */
+@Composable
+private fun NewBoardFlow(
+    step: NewBoardStep?,
+    summaries: List<BoardSummary>,
+    onStep: (NewBoardStep?) -> Unit,
+    onCreateBoard: (String) -> Unit,
+    onCopyBoard: (BoardEntity, String) -> Unit,
+) {
+    when (step) {
+        null -> Unit
+
+        NewBoardStep.ChoosingSource -> NewBoardSheet(
+            boards = summaries,
+            onDismiss = { onStep(null) },
+            onCopy = { board -> onStep(NewBoardStep.Naming(board)) },
+            onScratch = { onStep(NewBoardStep.Naming(null)) },
+        )
+
+        is NewBoardStep.Naming -> {
+            val source = step.source
+            BoardNameDialog(
+                initialName = if (source != null) {
+                    stringResource(R.string.boards_copy_name, source.name)
+                } else {
+                    stringResource(R.string.boards_new_default_name)
+                },
+                onDismiss = { onStep(null) },
+                onConfirm = { name ->
+                    onStep(null)
+                    if (source != null) onCopyBoard(source, name) else onCreateBoard(name)
+                },
+            )
+        }
     }
 }
 
@@ -258,6 +372,8 @@ private fun BoardsReadyPreview() {
             onEnableKeyboard = {},
             onSelectKeyboard = {},
             onImportBoard = {},
+            onCreateBoard = {},
+            onCopyBoard = { _, _ -> },
         )
     }
 }
@@ -278,6 +394,8 @@ private fun BoardsSetupPreview() {
             onEnableKeyboard = {},
             onSelectKeyboard = {},
             onImportBoard = {},
+            onCreateBoard = {},
+            onCopyBoard = { _, _ -> },
         )
     }
 }
@@ -298,6 +416,8 @@ private fun BoardsEmptyPreview() {
             onEnableKeyboard = {},
             onSelectKeyboard = {},
             onImportBoard = {},
+            onCreateBoard = {},
+            onCopyBoard = { _, _ -> },
         )
     }
 }
