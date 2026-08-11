@@ -48,11 +48,33 @@
   <p>There is no key logging, no cloud prediction, and no upload of typed
      content of any kind.</p>
 
+  <h3>Sentence help, if you switch it on</h3>
+  <p>Sentence help turns the words that were tapped into a full sentence. It is
+     <strong>off unless a caregiver turns it on</strong>, and turning it on
+     downloads a language model to the phone, once — see below.</p>
+  <div class="safe">
+    <strong>The sentence is written on the phone.</strong> The words go to a
+    model running in a separate process on this device, and the sentence comes
+    back from it. Nothing that is typed is sent anywhere, at any point, on or
+    off. This is the whole reason the model is a several-hundred-megabyte
+    download instead of a web request.
+  </div>
+  <p>Deleting the model removes it and the space it took, and the keyboard goes
+     back to behaving exactly as it did before.</p>
+
+  <h3>The person the bell calls</h3>
+  <p>A caregiver can enter one name and one phone number, so that a red bell on
+     the keyboard can call for help. Both are <strong>stored on the phone and
+     nowhere else</strong>, they are never sent to us or to anyone, and the app
+     does not read your contacts to get them — you type them in. Clearing the
+     number removes the bell.</p>
+
   <h2>Information that does leave the phone</h2>
-  <p>There is exactly one destination, and it is not us. PictoKeyboard has no
+  <p>There are two destinations, and neither of them is us. PictoKeyboard has no
      server, no account and no sign-in: there is nowhere for your information to
      be sent, which is a stronger promise than a policy saying we would not send
-     it.</p>
+     it. Both destinations below are the app <em>fetching</em> something —
+     nothing you write is uploaded to either.</p>
 
   <h3>ARASAAC, for searching and fetching pictograms</h3>
   <p>The pictograms come from <a href="https://arasaac.org">ARASAAC</a>, the
@@ -72,8 +94,19 @@
      keyboard — there is no identifier of any kind to send. ARASAAC is an
      independent public body and its own terms apply to its service.</p>
 
+  <h3>Hugging Face, only if sentence help is switched on</h3>
+  <p>The language model behind sentence help is downloaded from
+     <a href="https://huggingface.co">Hugging Face</a>, where its publisher hosts
+     it. This happens <strong>once, and only if a caregiver switches the feature
+     on</strong>; an install that never does never contacts them at all.</p>
+  <p>It is a download and nothing else: the request names the model file, and
+     carries the device's IP address as any web request does. No account, no
+     device identifier, and nothing typed on the keyboard is sent — the phone is
+     collecting a file, not reporting anything. Once it has arrived the feature
+     works with no connection.</p>
+
   <p>We do not sell data, we do not share it with advertisers, and there are no
-     third-party recipients beyond the one named above. We hold no account of
+     third-party recipients beyond the two named above. We hold no account of
      yours because there are none to hold.</p>
 
   <div class="safe">
@@ -120,13 +153,22 @@
   <h2>Permissions the app asks for</h2>
   <ul>
     <li><strong>Internet</strong> and <strong>network state</strong> — to fetch
-        pictogram images from ARASAAC while a board is being built. Once they are
+        pictogram images from ARASAAC while a board is being built, and to
+        download the sentence-help model if that is switched on. Once they are
         stored the keyboard works with no connection at all.</li>
+    <li><strong>Phone calls</strong> — asked for only when a caregiver has
+        actually entered a number for the keyboard's bell, and only so that
+        pressing the bell places the call itself. Refusing it is a supported
+        answer: the bell then opens the phone app with the number filled in, and
+        somebody presses the call button by hand. The app <strong>never reads
+        your call log and never places a call you did not press the bell
+        for</strong>.</li>
   </ul>
   <p>That is the complete list. In particular the app requests
-     <strong>no camera permission</strong>: when a photograph is added to a
+     <strong>no camera permission</strong> — when a photograph is added to a
      board, the phone's own camera app takes the picture and hands back the
-     result, so PictoKeyboard never has camera access of its own.</p>
+     result — and <strong>no contacts permission</strong>: the assistance number
+     is typed in, not looked up.</p>
 
   <h2>Pictogram licensing</h2>
   <p>The pictograms are the property of the Government of Aragón and were created
