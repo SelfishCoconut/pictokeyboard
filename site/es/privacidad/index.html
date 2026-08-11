@@ -21,7 +21,7 @@
   <p>Esta política es corta porque la aplicación hace muy poco, y todo lo que
      dice se puede comprobar en el código fuente, que es público.</p>
 
-  <p class="muted">Última actualización: <time datetime="2026-08-06">6 de agosto de 2026</time></p>
+  <p class="muted">Última actualización: <time datetime="2026-08-11">11 de agosto de 2026</time></p>
 
   <div class="safe">
     <strong>Lo que se escribe nunca sale del teléfono.</strong>
@@ -56,16 +56,24 @@
      tu información, que es una promesa más firme que una política diciendo que
      no la enviaríamos.</p>
 
-  <h3>ARASAAC, para las imágenes de los pictogramas</h3>
+  <h3>ARASAAC, para buscar y descargar pictogramas</h3>
   <p>Los pictogramas provienen de <a href="https://arasaac.org">ARASAAC</a>, el
-     Centro Aragonés para la Comunicación Aumentativa y Alternativa. Cuando la
-     aplicación necesita una imagen que aún no tiene guardada, se la pide a los
-     servidores de ARASAAC.</p>
-  <p>Esa petición indica a ARASAAC qué pictograma se ha solicitado y, como en
-     cualquier petición web, lleva la dirección IP del dispositivo. No les dice
-     quién usa la aplicación ni qué se ha escrito: la aplicación no envía ningún
-     identificador con estas peticiones. Después las imágenes se guardan en el
-     teléfono, así que el mismo pictograma no se pide dos veces. ARASAAC es un
+     Centro Aragonés para la Comunicación Aumentativa y Alternativa. La
+     aplicación contacta con ellos para dos cosas, ambas mientras se prepara un
+     tablero:</p>
+  <ul>
+    <li><strong>Buscar en su biblioteca.</strong> La palabra que escribes en el
+        buscador de pictogramas se envía a ARASAAC para que la busquen, igual
+        que funciona cualquier diccionario. Es el buscador de las pantallas de
+        configuración; no es nada de lo que se escriba con el teclado.</li>
+    <li><strong>Descargar una imagen</strong> que la aplicación aún no tiene
+        guardada. Esa petición indica qué pictograma se quiere. Después las
+        imágenes se guardan en el teléfono, así que el mismo pictograma no se
+        pide dos veces.</li>
+  </ul>
+  <p>Las dos llevan la dirección IP del dispositivo, como cualquier petición web.
+     Ninguna lleva una cuenta, un identificador del dispositivo ni nada escrito
+     con el teclado: no hay ningún identificador que enviar. ARASAAC es un
      organismo público independiente y a su servicio se aplican sus propios
      términos.</p>
 
@@ -101,6 +109,21 @@
     desde la aplicación como un archivo <code>.pkb</code> y guárdalo en un sitio
     seguro: ese archivo será la única copia que haya.
   </div>
+
+  <h3>La copia de seguridad automática de Android está desactivada</h3>
+  <p>Android ofrece a las aplicaciones una copia de seguridad automática en el
+     Google Drive de la persona usuaria, y viene activada de serie.
+     PictoKeyboard la desactiva. Los tableros, los ajustes, el recuento de uso y
+     sobre todo las fotografías que hayas añadido —su cocina, su parada de
+     autobús, su abuela— no se copian a Drive ni a ninguna otra cuenta en la
+     nube.</p>
+  <p>En Android 12 y posteriores se mantiene una excepción a propósito: cuando
+     configuras un teléfono nuevo y pasas tus datos desde el antiguo,
+     PictoKeyboard viaja con ellos. Es una entrega directa entre dos
+     dispositivos tuyos, en un momento que eliges tú, y por el camino no pasa
+     por ningún servidor. Aun así no es una copia de seguridad a la que
+     recurrir: un teléfono ya perdido o roto no puede transferir nada, y por eso
+     importa el archivo exportado de arriba.</p>
 
   <h2>Permisos que pide la aplicación</h2>
   <ul>

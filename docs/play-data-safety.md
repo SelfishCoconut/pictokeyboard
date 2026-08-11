@@ -33,10 +33,33 @@ build.
 
 **"Does your app collect or share user data?"** — No.
 
-**"Is data encrypted in transit?"** — The only outbound request is to ARASAAC
-for pictogram images, over HTTPS; no cleartext traffic is permitted (verified
-below). No user data is in those requests: the app sends a pictogram id and no
-identifier of any kind.
+**"Is data encrypted in transit?"** — Yes. Everything outbound goes to ARASAAC
+over HTTPS, and no cleartext traffic is permitted (verified below).
+
+There are two kinds of request, and the second one is easy to forget because it
+carries text a person typed:
+
+| Endpoint | Carries |
+|---|---|
+| `static.arasaac.org/pictograms/{id}...` | a pictogram id |
+| `api.arasaac.org/api/pictograms/{lang}/search/{text}` | **the search word** |
+
+`ArasaacApi.search` sends what the caregiver typed into the pictogram search box
+— "comer", "happy" — to ARASAAC, which is unavoidable for a search and is the
+same thing any dictionary lookup does. Neither request carries an account, a
+device identifier, or anything typed on the *keyboard*; as with any web request,
+ARASAAC sees the IP address.
+
+**Why this is still "no data collected".** A search term is Play's *App activity
+▸ Search history* type, so the question is real rather than rhetorical. It is not
+declared because it meets the ephemeral-processing exemption: the term is sent to
+service a request in real time and is never persisted — not by us, because there
+is no server to persist it to, and not on the device either. The results are
+cached as images; the query is not stored anywhere.
+
+Written out because the answer used to be "the app sends a pictogram id and no
+identifier of any kind", which was a true sentence about the wrong endpoint. The
+form's answer did not change; the reason it can be defended did.
 
 **"Can users request that data be deleted?"** — There is no account to delete
 and nothing held off the device. Everything the app stores is on the phone, and
@@ -65,6 +88,31 @@ and where it is enforced:
 - **Password fields are excluded** from that tally.
 - `EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING` is honoured — when a host app
   asks the keyboard not to learn from a field, nothing is recorded.
+
+## Android's own backup is turned off, on purpose
+
+Auto Backup is on by default, and its default rules include `filesDir` and every
+database. Left alone, this app would have shipped each board, the usage tally,
+and `filesDir/pictos` — which holds the custom pictograms — to the user's Google
+Drive. Those pictograms are photographs of somebody's kitchen, their bus stop,
+their grandmother.
+
+That is probably not a Data Safety disclosure: the platform performs it, and the
+destination is the user's own account rather than a developer's. It *is* a
+contradiction of a privacy policy that says the data stays on the phone, and the
+listing goes further and tells the caregiver an exported file is the only backup
+there is. Rather than rewrite three documents to describe a backup nobody asked
+for, the app now matches what they say.
+
+`data_extraction_rules.xml` (API 31+) excludes every domain from cloud backup
+while leaving phone-to-phone transfer intact — that one is the user moving their
+own data to their own next phone, directly, and switching it off would cost this
+population more than anyone. `backup_rules.xml` says the same for API 26–30,
+where the format cannot separate the two and the cloud exclusion takes the
+transfer with it.
+
+`play-compliance.sh` fails the build if both attributes ever go missing, because
+the default is silent and the symptom is a promise quietly becoming untrue.
 
 ## Sharing a board is the user's action, not the app's
 
