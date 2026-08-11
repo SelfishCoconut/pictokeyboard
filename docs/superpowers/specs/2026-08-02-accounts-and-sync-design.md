@@ -1,5 +1,13 @@
 # PictoKeyboard — accounts and board sync
 
+> **Parked — this describes work that is not on `main`.**
+>
+> `main` became the offline edition on 2026-08-11 (#119): no server, no account,
+> no sign-in. Everything below still exists on the **`marketplace`** branch,
+> which holds the state `main` had that day, and is accurate there. It is kept
+> here as the record of why those decisions were made, so the work can come back
+> whole rather than be rebuilt from memory.
+
 **Date:** 2026-08-02
 **Status:** **SUPERSEDED on 2026-08-03** by
 `2026-08-03-marketplace-and-local-backup-design.md`. Cloud sync of personal

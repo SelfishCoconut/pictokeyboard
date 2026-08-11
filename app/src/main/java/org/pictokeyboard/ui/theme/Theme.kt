@@ -50,8 +50,8 @@ fun PictoKeyboardTheme(
  * palettes at once.
  *
  * There is no second or third hue to map: this design has exactly one accent and
- * it is a slate. `secondary` and `tertiary` therefore resolve to that same accent
- * or to neutral fills, rather than to colours nobody chose.
+ * it is the blue. `secondary` and `tertiary` therefore resolve to that same
+ * accent or to neutral fills, rather than to colours nobody chose.
  */
 internal fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
     val base = if (darkTheme) darkColorScheme() else lightColorScheme()
@@ -90,9 +90,10 @@ internal fun PictoColors.toColorScheme(darkTheme: Boolean): ColorScheme {
         surfaceContainerHigh = card,
         surfaceContainerHighest = card,
 
-        // Material tints elevated surfaces with `primary`. With a slate accent
-        // that turns every card faintly blue, so elevation is carried by the
-        // shadow and the outline instead.
+        // Material tints elevated surfaces with `primary`, which would now wash
+        // every raised card in the accent blue at whatever strength Material
+        // picked -- a second, unchosen blue sitting under the one that was.
+        // Elevation is carried by the shadow and the outline instead.
         surfaceTint = Color.Transparent,
 
         outline = lineStrong,

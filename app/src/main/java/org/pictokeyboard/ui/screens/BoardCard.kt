@@ -203,7 +203,10 @@ private fun BoardOverflow(
         if (!board.active) add(R.string.boards_use_this to onUse)
         add(R.string.try_it to onTryIt)
         add(R.string.boards_duplicate to onDuplicate)
-        add(R.string.boards_export to onExport)
+        // "Share a copy", not "Export". Export named the mechanism; every
+        // caregiver who reached for it wanted to give the board to somebody,
+        // and it now opens the share sheet rather than a file picker (#119).
+        add(R.string.boards_share to onExport)
         add(R.string.boards_delete to { confirmingDelete = true })
     }
 

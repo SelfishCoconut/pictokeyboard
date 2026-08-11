@@ -1,5 +1,13 @@
 # Caregiver Accounts (#79) Implementation Plan
 
+> **Parked — this describes work that is not on `main`.**
+>
+> `main` became the offline edition on 2026-08-11 (#119): no server, no account,
+> no sign-in. Everything below still exists on the **`marketplace`** branch,
+> which holds the state `main` had that day, and is accurate there. It is kept
+> here as the record of why those decisions were made, so the work can come back
+> whole rather than be rebuilt from memory.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A caregiver can sign in to PictoKeyboard with Google or with an email

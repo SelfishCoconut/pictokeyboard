@@ -14,31 +14,39 @@ something else, the form is now wrong.
 
 | Data type | Collected | Shared | Purpose | Linked to identity | User can delete |
 |---|---|---|---|---|---|
-| Email address | Yes — **only if** the caregiver creates an account | No | Account management | Yes | Yes |
-| User IDs (Google account id) | Yes — only if "Continue with Google" is used | No | Account management | Yes | Yes |
-| **Everything else** | **No** | **No** | — | — | — |
+| **Everything** | **No** | **No** | — | — | — |
 
-Explicitly **not** collected: name, address, phone number, location (coarse or
-precise), photos, audio, files, contacts, calendar, app activity, search
-history, installed apps, device identifiers, advertising id, crash logs,
-diagnostics, or performance data.
+Nothing. There is no server, no account and no sign-in (#119), so there is no
+destination for user data to be collected *to*. This is a stronger claim than
+the app not sending anything: `AppHasNoAccountsTest` fails the build if any
+source file so much as imports an authentication stack.
+
+Explicitly **not** collected: email address, user ids, name, address, phone
+number, location (coarse or precise), photos, audio, files, contacts, calendar,
+app activity, search history, installed apps, device identifiers, advertising
+id, crash logs, diagnostics, or performance data.
 
 There is no analytics SDK, no crash reporter, and no advertising SDK in the
 build.
 
 ## Answers to the questions that get asked twice
 
-**"Does your app collect or share user data?"** — Yes, but only an email address
-or Google account id, and only when a caregiver chooses to create an account.
-An account is optional; the keyboard is fully functional without one.
+**"Does your app collect or share user data?"** — No.
 
-**"Is data encrypted in transit?"** — Yes. All requests are HTTPS; there is no
-cleartext traffic permitted (verified below).
+**"Is data encrypted in transit?"** — The only outbound request is to ARASAAC
+for pictogram images, over HTTPS; no cleartext traffic is permitted (verified
+below). No user data is in those requests: the app sends a pictogram id and no
+identifier of any kind.
 
-**"Can users request that data be deleted?"** — Yes, and it is immediate rather
-than a request. In the app: Settings → Account → Delete my account. On the web,
-without installing the app: <https://selfishcoconut.github.io/pictokeyboard/delete-account/>.
-Play requires that second URL, and it is the one it will check.
+**"Can users request that data be deleted?"** — There is no account to delete
+and nothing held off the device. Everything the app stores is on the phone, and
+uninstalling or clearing app data removes all of it. **No Account Deletion URL
+is required**, because the app has no account creation.
+
+> The Data Safety form only demands a deletion URL from apps that let users
+> create an account. This app does not, so the field is left empty rather than
+> pointed at a page that would have to explain there is nothing to delete. The
+> privacy policy URL is still required and still published.
 
 **"Does your app collect data from children?"** — No. The app is operated by an
 adult on the child's behalf, setup sits behind a PIN, and nothing in the app
@@ -58,9 +66,14 @@ and where it is enforced:
 - `EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING` is honoured — when a host app
   asks the keyboard not to learn from a field, nothing is recorded.
 
-`ImeHasNoSupabaseTest` asserts that no keyboard source file can even reach the
-Supabase client, so a token refresh can never stand between a person and their
-words.
+## Sharing a board is the user's action, not the app's
+
+A caregiver can export a board as a `.pkb` file and send it through the system
+share sheet. This is not data collection or sharing in the Data Safety sense:
+the app hands a file to whichever app the user picked, at the moment they picked
+it, and nothing is transmitted anywhere on its own. It is the same category as
+the platform's own share sheet — user-initiated, user-directed, one file at a
+time.
 
 ## The checks these answers come from
 
@@ -68,13 +81,13 @@ words.
 # Permissions: expect exactly INTERNET and ACCESS_NETWORK_STATE, and no CAMERA.
 grep -n "uses-permission" app/src/main/AndroidManifest.xml
 
-# Everything that leaves the device. Expect only ARASAAC and Supabase.
+# Everything that leaves the device. Expect ARASAAC and nothing else.
 grep -rhoE 'https?://[a-zA-Z0-9./-]+' --include='*.kt' app/src/main/java | sort -u
 
-# Which files can reach the backend at all. Expect only the two auth files --
-# anything else here means board content may now leave the phone, and both this
-# document and the public privacy policy need updating before release.
-grep -rln "supabase" --include='*.kt' app/src/main/java
+# No authentication stack anywhere in the app. This is the assertion that keeps
+# the table above at "no" -- it runs in CI on every push, but run it by hand
+# before a submission too, because it is the whole basis of the form.
+ANDROID_HOME=$HOME/Android/Sdk ./gradlew testDebugUnitTest --tests '*AppHasNoAccountsTest*'
 
 # No cleartext traffic, and not debuggable in release.
 grep -nE 'usesCleartextTraffic|android:debuggable' app/src/main/AndroidManifest.xml
@@ -86,12 +99,13 @@ grep -rn "NO_PERSONALIZED_LEARNING\|TYPE_TEXT_VARIATION_PASSWORD" \
 
 ## Still to do before the first upload
 
-These are outside this change and remain open:
-
-- Board publishing (#41) will send board content to the server for the first
-  time. **The public privacy policy and this table must be updated in the same
-  change that ships it**, not afterwards.
-- Custom SMTP and the release SHA-1 (#92) — sign-in emails currently come from
-  Supabase's shared sender, which is rate-limited and not suitable for release.
+- **Update the privacy policy when sentence help ships (#46).** The model runs
+  on the device and nothing is sent anywhere, but the policy currently does not
+  mention a model existing at all. One paragraph, both languages, same release.
 - The store listing itself: icon, feature graphic, screenshots, content rating
   questionnaire, and the target-audience answers.
+
+> If accounts ever return from the `marketplace` branch, **this table and the
+> public privacy policy change in the same release that ships them** — not
+> afterwards. The version of this document that describes them is on that
+> branch.

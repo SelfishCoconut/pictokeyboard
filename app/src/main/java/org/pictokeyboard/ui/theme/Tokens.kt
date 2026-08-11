@@ -11,12 +11,18 @@ import androidx.compose.ui.unit.dp
 /**
  * The product's colour tokens.
  *
- * The thesis: **the chrome goes chromatically silent so category colour can be
- * the only saturated colour in the product.** A category's hue encodes a part of
- * speech (the ARASAAC / Fitzgerald AAC code), which is real information; a brand
- * teal is not. For a user who may not read, every saturated colour that does not
- * carry meaning is noise, so chroma is spent exclusively on meaning and the
- * accent is a near-black slate rather than a hue.
+ * The thesis: **category colour is the only saturated colour in the content.** A
+ * category's hue encodes a part of speech (the ARASAAC / Fitzgerald AAC code),
+ * which is real information. For a user who may not read, a saturated colour
+ * that does not carry meaning is noise, so no hue competes with a category hue
+ * in the grid where somebody is reading colour to find a word.
+ *
+ * The accent was a near-black slate on that argument, taken further than the
+ * argument required: it made the *chrome* chromatically silent too. It is now a
+ * blue, and the thesis is unchanged — the chrome is furniture a caregiver reads
+ * words in, not a surface anybody decodes. `paper` went pure white with it, so
+ * the blue lands on white and the grid it surrounds keeps its monopoly on
+ * meaning-bearing colour.
  *
  * Every pair here is contrast-verified from its actual value in
  * `TokenContrastTest` — 4.5:1 for body text, 3:1 for large text and UI
@@ -32,7 +38,7 @@ data class PictoColors(
     /**
      * Surfaces that carry ARASAAC artwork. **Always white, in both schemes** —
      * the pictograms are black line work and a dark tile destroys them. In dark
-     * mode the tiles read as white cards glowing against warm black. This is a
+     * mode the tiles read as white cards glowing against blue-black. This is a
      * legibility constraint, not a stylistic one, and must not be "fixed" later.
      */
     val tile: Color,
@@ -50,8 +56,8 @@ data class PictoColors(
     /** Secondary text — captions, hints, supporting copy. */
     val inkSoft: Color,
     /**
-     * **Decorative only.** Dividers and unpressed key fill. It sits at 1.19:1
-     * light / 1.27:1 dark, so anything the user has to *find* uses [lineStrong]
+     * **Decorative only.** Dividers and unpressed key fill. It sits at 1.27:1
+     * light / 1.36:1 dark, so anything the user has to *find* uses [lineStrong]
      * instead. A hairline between two rows of text carries no information and
      * may be this quiet; the same colour drawn around a control is an
      * accessibility defect — invisible to a sighted developer on a good screen,
@@ -60,7 +66,10 @@ data class PictoColors(
     val line: Color,
     /** Boundaries of interactive controls. Verified at 3:1 against [paper]. */
     val lineStrong: Color,
-    /** Buttons, focus rings, switches. A slate, deliberately not a hue. */
+    /**
+     * Buttons, focus rings, switches. A blue, and confined to chrome — see the
+     * thesis above for why it may not enter the pictogram grid.
+     */
     val accent: Color,
     /** Content on [accent]. */
     val onAccent: Color,
@@ -73,54 +82,82 @@ data class PictoColors(
 )
 
 /**
- * `paper` is derived rather than chosen: exactly one step below tile white so
- * white tiles float, and near-zero chroma so it clashes with none of the 26
- * category hues.
+ * White paper, blue chrome.
+ *
+ * `paper` was a warm off-white, one step below tile white so white tiles would
+ * float against it. It is now pure white, and tiles are separated by their
+ * outline instead — asked for directly, and the cheapest of the three ways the
+ * blue could have been spent.
+ *
+ * **The accent is the only thing that became a hue, and the category colours are
+ * untouched.** The thesis at the top of this file still holds: a category's hue
+ * encodes a part of speech and is real information, so chroma in the *content*
+ * area stays reserved for it. A blue button is chrome — it sits in the app's
+ * furniture, where a caregiver is reading words, not in the grid where somebody
+ * is reading colour to find a verb. That line is the whole reason this is a
+ * blue accent on white rather than a blue wash behind everything.
  */
 internal val LightTokens = PictoColors(
-    paper = Color(0xFFF3F1ED),
+    paper = Color(0xFFFFFFFF),
     card = Color(0xFFFFFFFF),
     tile = Color(0xFFFFFFFF),
-    onTile = Color(0xFF191713),
-    onTileSoft = Color(0xFF6A645C),
-    ink = Color(0xFF191713),
-    inkSoft = Color(0xFF6A645C),
-    line = Color(0xFFE2DED6),
-    lineStrong = Color(0xFF8A8378),
-    accent = Color(0xFF24303F),
+    onTile = Color(0xFF101828),
+    onTileSoft = Color(0xFF5A6472),
+    ink = Color(0xFF101828),
+    inkSoft = Color(0xFF4A5568),
+    line = Color(0xFFDCE5F0),
+    // 4.31:1 on white. It used to clear 3:1 with little to spare against a
+    // darker paper; pure white is the hardest background an outline can have,
+    // so it was darkened rather than merely re-hued.
+    lineStrong = Color(0xFF5A7CA6),
+    // 7.14:1 against white — comfortably past the 3:1 a control owes, because
+    // this also has to carry white text at body size on a filled button.
+    accent = Color(0xFF1A56A8),
     onAccent = Color(0xFFFFFFFF),
     danger = Color(0xFFA02B22),
     onDanger = Color(0xFFFFFFFF),
     isDark = false,
 )
 
+/**
+ * The same product at night, and the reason the blue is a *lighter* one here.
+ *
+ * A deep blue accent that reads well on white is close to invisible on a dark
+ * chrome — #1A56A8 on this `paper` is 1.5:1. Dark mode is not the light palette
+ * dimmed; the accent and its content swap ends of the scale, exactly as the
+ * slate did before it.
+ *
+ * `paper` and `card` moved from warm black to a blue-black, so the chrome reads
+ * as the same product in both schemes rather than as blue by day and brown by
+ * night.
+ */
 internal val DarkTokens = PictoColors(
-    paper = Color(0xFF15130F),
-    card = Color(0xFF221E19),
+    paper = Color(0xFF0D131C),
+    card = Color(0xFF161F2C),
     // Unchanged from light on purpose -- see the KDoc on tile/onTile.
     tile = Color(0xFFFFFFFF),
-    onTile = Color(0xFF191713),
-    onTileSoft = Color(0xFF6A645C),
-    ink = Color(0xFFF0EDE6),
-    inkSoft = Color(0xFFA39C92),
-    line = Color(0xFF2C2822),
-    // Lifted from the design's #6E675C, which cleared 3:1 against `paper` but
-    // reached only 2.96:1 against the lighter `card` -- and a control outline has
-    // to hold on whichever surface it lands on, not just the darker one.
-    lineStrong = Color(0xFF767065),
-    accent = Color(0xFFC9D6E6),
-    onAccent = Color(0xFF15130F),
+    onTile = Color(0xFF101828),
+    onTileSoft = Color(0xFF5A6472),
+    ink = Color(0xFFEDF1F7),
+    inkSoft = Color(0xFFA3B0C2),
+    line = Color(0xFF232E3E),
+    // Verified against `card` as well as `paper` -- a control outline has to
+    // hold on whichever surface it lands on, not just the darker one. 4.82:1 on
+    // card, which is the binding constraint.
+    lineStrong = Color(0xFF7A8CA3),
+    accent = Color(0xFFA8C8EC),
+    onAccent = Color(0xFF0D131C),
     danger = Color(0xFFFFB4AB),
-    onDanger = Color(0xFF15130F),
+    onDanger = Color(0xFF0D131C),
     isDark = true,
 )
 
 /**
  * The same roles, with every contrast concession withdrawn (#109).
  *
- * The default palette is deliberately soft — a warm off-white `paper`, a `line`
- * at 1.19:1, an `inkSoft` for supporting copy. Each of those trades contrast for
- * calm, which is the right default and the wrong only option. The users here
+ * The default palette is deliberately soft — a `line` at 1.27:1 and an `inkSoft`
+ * for supporting copy. Each of those trades contrast for calm, which is the
+ * right default and the wrong only option. The users here
  * have a markedly higher rate of co-occurring visual impairment than the general
  * population, and until now the answer to "I cannot see this" was to change
  * nothing.

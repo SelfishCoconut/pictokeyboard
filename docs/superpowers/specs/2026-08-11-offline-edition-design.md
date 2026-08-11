@@ -98,11 +98,22 @@ legacy JSON document, which carries no media — so exporting a board silently
 drops every photograph and every imported drawing on it. Same format as the
 whole-device backup, scoped to one board.
 
-**Export offers the share sheet.** The file is written into a `FileProvider`
-directory under `cacheDir` and handed to `ShareCompat.IntentBuilder` with the
-`.pkb` MIME type, which reaches WhatsApp, Gmail, Drive and Nearby Share. This is
-`androidx.core`; no new dependency. "Save to a file" stays alongside it, because
-the share sheet cannot reach an SD card and some caregivers back up that way.
+**A board export goes to the share sheet; the whole-device backup keeps the file
+picker.** The board file is written into a `FileProvider` directory under
+`cacheDir` and handed to `ShareCompat.IntentBuilder`, which reaches WhatsApp,
+Gmail, Drive and Nearby Share. This is `androidx.core`; no new dependency.
+
+The two are deliberately different, and the difference is what each one is for.
+Exporting a board is something a caregiver does in order to *give it to
+somebody*, so it opens the sheet and skips "save it, then find it again". A
+backup is for a destination that will still exist when the phone does not — a
+memory card, a Drive folder — which the share sheet cannot reach, so Settings
+still writes through the system file picker. Neither grows a second button.
+
+**Voice settings travel with a backup and not with a board.** A backup is this
+caregiver's phone arriving on their next phone, so speech rate, pitch and
+blind-mode should follow them. A single board is handed to someone else, and it
+is not for one caregiver to reset how another's user sounds.
 
 **Import keeps accepting legacy JSON.** Backups already written by shipped builds
 have to keep loading. The picker offers `.pkb` first; a `.json` file is routed to
@@ -159,7 +170,15 @@ pair below 4.5:1 for body text or 3:1 for large text and controls. A colour that
 cannot pass does not ship, and the blue is chosen to pass rather than the test
 adjusted to admit it.
 
-### 7. Issues
+### 7. Play data safety
+
+The Data Safety table becomes a single row: nothing collected, nothing shared.
+The consequence worth stating is that the **Account Deletion URL field is left
+empty** — Play only requires it of apps that let users create an account, and
+filling it with a page that cannot delete anything is a rejection. `docs/`
+carries both that table and the owner's remaining Play steps.
+
+### 8. Issues
 
 A `Marketplace edition` milestone collects #37, #38, #40, #41, #92 and #98, each
 with a comment naming the `marketplace` branch. #39 is closed by this work.
@@ -173,10 +192,15 @@ Supabase configuration that no longer exists on `main`.
 - `PkbArchiveTest`, `PkbMappingTest` — unchanged, still passing.
 - New: per-board export contains exactly that board's categories, pictos and
   media, and nothing from any other board.
-- New: moving a category changes its `boardId` and its position, carries its
-  pictos, and is reversed exactly by undo.
-- New: a `.pkb` shared through the share sheet resolves to a readable
-  `FileProvider` uri.
+- New (`CategoryMoveTest`, instrumented): moving a category changes its
+  `boardId`, lands after what is already on the destination, leaves the source
+  board's other categories alone, **keeps its pictograms**, and is reversed
+  exactly — board *and* position — by undo. The picto assertion is the one that
+  matters: the obvious implementation upserts with REPLACE, which cascades and
+  silently deletes every word in the category.
+- New (`BoardExportTest`, instrumented): a one-board export contains that board
+  and nothing from any other, and carries no voice settings; a whole-device
+  export still contains every board and does carry them.
 - Migration tests unchanged — the schema does not move.
 
 Gate: `spotlessApply detekt lint testDebugUnitTest` clean, plus the instrumented

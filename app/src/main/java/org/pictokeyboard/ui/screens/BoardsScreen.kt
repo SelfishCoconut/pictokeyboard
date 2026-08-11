@@ -61,7 +61,7 @@ fun BoardsScreen(
     onDeleteBoard: (BoardEntity) -> Unit,
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
-    onOpenDiscover: () -> Unit,
+    onImportBoard: () -> Unit,
 ) {
     BoardsScreenContent(
         summaries = summaries,
@@ -73,7 +73,7 @@ fun BoardsScreen(
         onDeleteBoard = onDeleteBoard,
         onEnableKeyboard = onEnableKeyboard,
         onSelectKeyboard = onSelectKeyboard,
-        onOpenDiscover = onOpenDiscover,
+        onImportBoard = onImportBoard,
     )
 }
 
@@ -89,7 +89,7 @@ internal fun BoardsScreenContent(
     onDeleteBoard: (BoardEntity) -> Unit,
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
-    onOpenDiscover: () -> Unit,
+    onImportBoard: () -> Unit,
 ) {
     // Which board's Try it sheet is open, if any. Held here rather than on the
     // card so the sheet outlives the dropdown menu that asked for it.
@@ -127,7 +127,7 @@ internal fun BoardsScreenContent(
             }
 
             if (summaries.isEmpty()) {
-                item(key = "empty") { BoardsEmptyState(onOpenDiscover = onOpenDiscover) }
+                item(key = "empty") { BoardsEmptyState(onImportBoard = onImportBoard) }
             } else {
                 items(summaries, key = { it.board.id }) { summary ->
                     BoardCard(
@@ -161,9 +161,17 @@ internal fun BoardsScreenContent(
     }
 }
 
-/** No boards at all — points at Discover rather than at an empty grid. */
+/**
+ * No boards at all.
+ *
+ * This pointed at Discover, which was going to be a catalogue of other people's
+ * boards and never became one. With no server there is nothing to browse, so it
+ * offers the thing that actually exists: opening a `.pkb` somebody sent you.
+ * Starting from an empty grid is the hardest moment in every AAC product, and a
+ * board built by another caregiver is the shortest way out of it.
+ */
 @Composable
-private fun BoardsEmptyState(onOpenDiscover: () -> Unit) {
+private fun BoardsEmptyState(onImportBoard: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,7 +189,7 @@ private fun BoardsEmptyState(onOpenDiscover: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = Spacing.lg),
         )
-        Button(onClick = onOpenDiscover) {
+        Button(onClick = onImportBoard) {
             Text(stringResource(R.string.boards_empty_action))
         }
     }
@@ -249,7 +257,7 @@ private fun BoardsReadyPreview() {
             onDeleteBoard = {},
             onEnableKeyboard = {},
             onSelectKeyboard = {},
-            onOpenDiscover = {},
+            onImportBoard = {},
         )
     }
 }
@@ -269,7 +277,7 @@ private fun BoardsSetupPreview() {
             onDeleteBoard = {},
             onEnableKeyboard = {},
             onSelectKeyboard = {},
-            onOpenDiscover = {},
+            onImportBoard = {},
         )
     }
 }
@@ -289,7 +297,7 @@ private fun BoardsEmptyPreview() {
             onDeleteBoard = {},
             onEnableKeyboard = {},
             onSelectKeyboard = {},
-            onOpenDiscover = {},
+            onImportBoard = {},
         )
     }
 }

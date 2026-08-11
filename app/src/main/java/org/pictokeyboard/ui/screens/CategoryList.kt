@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
@@ -80,6 +81,10 @@ internal fun ReorderableCategoryList(
     onEdit: (CategoryEntity) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
     onOpen: (String) -> Unit,
+    // Null when this device has only one board, and the action is then absent
+    // rather than present-and-disabled: there is nowhere to move to, and a
+    // control that can never become enabled is a question with no answer.
+    onMoveToBoard: ((CategoryEntity) -> Unit)? = null,
 ) {
     val items = remember { mutableStateListOf<CategoryEntity>() }
     val drag = remember { DragState() }
@@ -118,6 +123,7 @@ internal fun ReorderableCategoryList(
                 onEdit = { onEdit(category) },
                 onDelete = { onDelete(category) },
                 onOpen = { onOpen(category.id) },
+                onMoveToBoard = onMoveToBoard?.let { move -> { move(category) } },
             )
         }
     }
@@ -229,6 +235,7 @@ private fun CategoryRow(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onOpen: () -> Unit,
+    onMoveToBoard: (() -> Unit)?,
 ) {
     Card(
         modifier = Modifier
@@ -279,7 +286,11 @@ private fun CategoryRow(
                         onMoveDown = onMoveDown,
                     )
                 } else {
-                    CategoryOverflow(onEdit = onEdit, onDelete = onDelete)
+                    CategoryOverflow(
+                        onEdit = onEdit,
+                        onDelete = onDelete,
+                        onMoveToBoard = onMoveToBoard,
+                    )
                 }
             }
         }
@@ -343,9 +354,21 @@ private fun ReorderControls(
     }
 }
 
-/** Edit and delete, out of the row's way until they are wanted. */
+/**
+ * Edit, move and delete, out of the row's way until they are wanted.
+ *
+ * Moving a category to another board goes here rather than becoming a control on
+ * the row (#119). The row already carries a colour bar, a picto, a name, a count
+ * and this button; a fourth affordance on it would cost every caregiver reading
+ * the list something, to save the occasional one a tap. The menu is where the
+ * actions that are not "open this" already live.
+ */
 @Composable
-private fun CategoryOverflow(onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun CategoryOverflow(
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onMoveToBoard: (() -> Unit)?,
+) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) {
@@ -364,6 +387,16 @@ private fun CategoryOverflow(onEdit: () -> Unit, onDelete: () -> Unit) {
                     onEdit()
                 },
             )
+            if (onMoveToBoard != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.category_move)) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.DriveFileMove, contentDescription = null) },
+                    onClick = {
+                        open = false
+                        onMoveToBoard()
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.delete)) },
                 leadingIcon = {

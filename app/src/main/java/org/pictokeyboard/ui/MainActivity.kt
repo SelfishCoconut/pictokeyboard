@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -27,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,15 +38,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import org.pictokeyboard.R
 import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.ui.screens.AboutScreen
-import org.pictokeyboard.ui.screens.AccountScreen
 import org.pictokeyboard.ui.screens.AddPictosScreen
 import org.pictokeyboard.ui.screens.BoardDetailScreen
+import org.pictokeyboard.ui.screens.BoardSharing
 import org.pictokeyboard.ui.screens.BoardsScreen
-import org.pictokeyboard.ui.screens.DiscoverScreen
+import org.pictokeyboard.ui.screens.PKB_MIME
 import org.pictokeyboard.ui.screens.PictosScreen
 import org.pictokeyboard.ui.screens.SettingsScreen
 import org.pictokeyboard.ui.screens.UnlockScreen
@@ -59,13 +56,11 @@ import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 
 object Routes {
     const val BOARDS = "boards"
-    const val DISCOVER = "discover"
     const val BOARD = "board"
     const val PICTOS = "pictos"
     const val ADD_PICTOS = "addpictos"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
-    const val ACCOUNT = "account"
     fun board(boardId: String) = "$BOARD/$boardId"
     fun pictos(categoryId: String) = "$PICTOS/$categoryId"
     fun addPictos(categoryId: String) = "$ADD_PICTOS/$categoryId"
@@ -75,17 +70,21 @@ object Routes {
 private data class NavItem(val route: String, val label: Int, val icon: ImageVector)
 
 /**
- * Three destinations, not four.
+ * Two destinations, and it took three cuts to get here.
  *
  * About was a quarter of the navigation bar for a screen read once, and is now
  * a Settings row. The old Home tab was a dashboard *about the app* -- setup
  * status, a build-your-board CTA, a tips card -- sitting above the caregiver's
- * actual content; Boards makes the content the home. Discover is empty until
- * #37, but the boards empty state has to be able to point somewhere. (#32)
+ * actual content; Boards makes the content the home. (#32)
+ *
+ * Discover was a third of the bar reserved for a catalogue of published boards,
+ * and with no server there is nothing to publish and nothing to browse (#119).
+ * A caregiver gets a board from another caregiver as a file now, which is the
+ * boards screen's own empty state and not a destination. What is left is the
+ * caregiver's content and the settings for it. (#32, #119)
  */
 private val NavItems = listOf(
     NavItem(Routes.BOARDS, R.string.nav_boards, Icons.Filled.GridView),
-    NavItem(Routes.DISCOVER, R.string.nav_discover, Icons.Filled.Explore),
     NavItem(Routes.SETTINGS, R.string.nav_settings, Icons.Filled.Settings),
 )
 
@@ -172,22 +171,22 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
     }
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val nav = rememberNavController()
 
-    // Exporting a board writes the same JSON the settings screen has always
-    // written, scoped to one board (#31). The launcher lives here because both
-    // the Boards tab and Settings need it and neither owns the other.
-    var pendingExportJson by remember { mutableStateOf<String?>(null) }
-    val boardExportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
+    // Opening a `.pkb` a caregiver was sent. The same importer the whole-device
+    // backup uses, because a file holding one board and a file holding twelve
+    // are the same format and land the same way: added, never over what is
+    // already here.
+    val boardImportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        val json = pendingExportJson
-        if (uri != null && json != null) {
-            context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-            Toast.makeText(context, R.string.settings_export_done, Toast.LENGTH_SHORT).show()
+        if (uri == null) return@rememberLauncherForActivityResult
+        viewModel.importEverything(
+            source = { requireNotNull(context.contentResolver.openInputStream(uri)) },
+        ) { result ->
+            val text = if (result.isSuccess) R.string.boards_import_done else R.string.boards_import_failed
+            Toast.makeText(context, text, Toast.LENGTH_LONG).show()
         }
-        pendingExportJson = null
     }
     // Read once here rather than per screen: the Boards tab and the board's own
     // Try it sheet both need it, and it is a system-settings read, not state.
@@ -242,10 +241,23 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                     },
                     onUseBoard = { board -> viewModel.useBoard(board.id) },
                     onDuplicateBoard = viewModel::duplicateBoard,
+                    // Written to a cache file first and then handed to the
+                    // share sheet, rather than saved through the file picker.
+                    // The caregiver's next move after exporting a board is
+                    // always to send it to somebody, and asking them to save it
+                    // and then find it again is a step that exists only because
+                    // of how the code was arranged. Settings keeps the picker
+                    // for the whole-device backup, where the destination is the
+                    // point.
                     onExportBoard = { board ->
-                        scope.launch {
-                            pendingExportJson = viewModel.exportJson(board.id)
-                            boardExportLauncher.launch("pictokeyboard-\${board.name}.json")
+                        val file = BoardSharing.fileFor(context, board.name)
+                        viewModel.exportBoard(board.id, file.outputStream()) { result ->
+                            result.fold(
+                                onSuccess = { BoardSharing.share(context, file, board.name) },
+                                onFailure = {
+                                    Toast.makeText(context, R.string.boards_share_failed, Toast.LENGTH_LONG).show()
+                                },
+                            )
                         }
                     },
                     onDeleteBoard = { board ->
@@ -257,17 +269,8 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                     },
                     onEnableKeyboard = { openInputMethodSettings(context) },
                     onSelectKeyboard = { showKeyboardPicker(context) },
-                    onOpenDiscover = {
-                        nav.navigate(Routes.DISCOVER) {
-                            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
+                    onImportBoard = { boardImportLauncher.launch(arrayOf(PKB_MIME, "application/zip", "*/*")) },
                 )
-            }
-            composable(Routes.DISCOVER) {
-                DiscoverScreen()
             }
             composable("${Routes.BOARD}/{boardId}") { entry ->
                 BoardDetailScreen(
@@ -303,12 +306,8 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                 SettingsScreen(
                     viewModel = viewModel,
                     onOpenAbout = { nav.navigate(Routes.ABOUT) },
-                    onOpenAccount = { nav.navigate(Routes.ACCOUNT) },
                     onBack = null,
                 )
-            }
-            composable(Routes.ACCOUNT) {
-                AccountScreen(onBack = { nav.popBackStack() })
             }
             composable(Routes.ABOUT) {
                 // Pushed from Settings now, so it gets a back arrow.

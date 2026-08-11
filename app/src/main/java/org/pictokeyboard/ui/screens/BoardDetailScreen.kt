@@ -11,6 +11,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,12 +30,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.BoardEntity
 import org.pictokeyboard.data.db.CategoryEntity
-import org.pictokeyboard.data.db.PictoEntity
 import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
-import org.pictokeyboard.data.seed.CategoryTemplates
 import org.pictokeyboard.ui.ConfigViewModel
 import org.pictokeyboard.ui.theme.PictoKeyboardTheme
 import org.pictokeyboard.ui.theme.ScreenPreviews
@@ -75,6 +75,11 @@ fun BoardDetailScreen(
     BoardDetailContent(
         summary = summary,
         pictoCounts = pictoCounts,
+        // Everywhere a category could go. Empty on a device with one board, and
+        // the Move action then never appears.
+        otherBoards = summaries.filter { it.board.id != boardId },
+        onMoveCategory = viewModel::moveCategoryToBoard,
+        onUndoMove = viewModel::restoreCategory,
         // How many boards the keyboard will offer as tabs. The Layout preview
         // needs it to know whether the strip costs the grid any height.
         keyboardBoardCount = summaries.count { it.board.showInKeyboard },
@@ -119,12 +124,22 @@ private enum class BoardTab(val label: Int) {
     Layout(R.string.board_tab_layout),
 }
 
-/** Stateless board detail. Tab and dialog state is local; the board is not. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Stateless board detail. Tab and dialog state is local; the board is not.
+ *
+ * This function owns the screen's five pieces of local state and nothing else —
+ * the chrome around them is [BoardDetailScaffold] and the things drawn over them
+ * are [BoardDetailOverlays]. That split is not cosmetic: every one of those
+ * states is written from one place and read from two, and with the scaffold
+ * inlined here the writes were forty lines away from the reads.
+ */
 @Composable
 internal fun BoardDetailContent(
     summary: BoardSummary,
     pictoCounts: Map<String, Int>,
+    otherBoards: List<BoardSummary>,
+    onMoveCategory: (CategoryEntity, String, (CategoryEntity) -> Unit) -> Unit,
+    onUndoMove: (CategoryEntity) -> Unit,
     keyboardBoardCount: Int,
     status: KeyboardStatus,
     onBack: () -> Unit,
@@ -147,43 +162,34 @@ internal fun BoardDetailContent(
     var dialog by remember { mutableStateOf<CategoryDialog?>(null) }
     var reordering by remember { mutableStateOf(false) }
     var trying by rememberSaveable { mutableStateOf(false) }
+    var moving by remember { mutableStateOf<CategoryEntity?>(null) }
+    val snackbars = remember { SnackbarHostState() }
 
-    Scaffold(
-        topBar = {
-            BoardDetailTopBar(
-                name = summary.board.name,
-                onBack = onBack,
-                onTryIt = { trying = true },
-            )
-        },
-        floatingActionButton = {
-            AddCategoryFab(
-                visible = tab == BoardTab.Categories && !reordering,
-                onClick = { dialog = CategoryDialog.Chooser },
-            )
-        },
-    ) { padding ->
-        BoardDetailBody(
-            tab = tab,
-            onSelectTab = { tab = it },
-            summary = summary,
-            pictoCounts = pictoCounts,
-            keyboardBoardCount = keyboardBoardCount,
-            reordering = reordering,
-            onToggleReorder = { reordering = !reordering },
-            onOpenCategory = onOpenCategory,
-            onSaveBoard = onSaveBoard,
-            onSaveBoardIcon = onSaveBoardIcon,
-            onReorder = onReorder,
-            onMove = onMove,
-            pickerDialog = pickerDialog,
-            onEditCategory = { dialog = CategoryDialog.Edit(it) },
-            onDeleteCategory = { dialog = CategoryDialog.Delete(it) },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        )
-    }
+    BoardDetailScaffold(
+        summary = summary,
+        pictoCounts = pictoCounts,
+        keyboardBoardCount = keyboardBoardCount,
+        snackbars = snackbars,
+        tab = tab,
+        onSelectTab = { tab = it },
+        reordering = reordering,
+        onToggleReorder = { reordering = !reordering },
+        onBack = onBack,
+        onTryIt = { trying = true },
+        onNewCategory = { dialog = CategoryDialog.Chooser },
+        onOpenCategory = onOpenCategory,
+        onSaveBoard = onSaveBoard,
+        onSaveBoardIcon = onSaveBoardIcon,
+        onReorder = onReorder,
+        onMove = onMove,
+        onEditCategory = { dialog = CategoryDialog.Edit(it) },
+        onDeleteCategory = { dialog = CategoryDialog.Delete(it) },
+        // Absent rather than disabled when this is the only board: there is
+        // nowhere to move to, and a control that can never become enabled is a
+        // question with no answer.
+        onMoveToBoard = if (otherBoards.isEmpty()) null else ({ moving = it }),
+        pickerDialog = pickerDialog,
+    )
 
     BoardDetailOverlays(
         summary = summary,
@@ -201,7 +207,72 @@ internal fun BoardDetailContent(
         onEnableKeyboard = onEnableKeyboard,
         onSelectKeyboard = onSelectKeyboard,
         onStopTrying = { trying = false },
+        moving = moving,
+        otherBoards = otherBoards,
+        snackbars = snackbars,
+        onStopMoving = { moving = null },
+        onMoveCategory = onMoveCategory,
+        onUndoMove = onUndoMove,
     )
+}
+
+/** The screen's chrome: top bar, snackbars, the add button, and the two tabs. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BoardDetailScaffold(
+    summary: BoardSummary,
+    pictoCounts: Map<String, Int>,
+    keyboardBoardCount: Int,
+    snackbars: SnackbarHostState,
+    tab: BoardTab,
+    onSelectTab: (BoardTab) -> Unit,
+    reordering: Boolean,
+    onToggleReorder: () -> Unit,
+    onBack: () -> Unit,
+    onTryIt: () -> Unit,
+    onNewCategory: () -> Unit,
+    onOpenCategory: (String) -> Unit,
+    onSaveBoard: (BoardEntity) -> Unit,
+    onSaveBoardIcon: (BoardEntity, IconChoice) -> Unit,
+    onReorder: (List<CategoryEntity>) -> Unit,
+    onMove: (CategoryEntity, Boolean) -> Unit,
+    onEditCategory: (CategoryEntity) -> Unit,
+    onDeleteCategory: (CategoryEntity) -> Unit,
+    onMoveToBoard: ((CategoryEntity) -> Unit)?,
+    pickerDialog: IconPickerSlot,
+) {
+    Scaffold(
+        topBar = { BoardDetailTopBar(summary.board.name, onBack, onTryIt) },
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            AddCategoryFab(
+                visible = tab == BoardTab.Categories && !reordering,
+                onClick = onNewCategory,
+            )
+        },
+    ) { padding ->
+        BoardDetailBody(
+            tab = tab,
+            onSelectTab = onSelectTab,
+            summary = summary,
+            pictoCounts = pictoCounts,
+            keyboardBoardCount = keyboardBoardCount,
+            reordering = reordering,
+            onToggleReorder = onToggleReorder,
+            onOpenCategory = onOpenCategory,
+            onSaveBoard = onSaveBoard,
+            onSaveBoardIcon = onSaveBoardIcon,
+            onReorder = onReorder,
+            onMove = onMove,
+            pickerDialog = pickerDialog,
+            onEditCategory = onEditCategory,
+            onDeleteCategory = onDeleteCategory,
+            onMoveToBoard = onMoveToBoard,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        )
+    }
 }
 
 /**
@@ -215,7 +286,10 @@ private fun AddCategoryFab(visible: Boolean, onClick: () -> Unit) {
     AddFab(contentDescription = stringResource(R.string.category_add), onClick = onClick)
 }
 
-/** Everything the board detail draws over itself: the category dialogs, and Try it. */
+/**
+ * Everything the board detail draws over itself: the category dialogs, Try it,
+ * and the move sheet with the snackbar that undoes it.
+ */
 @Composable
 private fun BoardDetailOverlays(
     summary: BoardSummary,
@@ -233,6 +307,12 @@ private fun BoardDetailOverlays(
     onEnableKeyboard: () -> Unit,
     onSelectKeyboard: () -> Unit,
     onStopTrying: () -> Unit,
+    moving: CategoryEntity?,
+    otherBoards: List<BoardSummary>,
+    snackbars: SnackbarHostState,
+    onStopMoving: () -> Unit,
+    onMoveCategory: (CategoryEntity, String, (CategoryEntity) -> Unit) -> Unit,
+    onUndoMove: (CategoryEntity) -> Unit,
 ) {
     CategoryDialogs(
         dialog = dialog,
@@ -257,6 +337,17 @@ private fun BoardDetailOverlays(
             onDismiss = onStopTrying,
         )
     }
+
+    moving?.let { category ->
+        MoveCategoryFlow(
+            category = category,
+            boards = otherBoards,
+            snackbars = snackbars,
+            onDismiss = onStopMoving,
+            onMoveCategory = onMoveCategory,
+            onUndoMove = onUndoMove,
+        )
+    }
 }
 
 /** The tab strip and whichever half of the board is selected. */
@@ -278,6 +369,7 @@ private fun BoardDetailBody(
     onEditCategory: (CategoryEntity) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit,
     modifier: Modifier = Modifier,
+    onMoveToBoard: ((CategoryEntity) -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
         PrimaryTabRow(selectedTabIndex = tab.ordinal) {
@@ -300,6 +392,7 @@ private fun BoardDetailBody(
                 onMove = onMove,
                 onEdit = onEditCategory,
                 onDelete = onDeleteCategory,
+                onMoveToBoard = onMoveToBoard,
             )
 
             BoardTab.Layout -> BoardLayoutTab(
@@ -362,57 +455,8 @@ private fun MissingBoardScaffold(onBack: () -> Unit) {
 
 // --- Previews ---------------------------------------------------------------
 
-/** Enough rows for a preview to show the palette without scrolling. */
-private const val PREVIEW_CATEGORIES = 5
-private const val PREVIEW_PICTOS = 12
-
 /** Preview counts fan out per category, so the row's second line varies. */
 private const val PREVIEW_COUNT_STEP = 4
-
-internal fun previewBoardSummary(
-    columns: Int = BoardEntity.DEFAULT_COLUMNS,
-    rows: Int = BoardEntity.DEFAULT_ROWS,
-    showLabels: Boolean = true,
-    iconArasaacId: Int? = null,
-): BoardSummary {
-    // Built from the real templates, so the preview shows the actual palette.
-    val categories = CategoryTemplates.all.take(PREVIEW_CATEGORIES).mapIndexed { i, template ->
-        CategoryEntity(
-            id = template.id,
-            boardId = "b1",
-            name = template.name("es"),
-            colorArgb = template.color.toInt(),
-            iconArasaacId = template.iconArasaacId,
-            position = i,
-            builtin = true,
-        )
-    }
-    return BoardSummary(
-        board = BoardEntity(
-            id = "b1",
-            name = "Casa",
-            colorArgb = BoardEntity.DEFAULT_COLOR_ARGB,
-            position = 0,
-            active = true,
-            columns = columns,
-            rows = rows,
-            showLabels = showLabels,
-            iconArasaacId = iconArasaacId,
-        ),
-        categories = categories,
-        heroPictos = List(PREVIEW_PICTOS) { index ->
-            PictoEntity(
-                id = "p$index",
-                categoryId = categories.first().id,
-                label = "palabra $index",
-                spokenText = "palabra $index",
-                language = "es",
-                position = index,
-            )
-        },
-        pictoCount = 84,
-    )
-}
 
 @Composable
 private fun BoardDetailPreview(summary: BoardSummary) {
@@ -422,6 +466,9 @@ private fun BoardDetailPreview(summary: BoardSummary) {
             pictoCounts = summary.categories
                 .mapIndexed { i, category -> category.id to i * PREVIEW_COUNT_STEP }
                 .toMap(),
+            otherBoards = emptyList(),
+            onMoveCategory = { _, _, _ -> },
+            onUndoMove = {},
             keyboardBoardCount = 1,
             status = KeyboardStatus(enabled = true, selected = true),
             onBack = {},

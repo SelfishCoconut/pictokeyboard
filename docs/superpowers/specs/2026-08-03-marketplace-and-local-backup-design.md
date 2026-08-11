@@ -1,5 +1,15 @@
 # PictoKeyboard — marketplace accounts and local backup
 
+> **Half of this is live and half of it is parked.**
+>
+> The `.pkb` file format — §4, §6 and the rules that make an import safe — is
+> shipping on `main` and is cited by name from `PkbDocument` and `PkbArchive`.
+> Read it as current.
+>
+> The catalogue, publishing and anything involving a server went to the
+> **`marketplace`** branch with #119, when `main` became the offline edition.
+> Read those parts as history.
+
 **Date:** 2026-08-03
 **Status:** design agreed, supersedes `2026-08-02-accounts-and-sync-design.md`
 **Scope:** what the server holds and who may read it, and how a caregiver moves

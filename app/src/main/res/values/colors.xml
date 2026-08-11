@@ -11,7 +11,7 @@
 -->
 <resources>
     <!-- Chrome background, for both the app window and the keyboard. -->
-    <color name="paper">#FFF3F1ED</color>
+    <color name="paper">#FFFFFFFF</color>
 
     <!-- The config app's raised surface. Unlike `tile`, this follows the scheme. -->
     <color name="card">#FFFFFFFF</color>
@@ -22,18 +22,18 @@
         colours are therefore scheme-invariant too - see on_tile.
     -->
     <color name="tile">#FFFFFFFF</color>
-    <color name="on_tile">#FF191713</color>
-    <color name="on_tile_soft">#FF6A645C</color>
+    <color name="on_tile">#FF101828</color>
+    <color name="on_tile_soft">#FF5A6472</color>
 
-    <color name="ink">#FF191713</color>
-    <color name="ink_soft">#FF6A645C</color>
+    <color name="ink">#FF101828</color>
+    <color name="ink_soft">#FF4A5568</color>
 
     <!-- Decorative only: dividers, unpressed key fill. See line_strong. -->
-    <color name="line">#FFE2DED6</color>
+    <color name="line">#FFDCE5F0</color>
 
     <!-- Anything outlining a control the user has to find. Verified at 3:1. -->
-    <color name="line_strong">#FF8A8378</color>
+    <color name="line_strong">#FF5A7CA6</color>
 
-    <color name="accent">#FF24303F</color>
+    <color name="accent">#FF1A56A8</color>
     <color name="on_accent">#FFFFFFFF</color>
 </resources>

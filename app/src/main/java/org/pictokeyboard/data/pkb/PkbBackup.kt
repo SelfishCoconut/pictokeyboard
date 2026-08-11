@@ -39,20 +39,30 @@ class PkbBackup(
     private val pictoDao = db.pictoDao()
 
     /**
-     * Writes everything this device holds about boards into [out].
+     * Writes what this device holds about boards into [out] — every board, or
+     * the single [boardId] when one is named.
      *
      * A photo whose file has gone — cleared cache, restored phone — costs its
      * picto a picture and never the export. Losing one symbol is a bad day;
      * refusing to back anything up because of it is how a caregiver ends up
      * with no backup at all.
+     *
+     * **Voice settings travel with a whole-device backup and not with one
+     * board.** A backup is this caregiver's own phone arriving on their next
+     * phone, so their speech rate, pitch and blind-mode choice should follow
+     * them. A single board is something they hand to somebody else, and it is
+     * not for one caregiver to reach into another's device and reset how their
+     * user's voice sounds. Same archive, and the difference is deliberate.
      */
-    suspend fun exportTo(out: OutputStream): Result<PkbImportSummary> =
+    suspend fun exportTo(out: OutputStream, boardId: String? = null): Result<PkbImportSummary> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val boards = boardDao.getAll()
-                val categories = categoryDao.getAll()
-                val pictos = pictoDao.getAll()
-                val settings = settingsStore.settings.first()
+                val boards = boardDao.getAll().filter { boardId == null || it.id == boardId }
+                val boardIds = boards.map { it.id }.toSet()
+                val categories = categoryDao.getAll().filter { it.boardId in boardIds }
+                val categoryIds = categories.map { it.id }.toSet()
+                val pictos = pictoDao.getAll().filter { it.categoryId in categoryIds }
+                val settings = if (boardId == null) settingsStore.settings.first() else null
 
                 val digestByPath = mediaPaths(boards, categories, pictos)
                     .mapNotNull { path ->

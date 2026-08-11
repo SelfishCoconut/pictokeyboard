@@ -4,8 +4,8 @@
     at night it was a slab of light grey under a dark host app.
 -->
 <resources>
-    <color name="paper">#FF15130F</color>
-    <color name="card">#FF221E19</color>
+    <color name="paper">#FF0D131C</color>
+    <color name="card">#FF161F2C</color>
 
     <!--
         Deliberately unchanged from the light scheme. ARASAAC artwork is black line
@@ -15,17 +15,17 @@
         warm black. This is a legibility constraint, not a style choice.
     -->
     <color name="tile">#FFFFFFFF</color>
-    <color name="on_tile">#FF191713</color>
-    <color name="on_tile_soft">#FF6A645C</color>
+    <color name="on_tile">#FF101828</color>
+    <color name="on_tile_soft">#FF5A6472</color>
 
-    <color name="ink">#FFF0EDE6</color>
-    <color name="ink_soft">#FFA39C92</color>
+    <color name="ink">#FFEDF1F7</color>
+    <color name="ink_soft">#FFA3B0C2</color>
 
-    <color name="line">#FF2C2822</color>
+    <color name="line">#FF232E3E</color>
 
-    <!-- Lifted from the design's #6E675C, which reached only 2.96:1 on `card`. -->
-    <color name="line_strong">#FF767065</color>
+    <!-- Verified against `card`, not just `paper`: 4.82:1 there, which binds. -->
+    <color name="line_strong">#FF7A8CA3</color>
 
-    <color name="accent">#FFC9D6E6</color>
-    <color name="on_accent">#FF15130F</color>
+    <color name="accent">#FFA8C8EC</color>
+    <color name="on_accent">#FF0D131C</color>
 </resources>

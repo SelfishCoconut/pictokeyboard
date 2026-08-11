@@ -405,6 +405,39 @@ class PictoRepository(
         categoryDao.updateAll(ordered.mapIndexed { i, c -> c.copy(position = i) })
     }
 
+    /**
+     * Moves [category] to the end of [targetBoardId]'s list, and returns the row
+     * exactly as it was so the move can be undone (#119).
+     *
+     * Its pictograms come with it and are never touched: a picto belongs to a
+     * category, not to a board, so the whole move is one column on one row. That
+     * is the reason this is cheap enough to offer an undo for at all — the
+     * inverse is [restoreCategory], writing the returned row straight back.
+     *
+     * An UPDATE for the same reason [reorderCategories] is: an upsert with
+     * REPLACE would delete and re-insert the category, and the cascade would
+     * take every picto in it. That would make "move a category" delete the
+     * caregiver's words, which is the exact failure this feature must not have.
+     *
+     * The source board is allowed to end up with no categories. A board with
+     * nothing on it is a board halfway through being built, and refusing the
+     * last move would block the most ordinary use of this — emptying one board
+     * into another before deleting it.
+     */
+    suspend fun moveCategoryToBoard(category: CategoryEntity, targetBoardId: String): CategoryEntity {
+        val previous = categoryDao.getById(category.id) ?: category
+        categoryDao.update(
+            previous.copy(
+                boardId = targetBoardId,
+                position = categoryDao.maxPosition(targetBoardId) + 1,
+            ),
+        )
+        return previous
+    }
+
+    /** Puts a moved category back on the board and at the position it came from. */
+    suspend fun restoreCategory(category: CategoryEntity) = categoryDao.update(category)
+
     // --- Pictos ------------------------------------------------------------
 
     /**

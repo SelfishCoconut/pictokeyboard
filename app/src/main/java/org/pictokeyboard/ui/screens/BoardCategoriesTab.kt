@@ -43,6 +43,7 @@ internal fun BoardCategoriesTab(
     onEdit: (CategoryEntity) -> Unit,
     onDelete: (CategoryEntity) -> Unit,
     modifier: Modifier = Modifier,
+    onMoveToBoard: ((CategoryEntity) -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
         if (categories.size > 1) {
@@ -66,6 +67,7 @@ internal fun BoardCategoriesTab(
             onEdit = onEdit,
             onDelete = onDelete,
             onOpen = onOpenCategory,
+            onMoveToBoard = onMoveToBoard,
         )
     }
 }
