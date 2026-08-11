@@ -1,15 +1,18 @@
 package org.pictokeyboard.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import org.pictokeyboard.R
 import org.pictokeyboard.data.db.CategoryEntity
 import org.pictokeyboard.data.db.UsageEntity
@@ -46,6 +49,14 @@ internal fun BoardCategoriesTab(
     onMoveToBoard: ((CategoryEntity) -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
+        // Reachable in one tap since **Start from scratch** arrived (#135), and
+        // before that only by deleting every category — so an empty board used
+        // to be a corner nobody landed in and is now the normal end of a route
+        // the app itself offers. Landing a caregiver on a blank screen with an
+        // unlabelled + in the corner is where building a board stops.
+        if (categories.isEmpty()) {
+            EmptyCategoriesHint()
+        }
         if (categories.size > 1) {
             Column(
                 modifier = Modifier
@@ -68,6 +79,29 @@ internal fun BoardCategoriesTab(
             onDelete = onDelete,
             onOpen = onOpenCategory,
             onMoveToBoard = onMoveToBoard,
+        )
+    }
+}
+
+/** What an empty board says for itself, and where to go next. */
+@Composable
+private fun EmptyCategoriesHint() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.lg, vertical = Spacing.xxl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        Text(
+            stringResource(R.string.board_categories_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            stringResource(R.string.board_categories_empty_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }

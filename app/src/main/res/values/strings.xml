@@ -346,6 +346,23 @@
     <string name="boards_delete_last">The last board cannot be deleted — the keyboard would have nothing to show.</string>
     <string name="boards_card_a11y">%1$s, %2$d categories, %3$d pictograms</string>
     <string name="boards_card_a11y_in_use">%1$s, in use, %2$d categories, %3$d pictograms</string>
+    <string name="board_categories_empty_title">This board is empty</string>
+    <string name="board_categories_empty_body">Add a category with the + button — people, food, feelings — and put the words inside it.</string>
+
+    <!-- Making a board (#135) -->
+    <string name="boards_new">New board</string>
+    <string name="boards_new_title">New board</string>
+    <string name="boards_new_subtitle">A board is one set of words for one situation — home, school, an appointment.</string>
+    <string name="boards_new_copy_label">Copy a board you already have</string>
+    <string name="boards_new_copy_desc">%1$d categories, %2$d pictograms</string>
+    <string name="boards_new_scratch_label">Or begin with nothing</string>
+    <string name="boards_new_scratch">Start from scratch</string>
+    <string name="boards_new_scratch_desc">An empty board. You choose every category and every word.</string>
+    <string name="boards_new_default_name">New board</string>
+    <string name="boards_new_name_title">What is this board called?</string>
+    <string name="boards_new_name_label">Name</string>
+    <string name="boards_new_name_confirm">Create</string>
+
     <string name="boards_empty_title">No boards yet</string>
     <string name="boards_empty_body">A board is one set of words for one situation — home, school, an appointment. Build one, or open a board another caregiver sent you.</string>
     <string name="boards_empty_action">Open a board file</string>

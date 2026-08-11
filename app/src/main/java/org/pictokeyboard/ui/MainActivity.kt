@@ -270,6 +270,33 @@ private fun AppNavigation(viewModel: ConfigViewModel, settings: org.pictokeyboar
                     onEnableKeyboard = { openInputMethodSettings(context) },
                     onSelectKeyboard = { showKeyboardPicker(context) },
                     onImportBoard = { boardImportLauncher.launch(arrayOf(PKB_MIME, "application/zip", "*/*")) },
+                    // A board is made to be filled, so both routes end on the
+                    // board itself rather than back on the list.
+                    //
+                    // `useBoard` is not a nicety here. Adding a category writes
+                    // to whichever board is *active* -- see
+                    // PictoRepository.activeBoardId -- so a new board opened
+                    // without being handed the keyboard would quietly collect
+                    // its first categories on the previous board. That is also
+                    // why opening any board activates it.
+                    //
+                    // The cost is real and worth naming: starting from scratch
+                    // makes the live keyboard empty until the first category
+                    // lands. It is the caregiver's own deliberate tap, on the
+                    // phone in their hand, and the keyboard says so rather than
+                    // showing a blank grid -- see kb_empty_hint.
+                    onCreateBoard = { name ->
+                        viewModel.addBoard(name) { id ->
+                            viewModel.useBoard(id)
+                            nav.navigate(Routes.board(id))
+                        }
+                    },
+                    onCopyBoard = { board, name ->
+                        viewModel.copyBoard(board, name) { id ->
+                            viewModel.useBoard(id)
+                            nav.navigate(Routes.board(id))
+                        }
+                    },
                 )
             }
             composable("${Routes.BOARD}/{boardId}") { entry ->

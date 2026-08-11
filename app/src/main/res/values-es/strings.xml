@@ -330,6 +330,23 @@
     <string name="boards_delete_last">No se puede eliminar el último tablero: el teclado se quedaría sin nada que mostrar.</string>
     <string name="boards_card_a11y">%1$s, %2$d categorías, %3$d pictogramas</string>
     <string name="boards_card_a11y_in_use">%1$s, en uso, %2$d categorías, %3$d pictogramas</string>
+    <string name="board_categories_empty_title">Este tablero está vacío</string>
+    <string name="board_categories_empty_body">Añade una categoría con el botón + —personas, comida, sentimientos— y mete dentro las palabras.</string>
+
+    <!-- Crear un tablero (#135) -->
+    <string name="boards_new">Nuevo tablero</string>
+    <string name="boards_new_title">Nuevo tablero</string>
+    <string name="boards_new_subtitle">Un tablero es un conjunto de palabras para una situación: casa, colegio, una cita.</string>
+    <string name="boards_new_copy_label">Copiar un tablero que ya tienes</string>
+    <string name="boards_new_copy_desc">%1$d categorías, %2$d pictogramas</string>
+    <string name="boards_new_scratch_label">O empezar sin nada</string>
+    <string name="boards_new_scratch">Empezar de cero</string>
+    <string name="boards_new_scratch_desc">Un tablero vacío. Tú eliges cada categoría y cada palabra.</string>
+    <string name="boards_new_default_name">Tablero nuevo</string>
+    <string name="boards_new_name_title">¿Cómo se llama este tablero?</string>
+    <string name="boards_new_name_label">Nombre</string>
+    <string name="boards_new_name_confirm">Crear</string>
+
     <string name="boards_empty_title">Aún no hay tableros</string>
     <string name="boards_empty_body">Un tablero es un conjunto de palabras para una situación: casa, colegio, una cita. Crea uno o abre un tablero que te haya enviado otra persona.</string>
     <string name="boards_empty_action">Abrir un archivo de tablero</string>
