@@ -23,16 +23,43 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v6
 
+      # A tag is a real release, so missing signing material is a failure here
+      # and not a fallback. It used to be a fallback, and the consequence was
+      # worse than it sounds: the verification step below was itself conditional
+      # on the same secret, so a missing one skipped its own safety net and the
+      # job went on to publish an unsigned AAB with nothing red anywhere. Play
+      # spends a versionCode permanently on upload -- including on an upload it
+      # then rejects -- so that is not a mistake you get to retry.
+      #
+      # workflow_dispatch stays permissive on purpose: rehearsing the build on a
+      # fork or before the secrets exist is useful, and it publishes nothing.
       - name: Decode keystore
         id: keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "No KEYSTORE_BASE64 secret set -- building unsigned." >&2
+          # All four, not just the keystore. Three out of four does not build
+          # unsigned -- it fails inside AGP with a stack trace about a null
+          # alias, which is a much longer way round to the same answer.
+          missing=""
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+
+          if [ -n "$missing" ]; then
+            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+              echo "::error::Cannot sign $GITHUB_REF_NAME. Missing secret(s):$missing"
+              echo "::error::See docs/owner-setup.md - scripts/make-upload-key.sh --push sets all four."
+              exit 1
+            fi
+            echo "::warning::Missing secret(s):$missing -- building unsigned. Nothing will be published."
             echo "signed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
           echo "signed=true" >> "$GITHUB_OUTPUT"
 
@@ -47,12 +74,47 @@ jobs:
           VERSION_CODE: ${{ github.run_number }}
         run: ./gradlew bundleRelease assembleRelease
 
+      # The AAB is checked as well as the APK, because the AAB is the artifact
+      # Play consumes and the APK is the one people sideload. Verifying only the
+      # APK leaves the uploaded file unchecked.
+      #
+      # By fingerprint, not by `jarsigner -verify`: every Android signing
+      # certificate is self-signed, so jarsigner reports "signer errors" and a
+      # non-zero status for a perfectly good bundle. The question worth asking
+      # is not whether the certificate chains to a CA -- it never will -- but
+      # whether it is *our* certificate.
       - name: Verify signature
         if: steps.keystore.outputs.signed == 'true'
+        env:
+          EXPECTED_SHA256: ${{ vars.UPLOAD_KEY_SHA256 }}
         run: |
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BUILD_TOOLS/apksigner" verify --verbose \
             app/build/outputs/apk/release/*.apk
+
+          aab=$(ls app/build/outputs/bundle/release/*.aab)
+          actual=$(unzip -p "$aab" 'META-INF/*.RSA' \
+            | keytool -printcert \
+            | grep -oP 'SHA256:\s*\K[0-9A-F:]+' \
+            | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          [ -n "$actual" ] || { echo "::error::$aab carries no signature."; exit 1; }
+          echo "AAB signer SHA-256: $actual"
+
+          # Optional, and worth setting: Play binds the app to the first upload
+          # key it sees and refuses every later upload signed by a different
+          # one. Pinning turns "signed by the wrong key" into a failed build
+          # rather than a rejected upload, and a rejected upload has already
+          # spent its versionCode.
+          if [ -n "$EXPECTED_SHA256" ]; then
+            expected=$(echo "$EXPECTED_SHA256" | tr -d ':' | tr '[:upper:]' '[:lower:]')
+            if [ "$actual" != "$expected" ]; then
+              echo "::error::Signed by the wrong key. Expected $expected, got $actual."
+              exit 1
+            fi
+            echo "Matches the pinned upload key."
+          else
+            echo "::warning::vars.UPLOAD_KEY_SHA256 is not set, so the key was not pinned."
+          fi
 
       - uses: actions/upload-artifact@v7
         with:
@@ -61,8 +123,12 @@ jobs:
             app/build/outputs/bundle/release/*.aab
             app/build/outputs/apk/release/*.apk
 
+      # Belt and braces: the decode step already fails a tag it cannot sign, so
+      # reaching here unsigned should be impossible. It stays because the cost
+      # of the impossible happening is a published artifact nobody can install
+      # an update over.
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && steps.keystore.outputs.signed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

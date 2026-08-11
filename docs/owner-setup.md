@@ -12,8 +12,10 @@ actually worked rather than only looked like it did.
 | 1 | GitHub Pages set to *GitHub Actions* | **done** |
 | 2 | `database` and `functions` removed from the required checks | **done** (2026-08-11) |
 | 3 | Play Console answers | **yours** — at listing time |
-| 4 | Release signing key registered | **yours** — before the first upload |
-| 5 | Play Console account, and the closed test it requires | **yours** — start this first, it takes weeks |
+| 4 | Upload key minted, and a signed build proven | **done** (2026-08-11) |
+| 4 | The same key given to CI as four secrets | **yours** — one command |
+| 5 | Privacy policy, when sentence help ships | not yet — same release as #46 |
+| 6 | Play Console account, and the closed test it requires | **yours** — start this first, it takes weeks |
 
 The site is published and both pages load:
 
@@ -89,25 +91,104 @@ in the code where it is enforced, is in `play-data-safety.md`.
 
 ---
 
-## 4. Also before any public release
+## 4. Play App Signing — the upload key
 
-- **Release signing.** The upload key is supplied to CI through `KEYSTORE_FILE`,
-  `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. Without them the release
-  build is left *unsigned* rather than falling back to the debug key, and
-  `release.yml`'s apksigner step is what catches that before the upload spends a
-  `versionCode` permanently.
+Play App Signing is **mandatory** for any app new to the store, so this is not a
+choice to weigh, only a thing to do correctly once. There is no separate
+"enrol" button: enrolment happens as a side effect of the first upload, and the
+only decision on that screen is which key becomes the app signing key.
 
-  ```sh
-  keytool -list -v -keystore <release.jks> -alias <alias> | grep SHA1
-  ```
+**Two keys, and the difference matters.**
+
+| | Upload key | App signing key |
+|---|---|---|
+| Signs | what you upload | what users install |
+| Held by | you | Google |
+| If lost | request a reset in the Console, keep publishing | **unrecoverable** |
+
+Play checks the upload signature, strips it, and re-signs with the app signing
+key it holds. That is the whole point of the scheme: the key that can never be
+replaced is one you cannot lose, because you never have it.
+
+### What is already done
+
+`scripts/make-upload-key.sh` has been run. The key is at
+`~/.pictokeyboard/upload.jks`, alias `upload`, password in
+`~/.pictokeyboard/upload-key.password` — RSA 4096, valid to **2053**, comfortably
+past the 2033-10-22 floor Play enforces on upload certificates.
+
+```
+SHA-256  84:B8:93:13:70:DB:61:46:2F:A8:0B:FB:F8:1D:C1:36:BE:18:97:98:9E:A3:A3:C4:5F:78:EE:2E:F3:AA:1F:66
+SHA-1    5C:63:EF:84:54:23:03:57:C8:A4:46:0A:9A:EC:81:20:50:50:7C:C9
+```
+
+It has produced a signed AAB and APK locally, verified with `apksigner`, so the
+chain from Gradle to artefact is known to work rather than assumed to.
+
+> **Back up both files somewhere that is not this machine.** Losing them is
+> survivable — an upload key can be reset — but the reset is a support request
+> and a wait.
+
+### What only you can do
+
+**1. Give CI the key.** Four secrets, and the script sets all four:
+
+```sh
+./scripts/make-upload-key.sh --push-only
+```
+
+The names matter: `release.yml` reads **`KEYSTORE_BASE64`** and derives
+`KEYSTORE_FILE` from it as the path it decoded to. (An earlier version of this
+document listed `KEYSTORE_FILE` as a secret to set. It is not one, and setting
+it did nothing.)
+
+**2. Upload, and let Google generate the app signing key.** In the Console:
+create the app, start a release on the closed-test track, and in **App signing**
+change nothing — the default is Google generating and holding the key, which is
+what you want. Then upload the AAB. Enrolment is complete at that moment.
+
+Afterwards the Console shows both certificates back to you. The upload one must
+match the SHA-256 above; that fingerprint is also pinned in CI as the repository
+variable `UPLOAD_KEY_SHA256`, so a build signed by the wrong key fails before it
+can spend a `versionCode`.
+
+### One decision this repository forces
+
+`release.yml` publishes an **APK to GitHub Releases** as well as the AAB to Play.
+Under the default arrangement those two are signed by *different* certificates —
+the GitHub APK by your upload key, the Play build by Google's app signing key.
+Android refuses to update an installed app across a certificate change, so
+somebody who sideloads from GitHub cannot later move to the Play version without
+uninstalling first, which erases their boards.
+
+Three ways out, none of them free:
+
+- **Accept it**, and say so plainly on the Release page: sideload *or* Play, pick
+  one. Cheapest, and reasonable while the GitHub APK is mainly for testers.
+- **Provide your own app signing key** (Console ▸ *Change app signing key* ▸
+  export and upload) so both are signed identically. This gives up exactly the
+  protection Play App Signing exists to provide — the unrecoverable key becomes
+  yours to lose.
+- **Stop publishing APKs** once Play is live, and point the Release page at the
+  store.
+
+This does not block enrolment, and the first upload does not settle it, so it can
+wait — but not past the first person who sideloads.
+
+## 5. Also before any public release
 
 - **Update the privacy policy when sentence help ships (#46).** The model runs
   on the device and nothing is sent anywhere, but the policy currently does not
   mention a model existing at all. One paragraph, both languages, same release.
 
+- **Stale secrets.** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are still set
+  on the repository. Nothing on `main` reads them since #119. They are still
+  live for the **`marketplace`** branch, so this is a note rather than an
+  instruction — delete them only if that branch is abandoned.
+
 ---
 
-## 5. The Play Console account — the long pole
+## 6. The Play Console account — the long pole
 
 **Start this before anything else on this page.** Everything else here is an
 afternoon; this one is measured in weeks, and no amount of finished code shortens
