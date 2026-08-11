@@ -22,6 +22,18 @@
     <string name="kb_sentence_empty">Nothing written yet</string>
     <string name="kb_sentence_a11y">Written so far: %1$s</string>
     <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
+    <!-- Sentence help (#46, #48). "Beautify" is the sparkle; undo is the arrow. -->
+    <string name="kb_beautify">Say it better</string>
+    <string name="kb_beautify_icon">\u2728</string>
+    <string name="kb_beautify_undo">Undo, put my words back</string>
+    <string name="kb_beautify_undo_icon">\u21ba</string>
+    <string name="kb_beautify_working">Working on it</string>
+    <string name="kb_beautify_applied">Sentence rewritten. Press again to put your words back.</string>
+    <string name="kb_beautify_undone">Your words are back.</string>
+    <string name="kb_beautify_nothing">Left as you wrote it.</string>
+    <string name="kb_beautify_unavailable">Sentence help is not ready.</string>
+    <string name="kb_beautify_changed">The text changed, so nothing was replaced.</string>
+
     <string name="img_not_ready">Picture still downloading — try again in a moment.</string>
     <string name="img_unsupported">This field can\'t receive images.</string>
     <!-- Baked onto ARASAAC pictos shared as image/sticker so attribution travels with them. -->
@@ -403,4 +415,22 @@
     <string name="category_move_body">Its symbols go with it. The board it is on now keeps everything else.</string>
     <string name="category_moved">%1$s moved to %2$s</string>
     <string name="undo">Undo</string>
+    <!-- Sentence help (#48) -->
+    <string name="settings_group_sentence">Sentence help</string>
+    <string name="settings_sentence_help">Say it better</string>
+    <string name="settings_sentence_help_desc">Adds a button to the keyboard that rewrites the tapped words as a sentence. It never adds a word you did not tap, and one press puts your words back.</string>
+    <string name="settings_sentence_help_privacy">Sentences are written on this phone, by a model stored on it. Nothing you type is sent anywhere.</string>
+    <string name="settings_sentence_model">Model: %1$s</string>
+    <string name="settings_sentence_model_size">%1$d MB to download, once.</string>
+    <string name="settings_sentence_download">Download the model</string>
+    <string name="settings_sentence_resume">Resume the download</string>
+    <string name="settings_sentence_delete">Delete the model (%1$d MB)</string>
+    <string name="settings_sentence_progress">%1$d of %2$d MB</string>
+    <string name="settings_sentence_verifying">Checking the download\u2026</string>
+    <string name="settings_sentence_failed_network">The download stopped. Your progress is kept \u2014 try again when you have a connection.</string>
+    <string name="settings_sentence_failed_disk">There is not enough space left on the phone.</string>
+    <string name="settings_sentence_failed_corrupt">The download did not arrive intact and was discarded. Please try again.</string>
+    <string name="settings_sentence_no_processor">This phone\'s processor cannot run the sentence model.</string>
+    <string name="settings_sentence_no_memory">This phone does not have enough memory to run the sentence model.</string>
+    <string name="settings_sentence_no_storage">There is not enough space for the sentence model. It needs about %1$d MB.</string>
 </resources>

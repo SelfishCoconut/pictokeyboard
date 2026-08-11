@@ -61,6 +61,25 @@
         </HorizontalScrollView>
 
         <!--
+            Beautify (#46). Gone entirely, not merely disabled, unless sentence
+            help is switched on and a model is actually present: a permanently
+            greyed key on a keyboard this small is 48dp spent on something the
+            user cannot act on. See PictoKeyboardService.applySentenceHelp.
+
+            Nothing runs until it is pressed. The words already reached the field
+            the instant each picto was tapped; this only offers to say them
+            better, and undo puts back exactly what was typed.
+        -->
+        <Button
+            android:id="@+id/key_beautify"
+            style="@style/KbKey.Recessive"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:contentDescription="@string/kb_beautify"
+            android:text="@string/kb_beautify_icon"
+            android:visibility="gone" />
+
+        <!--
             Backspace lives here rather than in the action row, beside the words
             it removes. It was one of four identical grey keys along the bottom,
             which is where word-level undo went to be undiscoverable.

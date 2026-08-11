@@ -70,6 +70,18 @@ data class Settings(
      * the app, because the person who needs it is holding the keyboard.
      */
     val highContrast: Boolean = false,
+    /**
+     * Rephrasing the sentence with the on-device model (#48).
+     *
+     * **Off by default, and that is the decision rather than a default.** Turning
+     * it on costs a 347 MB download and several hundred megabytes resident in a
+     * second process, for a feature whose whole output is optional. Nobody should
+     * pay that because they installed a keyboard.
+     *
+     * Off is also the state in which the keyboard is simplest: no extra button in
+     * the sentence bar, nothing to wait for, nothing that can be wrong.
+     */
+    val sentenceHelp: Boolean = false,
 )
 
 /**
@@ -101,6 +113,7 @@ class SettingsStore(private val context: Context) {
             blindMode = p[KEY_BLIND_MODE] ?: false,
             hapticFeedback = p[KEY_HAPTICS] ?: true,
             highContrast = p[KEY_HIGH_CONTRAST] ?: false,
+            sentenceHelp = p[KEY_SENTENCE_HELP] ?: false,
         )
     }
 
@@ -114,6 +127,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setBlindMode(value: Boolean) = edit { it[KEY_BLIND_MODE] = value }
     suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
     suspend fun setHighContrast(value: Boolean) = edit { it[KEY_HIGH_CONTRAST] = value }
+    suspend fun setSentenceHelp(value: Boolean) = edit { it[KEY_SENTENCE_HELP] = value }
 
     // --- Layout values inherited from before boards existed ------------------
 
@@ -209,5 +223,6 @@ class SettingsStore(private val context: Context) {
         private val KEY_BLIND_MODE = booleanPreferencesKey("blind_mode")
         private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
         private val KEY_HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
+        private val KEY_SENTENCE_HELP = booleanPreferencesKey("sentence_help")
     }
 }

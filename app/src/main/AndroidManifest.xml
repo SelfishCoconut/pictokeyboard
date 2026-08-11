@@ -68,6 +68,28 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!--
+            The sentence-help model, and the only reason this app has a second
+            process (#44).
+
+            An InputMethodService is lightweight and Android kills it readily
+            under memory pressure. Several hundred megabytes of weights loaded
+            into that process would make the keyboard the obvious thing to
+            reclaim, and a keyboard that dies mid-conversation is not a glitch
+            for an AAC user: it is losing the ability to speak while speaking.
+
+            So the weights live here instead. When the system reclaims :llm the
+            keyboard notices nothing beyond a button that reports itself
+            unavailable, which is exactly how it behaves with the feature off.
+
+            Not exported: the only callers are this app's own keyboard and its
+            settings screen.
+        -->
+        <service
+            android:name=".sentence.llm.SentenceService"
+            android:exported="false"
+            android:process=":llm" />
+
         <service
             android:name=".ime.PictoKeyboardService"
             android:exported="true"

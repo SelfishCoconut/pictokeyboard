@@ -95,8 +95,15 @@ fun SettingsScreen(
         }
     }
 
+    val sentenceModel by viewModel.sentenceModel.collectAsStateWithLifecycle()
+
     SettingsScreenContent(
         settings = settings,
+        sentenceModel = sentenceModel,
+        onSentenceHelp = viewModel::setSentenceHelp,
+        onDownloadModel = viewModel::downloadModel,
+        onCancelModelDownload = viewModel::cancelModelDownload,
+        onDeleteModel = viewModel::deleteModel,
         onBack = onBack,
         onOpenAbout = onOpenAbout,
         onLanguage = viewModel::setLanguage,
@@ -150,6 +157,11 @@ data class BackupCounts(val boards: Int, val pictos: Int, val media: Int)
 fun SettingsScreenContent(
     settings: Settings,
     onBack: (() -> Unit)?,
+    sentenceModel: SentenceModelState = SentenceModelState(),
+    onSentenceHelp: (Boolean) -> Unit = {},
+    onDownloadModel: () -> Unit = {},
+    onCancelModelDownload: () -> Unit = {},
+    onDeleteModel: () -> Unit = {},
     onOpenAbout: () -> Unit,
     onLanguage: (String) -> Unit,
     onAddSpace: (Boolean) -> Unit,
@@ -188,6 +200,16 @@ fun SettingsScreenContent(
                 onBlindMode = onBlindMode,
                 onOpenAbout = onOpenAbout,
             )
+            SettingsGroup(stringResource(R.string.settings_group_sentence)) {
+                SentenceHelpSection(
+                    enabled = settings.sentenceHelp,
+                    model = sentenceModel,
+                    onEnabled = onSentenceHelp,
+                    onDownload = onDownloadModel,
+                    onCancel = onCancelModelDownload,
+                    onDelete = onDeleteModel,
+                )
+            }
             SettingsGroup(stringResource(R.string.settings_group_security)) {
                 PinSection(
                     hasPin = settings.hasPin,

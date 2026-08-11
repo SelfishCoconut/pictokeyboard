@@ -91,6 +91,9 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // The keyboard talks to the model over a binder, because the model runs
+        // in its own process and must never load into the IME (#44).
+        aidl = true
     }
     packaging {
         resources {
@@ -241,7 +244,13 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
 
+    // Runs the sentence-help model, in the :llm process only. ~21 MB of native
+    // library for arm64-v8a, which is the price of the feature existing at all;
+    // the 347 MB of weights are downloaded on demand and never shipped (#44).
+    implementation(libs.litertlm.android)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // The instrumented suite. Its whole point is to exercise what a JVM test
     // cannot: a real Activity, a real InputMethodService, and the accessibility

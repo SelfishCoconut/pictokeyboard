@@ -3,6 +3,7 @@ package org.pictokeyboard.ui
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,6 +24,11 @@ import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
+import org.pictokeyboard.sentence.DeviceCapability
+import org.pictokeyboard.sentence.DownloadState
+import org.pictokeyboard.sentence.ModelDownloader
+import org.pictokeyboard.sentence.ModelStore
+import org.pictokeyboard.ui.screens.SentenceModelState
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -48,6 +54,65 @@ class ConfigViewModel : ViewModel() {
     private val backup = locator.backupManager
     private val pkb = locator.pkbBackup
     private val arasaac = locator.arasaacRepository
+
+    // --- Sentence help (#48) ------------------------------------------------
+
+    private val modelStore = ModelStore(locator.appContext)
+    private val deviceCapability = DeviceCapability(locator.appContext)
+    private var downloadJob: Job? = null
+
+    private val _sentenceModel = MutableStateFlow(readSentenceModel())
+    val sentenceModel: StateFlow<SentenceModelState> = _sentenceModel
+
+    fun setSentenceHelp(value: Boolean) = viewModelScope.launch {
+        settingsStore.setSentenceHelp(value)
+    }
+
+    /**
+     * Starts, or resumes, the weights download.
+     *
+     * Held in a job rather than launched loose so [cancelModelDownload] has
+     * something to cancel: 347 MB is a long time to be unable to change your
+     * mind, and on a metered connection it is somebody's month.
+     */
+    fun downloadModel() {
+        if (downloadJob?.isActive == true) return
+        downloadJob = viewModelScope.launch {
+            ModelDownloader(modelStore, locator.largeDownloadClient).download().collect { state ->
+                _sentenceModel.value = _sentenceModel.value.copy(
+                    download = state,
+                    installed = state is DownloadState.Done,
+                    bytesOnDisk = modelStore.bytesOnDisk(),
+                )
+            }
+        }
+    }
+
+    /** Stops the transfer and keeps the partial file, so resuming is cheap. */
+    fun cancelModelDownload() {
+        downloadJob?.cancel()
+        downloadJob = null
+        _sentenceModel.value = readSentenceModel()
+    }
+
+    /**
+     * Deletes the weights and switches the feature off in the same move.
+     *
+     * Leaving it on with nothing to run would put the keyboard into the state
+     * where its button is hidden for a reason the caregiver cannot see.
+     */
+    fun deleteModel() = viewModelScope.launch {
+        cancelModelDownload()
+        modelStore.delete()
+        settingsStore.setSentenceHelp(false)
+        _sentenceModel.value = readSentenceModel()
+    }
+
+    private fun readSentenceModel() = SentenceModelState(
+        capability = deviceCapability.check(),
+        installed = modelStore.isDownloaded(),
+        bytesOnDisk = modelStore.bytesOnDisk(),
+    )
 
     val categories: StateFlow<List<CategoryEntity>> =
         repo.observeActiveBoardCategories()
