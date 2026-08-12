@@ -64,10 +64,14 @@ data class BeautifyEdit(
     /**
      * The rephrase stands, and the undo window is over (#166).
      *
-     * Reaching for any other key is agreement: the sentence in the field is the
-     * one the user is keeping, so it becomes the new baseline exactly as an
-     * extra word would have made it. The variant goes with it, because the next
-     * press is a fresh question rather than the next answer to the old one.
+     * The sentence in the field is the one the user is keeping, so it becomes
+     * the new baseline exactly as an extra word would have made it. The variant
+     * goes with it, because the next press is a fresh question rather than the
+     * next answer to the old one.
+     *
+     * Reached only when the user genuinely moved on — sent the sentence, or left
+     * for the letter keyboard. Speaking it, walking it and calling for help do
+     * not come here (#173).
      */
     fun accepted(): BeautifyEdit = BeautifyEdit(typed = inField)
 
