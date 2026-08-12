@@ -13,10 +13,8 @@
     <!-- Pestañas de tablero y teclas de la frase (#36, #148) -->
     <string name="kb_board_tab_role">Tablero</string>
     <string name="kb_speak_all">Decir la frase entera</string>
-    <string name="kb_clear_sentence">Empezar una frase nueva</string>
     <!-- Ambas se dicen, porque desde #148 no cambia nada en pantalla al pulsarlas. -->
     <string name="kb_sentence_empty">Todavía no has escrito nada</string>
-    <string name="kb_sentence_cleared">Empezando una frase nueva.</string>
     <string name="kb_empty_hint">Aún no hay categorías. Abre los ajustes para configurar el tablero.</string>
     <!-- Ayuda con la frase (#46, #48). -->
     <string name="kb_beautify">Decirlo mejor</string>

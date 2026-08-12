@@ -18,10 +18,8 @@
     <!-- Board tabs and the phrase keys (#36, #148) -->
     <string name="kb_board_tab_role">Board</string>
     <string name="kb_speak_all">Say the whole phrase</string>
-    <string name="kb_clear_sentence">Start a new phrase</string>
     <!-- Both spoken, because since #148 nothing on screen changes when they happen. -->
     <string name="kb_sentence_empty">Nothing written yet</string>
-    <string name="kb_sentence_cleared">Starting a new phrase.</string>
     <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
     <!-- Sentence help (#46, #48). "Beautify" is the sparkle; undo is the arrow. -->
     <string name="kb_beautify">Say it better</string>
