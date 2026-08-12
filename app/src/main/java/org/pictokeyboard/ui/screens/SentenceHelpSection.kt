@@ -12,6 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import org.pictokeyboard.BuildConfig
 import org.pictokeyboard.R
 import org.pictokeyboard.data.prefs.SentenceSpeed
 import org.pictokeyboard.sentence.Capability
@@ -38,6 +39,8 @@ internal fun SentenceHelpSection(
     onCancel: () -> Unit,
     onDelete: () -> Unit,
     onBenchmark: () -> Unit,
+    unvalidated: Boolean = false,
+    onUnvalidated: (Boolean) -> Unit = {},
 ) {
     val capability = model.capability
     // Said instead of offering a download that would fail, which is the whole
@@ -91,6 +94,35 @@ internal fun SentenceHelpSection(
 
     ModelRow(model = model, onDownload = onDownload, onCancel = onCancel, onDelete = onDelete)
     if (model.installed) SpeedRow(speed, model.benchmarking, onBenchmark)
+    if (model.installed) UnvalidatedRow(unvalidated, onUnvalidated)
+}
+
+/**
+ * The validator off, so the model can be judged on its own — debug builds only
+ * (#167).
+ *
+ * **The `if` is the guard, and it is the point rather than a formality.** Content
+ * lemmas out ⊆ content lemmas in is what makes it honest to say this keyboard
+ * speaks *as* the user and never *for* them, and an installable build where a
+ * 0.6B model's output goes unchecked into a non-speaking person's message is not
+ * a diagnostic — it is the failure the whole milestone was designed around.
+ * `BuildConfig.DEBUG` is a compile-time constant, so R8 removes this call and
+ * everything under it from a release build.
+ *
+ * Not translated, and deliberately: it is written for whoever is debugging the
+ * model, who is reading `#167` in the label, and a `values-es` entry for a string
+ * no user can reach is drift waiting to happen.
+ */
+@Composable
+private fun UnvalidatedRow(unvalidated: Boolean, onUnvalidated: (Boolean) -> Unit) {
+    if (!BuildConfig.DEBUG) return
+    SwitchRow("Debug: skip the validator (#167)", unvalidated, onUnvalidated)
+    Text(
+        "Applies the model's first answer with no safety check. It can add words nobody tapped. " +
+            "Debug builds only — this switch does not exist in a release build.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error,
+    )
 }
 
 /**

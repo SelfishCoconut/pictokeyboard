@@ -153,4 +153,68 @@ class BeautifierTest {
         assertEquals(Beautified.Sentence("I want the water."), result)
         assertEquals(listOf(Rejection.ADDED_CONTENT_WORD), beautifier.lastRejections.map { it.reason })
     }
+
+    // --- #167: what was thrown away, and what happens without the harness ----
+
+    /**
+     * The candidate text, not only the reason it went.
+     *
+     * *"Left as you wrote it"* reads the same whether the harness threw away a
+     * good sentence or the model produced nonsense, and those want opposite
+     * fixes. #165 was the first kind and was found by hand-tracing the lexicon,
+     * because nothing recorded what the model had actually said.
+     */
+    @Test
+    fun `a discarded candidate keeps its text alongside the verdict`() = runTest {
+        val beautifier = Beautifier(engineReturning("Quiero agua fría.", "Quiero agua."))
+        beautifier.beautify(
+            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
+            language = "es",
+        )
+        // The offending word arrives as it appeared, punctuation included: this
+        // is what gets printed, and a log that says `fría.` is showing what was
+        // in the sentence rather than a tidied version of it.
+        assertEquals(
+            listOf(Discarded("Quiero agua fría.", Rejection.ADDED_CONTENT_WORD, listOf("fría."))),
+            beautifier.lastRejections,
+        )
+    }
+
+    /**
+     * With the harness off, the model's first answer stands — invented word and
+     * all. That is the whole diagnostic value of it, and the whole reason
+     * `ValidatorBypass` will not let a shipped build ask for it.
+     */
+    @Test
+    fun `without the validator, a candidate that adds a word is applied anyway`() = runTest {
+        val beautifier = Beautifier(engineReturning("Quiero agua fría ahora mismo."))
+        val result = beautifier.beautify(
+            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
+            language = "es",
+            validate = false,
+        )
+        assertEquals(Beautified.Sentence("Quiero agua fría ahora mismo."), result)
+        assertTrue("nothing was discarded", beautifier.lastRejections.isEmpty())
+    }
+
+    /** Empty is still empty: there would be nothing to put in the field. */
+    @Test
+    fun `without the validator, an empty answer is still nothing`() = runTest {
+        val result = Beautifier(engineReturning("   ")).beautify(
+            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
+            language = "es",
+            validate = false,
+        )
+        assertEquals(Beautified.NothingPassed, result)
+    }
+
+    /** The harness is on unless somebody says otherwise, at every call site. */
+    @Test
+    fun `validation is the default`() = runTest {
+        val result = Beautifier(engineReturning("Quiero agua fría.")).beautify(
+            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
+            language = "es",
+        )
+        assertEquals(Beautified.NothingPassed, result)
+    }
 }

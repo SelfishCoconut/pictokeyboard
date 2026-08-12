@@ -3,16 +3,19 @@ package org.pictokeyboard.sentence.llm
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import org.pictokeyboard.BuildConfig
 import org.pictokeyboard.sentence.Beautified
 import org.pictokeyboard.sentence.Beautifier
 import org.pictokeyboard.sentence.ModelStore
 import org.pictokeyboard.sentence.TypedWord
+import org.pictokeyboard.sentence.ValidatorBypass
 import java.util.concurrent.ConcurrentHashMap
 
 /** Why no sentence came back, as it crosses the binder. */
@@ -83,6 +86,7 @@ class SentenceService : Service() {
             wordLanguages: Array<out String>?,
             language: String?,
             variant: Int,
+            unvalidated: Boolean,
             callback: ISentenceCallback?,
         ) {
             val answer = callback ?: return
@@ -92,12 +96,20 @@ class SentenceService : Service() {
                 return
             }
 
+            // The keyboard asks; this decides (#167). `BuildConfig.DEBUG` is
+            // read here, at the one call site, and passed in rather than
+            // consulted inside the guard -- which is what lets a unit test ask
+            // the release question from a debug build.
+            val validate = !ValidatorBypass.allowed(unvalidated, BuildConfig.DEBUG)
+
             val job = scope.launch {
                 if (!engine.load()) {
                     answer.reportNothing(requestId, SentenceResult.UNAVAILABLE)
                     return@launch
                 }
-                when (val result = beautifier.beautify(typed, language.orEmpty(), variant)) {
+                val result = beautifier.beautify(typed, language.orEmpty(), variant, validate = validate)
+                logAttempt(typed, language.orEmpty(), variant, validate, result)
+                when (result) {
                     is Beautified.Sentence -> runCatching { answer.onSentence(requestId, result.text) }
                     Beautified.NothingPassed -> answer.reportNothing(requestId, SentenceResult.NOTHING_PASSED)
                     Beautified.Unavailable -> answer.reportNothing(requestId, SentenceResult.UNAVAILABLE)
@@ -109,6 +121,43 @@ class SentenceService : Service() {
 
         override fun cancel(requestId: Int) {
             inFlight.remove(requestId)?.cancel()
+        }
+    }
+
+    /**
+     * What the model said, including the parts nobody kept — debug builds only
+     * (#167).
+     *
+     * `Beautifier` has always collected every discarded candidate and nothing
+     * has ever read it, so *"Left as you wrote it"* was the same message whether
+     * the harness threw away a good sentence or the model produced nonsense.
+     * #165 was the first of those and was found by hand-tracing the lexicon; one
+     * press with this on would have shown it.
+     *
+     * **Guarded because it prints what somebody said.** This is an AAC keyboard:
+     * the words going through here are a person's half of a conversation, and
+     * logcat is readable by anyone with the phone plugged in. `BuildConfig.DEBUG`
+     * is not a formality on this one — R8 removes the whole branch from a release
+     * build, and `docs/play-data-safety.md`'s claim that typed content reaches
+     * the host app and nowhere else depends on it staying that way.
+     */
+    private fun logAttempt(
+        typed: List<TypedWord>,
+        language: String,
+        variant: Int,
+        validated: Boolean,
+        result: Beautified,
+    ) {
+        if (!BuildConfig.DEBUG) return
+        val harness = if (validated) "validated" else "UNVALIDATED (#167)"
+        val outcome = when (result) {
+            is Beautified.Sentence -> "\"${result.text}\""
+            Beautified.NothingPassed -> "nothing passed"
+            Beautified.Unavailable -> "unavailable"
+        }
+        Log.d(TAG, "[$language v$variant $harness] ${typed.joinToString(" ") { it.text }} -> $outcome")
+        beautifier.lastRejections.forEach {
+            Log.d(TAG, "  discarded \"${it.candidate}\" ${it.reason} ${it.words}")
         }
     }
 
@@ -134,6 +183,8 @@ class SentenceService : Service() {
     }
 
     companion object {
+        private const val TAG = "PictoKeyboardLlm"
+
         /** Shared by the downloader; the service is the only thing that needs one. */
         val httpClient: OkHttpClient by lazy { OkHttpClient() }
     }

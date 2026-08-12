@@ -70,6 +70,11 @@ class ConfigViewModel : ViewModel() {
         settingsStore.setSentenceHelp(value)
     }
 
+    /** Debug builds only; the switch that calls this is not composed elsewhere (#167). */
+    fun setSentenceUnvalidated(value: Boolean) = viewModelScope.launch {
+        settingsStore.setSentenceUnvalidated(value)
+    }
+
     /**
      * Who the keyboard's bell rings (#144).
      *
