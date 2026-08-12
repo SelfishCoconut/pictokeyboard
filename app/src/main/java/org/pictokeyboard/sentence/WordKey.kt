@@ -27,6 +27,9 @@ internal object WordKey {
      */
     private const val MIN_STEM = 3
 
+    /** Spanish stacks at most two pronouns on one verb — *dármelo*, *comérselo*. */
+    private const val MAX_ENCLITICS = 2
+
     private val ACCENTS = Regex("\\p{Mn}+")
     private val NOT_LETTERS = Regex("[^\\p{L}\\p{N}']")
 
@@ -44,16 +47,64 @@ internal object WordKey {
      */
     fun of(word: String, lexicon: Lexicon): String? {
         val plain = normalise(word)
+        val verb = plain.takeIf { it.isNotEmpty() }?.let { deenclitic(it, lexicon) ?: it }
         return when {
-            plain.isEmpty() -> null
-            plain in lexicon.irregulars -> lexicon.irregulars[plain]
+            verb == null -> null
+            // Checked after the pronoun comes off as well as before it, so
+            // `comerlo` reaches `comer` and an irregular like `ponerse` reaches
+            // the table entry for `poner` rather than being stemmed twice.
+            verb in lexicon.irregulars -> lexicon.irregulars[verb]
             else -> {
-                val bare = stripOnce(plain, lexicon) ?: plain
+                val bare = stripOnce(verb, lexicon) ?: verb
                 val stem = unstress(bare, lexicon)
                 stripOnce(stem, lexicon) ?: stem
             }
         }
     }
+
+    /**
+     * Takes the glued-on pronouns off a Spanish verb, or returns null (#165).
+     *
+     * Null rather than the word unchanged, so the caller can tell "this was not
+     * an enclitic form" from "this was, and here is the verb" — the difference
+     * matters because only the second is allowed to skip straight to the
+     * irregular table.
+     *
+     * Two passes, because Spanish stacks at most two: *dármelo* is *dar* + *me*
+     * + *lo*. The host check runs after each one, so *darme* — which is not yet
+     * a verb shape — keeps going rather than being accepted halfway.
+     */
+    private fun deenclitic(word: String, lexicon: Lexicon): String? {
+        var stem = word
+        var host: String? = null
+        var taken = 0
+        while (host == null && taken < MAX_ENCLITICS) {
+            val pronoun = lexicon.enclitics.firstOrNull {
+                stem.length - it.length >= MIN_STEM && stem.endsWith(it)
+            } ?: break
+            stem = stem.dropLast(pronoun.length)
+            if (isVerbForm(stem, lexicon)) host = stem
+            taken++
+        }
+        return host
+    }
+
+    /**
+     * Whether what is left after a pronoun could be the verb it came off.
+     *
+     * Ending in `-ar` is not enough on its own, and the word that proved it is
+     * *parte*: take `te` off and `par` ends in an infinitive ending, so the
+     * noun would have started licensing *parar*. So the ending has to sit on a
+     * stem of its own — the same [MIN_STEM] the rest of this file is built on,
+     * asked here rather than invented again.
+     *
+     * The short irregulars — *dar*, *ver*, *ir* — have no stem left once their
+     * ending comes off and would fail that test, so the table answers for them
+     * first. It is the same table that already knows they are verbs.
+     */
+    private fun isVerbForm(word: String, lexicon: Lexicon): Boolean =
+        word in lexicon.irregulars ||
+            lexicon.encliticHosts.any { word.endsWith(it) && word.length - it.length >= MIN_STEM }
 
     /**
      * Lowercased, unaccented and stripped of punctuation.

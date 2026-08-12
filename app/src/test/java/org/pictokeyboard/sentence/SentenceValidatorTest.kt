@@ -96,6 +96,34 @@ class SentenceValidatorTest {
         assertAccepted(es("yo", "comer", "manana"), "comere manana")
     }
 
+    /**
+     * The sentence that sent up #165: `yo querer ir casa` came back untouched
+     * because the natural Spanish for it puts the pronoun on the verb, and a
+     * validator that reads *irme* as a word nobody tapped rejects all three
+     * attempts and reports that nothing passed. The model was never at fault.
+     */
+    @Test
+    fun aPronounOnTheEndOfAVerbIsNotAnInventedWord() {
+        assertAccepted(es("yo", "querer", "ir", "casa"), "quiero irme a casa")
+        assertAccepted(es("yo", "querer", "levantar"), "quiero levantarme")
+        assertAccepted(es("yo", "querer", "comer", "galleta"), "quiero comerla")
+        assertAccepted(es("yo", "querer", "duchar"), "quiero ducharme")
+        assertAccepted(es("tu", "poder", "dar", "agua"), "puedes darmela")
+    }
+
+    /**
+     * And the half that must not have been bought with the safety property: a
+     * noun that happens to end in a pronoun still cannot license a verb.
+     */
+    @Test
+    fun aWordThatMerelyEndsInAPronounIsStillInvented() {
+        assertRejected(
+            es("yo", "querer", "gente"),
+            "quiero generar gente",
+            Rejection.ADDED_CONTENT_WORD,
+        )
+    }
+
     /** Punctuation an expansion adds is not a new word. */
     @Test
     fun trailingPunctuationDoesNotCount() {
