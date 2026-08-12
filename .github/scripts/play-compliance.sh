@@ -97,10 +97,15 @@ if [ -z "$perms" ]; then
   ok "no permissions declared"
 else
   echo "$perms" | sed 's/^/     /'
+  # CALL_PHONE is not on Play's restricted list and needs no declaration form,
+  # but it is the permission a keyboard is least expected to hold, so a reviewer
+  # will ask about it directly. The warning exists to make somebody answer that
+  # question before the upload rather than during the review.
   for dangerous in RECORD_AUDIO READ_CONTACTS READ_SMS RECEIVE_SMS ACCESS_FINE_LOCATION \
-                   READ_EXTERNAL_STORAGE QUERY_ALL_PACKAGES REQUEST_INSTALL_PACKAGES; do
+                   READ_EXTERNAL_STORAGE QUERY_ALL_PACKAGES REQUEST_INSTALL_PACKAGES \
+                   CALL_PHONE; do
     echo "$perms" | grep -q "$dangerous" \
-      && warning "Sensitive permission $dangerous requires an in-console declaration and a strong justification."
+      && warning "Sensitive permission $dangerous needs a written justification in Data Safety, and may need an in-console declaration -- check the current restricted-permissions list before uploading."
   done
 fi
 
