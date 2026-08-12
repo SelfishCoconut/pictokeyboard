@@ -62,6 +62,16 @@ data class BeautifyEdit(
     fun undone(): BeautifyEdit = copy(applied = null)
 
     /**
+     * The rephrase stands, and the undo window is over (#166).
+     *
+     * Reaching for any other key is agreement: the sentence in the field is the
+     * one the user is keeping, so it becomes the new baseline exactly as an
+     * extra word would have made it. The variant goes with it, because the next
+     * press is a fresh question rather than the next answer to the old one.
+     */
+    fun accepted(): BeautifyEdit = BeautifyEdit(typed = inField)
+
+    /**
      * The phrase is over: a new field, a cleared bar, or a selection replaced.
      *
      * Everything goes, including the variant, so nothing leaks from one app into

@@ -407,6 +407,12 @@ class PictoKeyboardService : InputMethodService() {
                 // otherwise overwrite it. Everything except the arrows and the
                 // backspace that acts on the selection lets go of it first.
                 if (id !in KEEPS_SELECTION) phrase.navigator.stop()
+                // Reaching for any other key is taken as accepting the rephrase
+                // (#166). Undo is for the moment right after one, not for the
+                // rest of the sentence: once the user has spoken it, walked it
+                // or added to it, a ↺ still sitting on the key is an invitation
+                // to lose the sentence they chose by pressing it by accident.
+                if (id != R.id.key_beautify) beautify.onAccepted()
                 action()
             }
         }
@@ -845,8 +851,17 @@ class PictoKeyboardService : InputMethodService() {
             else -> R.string.kb_beautify
         }
         key.contentDescription = uiContext.getString(label)
+        // Three states, three glyphs. The key used to keep its ✨ while it
+        // worked and say so only in its content description, which left a
+        // disabled tint as the entire visible answer to "did that do anything?"
+        // -- for 1.7 s warm, and 3.9 s on the cold start that #157 established
+        // is the common case (#166).
         key.text = uiContext.getString(
-            if (beautify.edit.canUndo) R.string.kb_beautify_undo_icon else R.string.kb_beautify_icon,
+            when {
+                beautify.working -> R.string.kb_beautify_working_icon
+                beautify.edit.canUndo -> R.string.kb_beautify_undo_icon
+                else -> R.string.kb_beautify_icon
+            },
         )
     }
 

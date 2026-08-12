@@ -22,6 +22,8 @@
     <string name="kb_beautify_undo">Deshacer y recuperar mis palabras</string>
     <string name="kb_beautify_undo_icon">\u21ba</string>
     <string name="kb_beautify_working">Trabajando</string>
+    <string name="kb_beautify_working_icon">⏳</string>
+    <string name="kb_beautify_empty">Toca primero algunas imágenes y luego pulsa aquí.</string>
     <string name="kb_beautify_applied">Frase reescrita. Pulsa otra vez para recuperar tus palabras.</string>
     <string name="kb_beautify_undone">Tus palabras han vuelto.</string>
     <string name="kb_beautify_nothing">Se queda como lo escribiste.</string>
