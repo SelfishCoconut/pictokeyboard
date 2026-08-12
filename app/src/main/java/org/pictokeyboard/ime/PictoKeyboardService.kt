@@ -1112,29 +1112,38 @@ class PictoKeyboardService : InputMethodService() {
         /**
          * The keys that leave a rephrase undoable (#173).
          *
-         * These are the ones that only *read* the phrase. 🔊 speaks it back and
-         * the arrows walk it word by word saying each one (#143) — which is how
-         * somebody who cannot read the field checks what the model did. Closing
-         * the undo window there would mean the act of checking destroys the
-         * thing being checked. The bell is not about the sentence at all: it
-         * calls for help (#144), and losing your own words because you rang for
-         * somebody is not a trade anybody would choose.
+         * These are the ones that do not touch the field at all. 🔊 speaks the
+         * phrase back, which is how somebody who cannot read it checks what the
+         * model did — and closing the undo window there would mean the act of
+         * checking destroys the thing being checked. The bell is not about the
+         * sentence: it calls for help (#144), and losing your own words because
+         * you rang for somebody is not a trade anybody would choose.
          *
-         * The asymmetry is what settles it. Undoing by accident costs one
+         * The asymmetry settles which way to err. Undoing by accident costs one
          * rephrase — press ✨ again and the model has another go. Losing the
          * undo costs the words the user tapped, and nothing brings those back.
          *
-         * Everything absent from this set still ends the window: the send, the
-         * switch to the letter keyboard, and — through [BeautifyEdit.plus] and
-         * [BeautifyEdit.minus] rather than through here — space, backspace and
-         * every picto tap.
+         * **The arrows are deliberately not here, and it is not a compromise.**
+         * They read the phrase like 🔊 does, but they read it by *selecting* in
+         * the host's field, and `WordNavigator.stop` leaves the cursor after the
+         * word it was on. Undo replaces the text immediately before the cursor
+         * and checks it first (`replaceTail`), so from the middle of the
+         * sentence it finds `Quiero ir` where it expects `Quiero ir casa.` and
+         * refuses — correctly, because a blind replace there would eat the wrong
+         * characters. Keeping ↺ lit after an arrow would be exactly the glyph
+         * that lies about what the key will do that #166 was about. Measured on
+         * a device rather than reasoned about: ✨, 🔊, ←, →, then ↺ put nothing
+         * back and said "the text changed".
+         *
+         * Everything absent from this set still ends the window: the arrows, the
+         * send, the switch to the letter keyboard, and — through
+         * [BeautifyEdit.plus] and [BeautifyEdit.minus] rather than through here
+         * — space, backspace and every picto tap.
          */
         private val KEEPS_UNDO = setOf(
             R.id.key_beautify,
             R.id.key_speak,
             R.id.key_assistance,
-            R.id.key_prev_word,
-            R.id.key_next_word,
         )
 
         /**

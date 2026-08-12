@@ -137,9 +137,9 @@ class BeautifyController(
      *
      * **Which presses count is the keyboard's call, not this class's** (#173),
      * and it is a narrow list — see `PictoKeyboardService.KEEPS_UNDO`. Reading
-     * the sentence back with 🔊, walking it with the arrows and ringing the bell
-     * all leave the window open, because none of them is moving on. The first
-     * two are how somebody checks a rephrase they cannot read, and a check that
+     * the sentence back with 🔊 and ringing the bell both leave the window open,
+     * because neither is moving on and neither touches the field. Hearing it is
+     * how somebody who cannot read the field checks a rephrase, and a check that
      * destroys what it is checking is worse than no check.
      */
     fun onAccepted() {
