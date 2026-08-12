@@ -50,11 +50,34 @@
   <p>No hay registro de pulsaciones, ni predicción en la nube, ni envío de lo
      escrito de ninguna clase.</p>
 
+  <h3>La ayuda con la frase, si la activas</h3>
+  <p>La ayuda con la frase convierte las palabras tocadas en una frase completa.
+     Viene <strong>desactivada mientras alguien no la active</strong>, y
+     activarla descarga al teléfono un modelo de lenguaje, una sola vez: mira más
+     abajo.</p>
+  <div class="safe">
+    <strong>La frase se escribe en el teléfono.</strong> Las palabras van a un
+    modelo que funciona en un proceso aparte de este mismo dispositivo, y la
+    frase vuelve de ahí. Nada de lo que se escribe se envía a ningún sitio, en
+    ningún momento, ni activada ni desactivada. Esa es justamente la razón de que
+    el modelo sea una descarga de varios cientos de megas y no una petición web.
+  </div>
+  <p>Al borrar el modelo se recupera el espacio que ocupaba y el teclado vuelve a
+     comportarse exactamente como antes.</p>
+
+  <h3>La persona a la que llama la campana</h3>
+  <p>Quien configura la aplicación puede introducir un nombre y un número de
+     teléfono, para que una campana roja del teclado pueda pedir ayuda. Los dos
+     se <strong>guardan en el teléfono y en ningún otro sitio</strong>, nunca se
+     nos envían ni se envían a nadie, y la aplicación no lee tus contactos para
+     obtenerlos: los escribes tú. Si borras el número, desaparece la campana.</p>
+
   <h2>Información que sí sale del teléfono</h2>
-  <p>Hay exactamente un destino, y no somos nosotros. PictoKeyboard no tiene
-     servidor, ni cuenta, ni inicio de sesión: no hay ningún sitio al que enviar
-     tu información, que es una promesa más firme que una política diciendo que
-     no la enviaríamos.</p>
+  <p>Hay dos destinos, y ninguno somos nosotros. PictoKeyboard no tiene servidor,
+     ni cuenta, ni inicio de sesión: no hay ningún sitio al que enviar tu
+     información, que es una promesa más firme que una política diciendo que no
+     la enviaríamos. Los dos destinos de abajo son la aplicación
+     <em>descargando</em> algo: nada de lo que escribes se sube a ninguno.</p>
 
   <h3>ARASAAC, para buscar y descargar pictogramas</h3>
   <p>Los pictogramas provienen de <a href="https://arasaac.org">ARASAAC</a>, el
@@ -77,8 +100,20 @@
      organismo público independiente y a su servicio se aplican sus propios
      términos.</p>
 
+  <h3>Hugging Face, solo si la ayuda con la frase está activada</h3>
+  <p>El modelo de lenguaje que hay detrás de la ayuda con la frase se descarga de
+     <a href="https://huggingface.co">Hugging Face</a>, donde lo publica quien lo
+     hizo. Ocurre <strong>una sola vez, y solo si alguien activa la
+     función</strong>: una instalación que no la active nunca contacta con
+     ellos.</p>
+  <p>Es una descarga y nada más: la petición indica qué archivo se quiere y lleva
+     la dirección IP del dispositivo, como cualquier petición web. No se envía
+     ninguna cuenta, ningún identificador del dispositivo ni nada escrito con el
+     teclado: el teléfono está recogiendo un archivo, no informando de nada. Una
+     vez descargado, la función funciona sin conexión.</p>
+
   <p>No vendemos datos, no los compartimos con anunciantes y no hay más
-     destinatarios que el nombrado arriba. No guardamos ninguna cuenta tuya
+     destinatarios que los dos nombrados arriba. No guardamos ninguna cuenta tuya
      porque no existe ninguna.</p>
 
   <div class="safe">
@@ -129,12 +164,21 @@
   <ul>
     <li><strong>Internet</strong> y <strong>estado de la red</strong>: para
         descargar las imágenes de los pictogramas de ARASAAC mientras se crea un
-        tablero. Una vez guardadas, el teclado funciona sin conexión alguna.</li>
+        tablero, y para descargar el modelo de la ayuda con la frase si está
+        activada. Una vez guardados, el teclado funciona sin conexión alguna.</li>
+    <li><strong>Llamadas telefónicas</strong>: se pide solo cuando alguien ha
+        introducido de verdad un número para la campana del teclado, y solo para
+        que al pulsar la campana se haga la llamada. Negarlo es una respuesta
+        válida: entonces la campana abre la aplicación de teléfono con el número
+        puesto y alguien pulsa el botón de llamar a mano. La aplicación
+        <strong>nunca lee tu registro de llamadas ni hace ninguna llamada sin que
+        se pulse la campana</strong>.</li>
   </ul>
   <p>Esa es la lista completa. En particular, la aplicación
-     <strong>no pide permiso de cámara</strong>: cuando se añade una fotografía a
+     <strong>no pide permiso de cámara</strong> —cuando se añade una fotografía a
      un tablero, la hace la propia aplicación de cámara del teléfono y devuelve
-     el resultado, así que PictoKeyboard nunca tiene acceso propio a la cámara.</p>
+     el resultado— ni <strong>permiso de contactos</strong>: el número para pedir
+     ayuda se escribe a mano, no se busca en la agenda.</p>
 
   <h2>Licencia de los pictogramas</h2>
   <p>Los pictogramas son propiedad del Gobierno de Aragón y han sido creados por
