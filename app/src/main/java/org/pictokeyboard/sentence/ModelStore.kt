@@ -30,6 +30,18 @@ class ModelStore(context: Context) {
      */
     val partial: File = File(directory, "${file.name}.part")
 
+    /**
+     * Where the runtime keeps the weights repacked into the layout its kernels
+     * want, so that work happens once instead of on every load (#155).
+     *
+     * It has to exist before the engine is told about it. LiteRT will not create
+     * it, and when it is missing XNNPACK logs that it could neither read nor
+     * write the cache and carries on — silently, from Kotlin's side, paying the
+     * full repacking cost every time. That is why this survived until the first
+     * run against real weights.
+     */
+    val cacheDirectory: File = File(directory, CACHE_DIRECTORY)
+
     fun isDownloaded(): Boolean = file.isFile && file.length() == ModelSpec.SIZE_BYTES
 
     /** How far a previous attempt got, for a `Range` request. */
@@ -38,6 +50,14 @@ class ModelStore(context: Context) {
     fun prepareDirectory() {
         directory.mkdirs()
     }
+
+    /**
+     * Makes [cacheDirectory], reporting whether there is now somewhere to write.
+     *
+     * False is not a failure worth stopping for: the model still loads, just
+     * without a cache, which is exactly what happens today.
+     */
+    fun prepareCache(): Boolean = cacheDirectory.isDirectory || cacheDirectory.mkdirs()
 
     /**
      * Promotes a completed [partial] to [file] once its digest matches.
@@ -57,14 +77,31 @@ class ModelStore(context: Context) {
         return partial.renameTo(file)
     }
 
-    /** Removes both the model and any half-finished attempt. */
+    /**
+     * Removes the model, any half-finished attempt, and the repacked cache.
+     *
+     * The cache goes too, and must: it is derived from weights that are being
+     * deleted, it is worth hundreds of megabytes, and somebody who just pressed
+     * a button offering to free that space would still be short of it (#155).
+     */
     fun delete() {
         file.delete()
         partial.delete()
+        cacheDirectory.deleteRecursively()
     }
 
-    /** Bytes on disk for this feature, so Settings can name a number (#48). */
-    fun bytesOnDisk(): Long = (if (file.isFile) file.length() else 0) + partialBytes()
+    /**
+     * Bytes on disk for this feature, so Settings can name a number (#48).
+     *
+     * The cache counts. It is space this feature is using and that deleting the
+     * model gives back, so leaving it out would understate the offer by however
+     * large the repacked weights happen to be.
+     */
+    fun bytesOnDisk(): Long =
+        (if (file.isFile) file.length() else 0) + partialBytes() + cacheBytes()
+
+    private fun cacheBytes(): Long =
+        cacheDirectory.walkBottomUp().filter(File::isFile).sumOf(File::length)
 
     private fun sha256Matches(target: File): Boolean {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -81,6 +118,7 @@ class ModelStore(context: Context) {
 
     private companion object {
         const val DIRECTORY = "sentence-model"
+        const val CACHE_DIRECTORY = "cache"
         const val DIGEST_BUFFER = 1 shl 16
     }
 }
