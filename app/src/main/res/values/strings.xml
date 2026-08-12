@@ -27,6 +27,8 @@
     <string name="kb_beautify_undo">Undo, put my words back</string>
     <string name="kb_beautify_undo_icon">\u21ba</string>
     <string name="kb_beautify_working">Working on it</string>
+    <string name="kb_beautify_working_icon">⏳</string>
+    <string name="kb_beautify_empty">Tap some pictures first, then press this.</string>
     <string name="kb_beautify_applied">Sentence rewritten. Press again to put your words back.</string>
     <string name="kb_beautify_undone">Your words are back.</string>
     <string name="kb_beautify_nothing">Left as you wrote it.</string>

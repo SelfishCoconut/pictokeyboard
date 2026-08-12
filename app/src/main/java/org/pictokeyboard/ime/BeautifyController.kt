@@ -88,16 +88,46 @@ class BeautifyController(
 
     // --- Keeping the tracked range in step with the field --------------------
 
+    /**
+     * Every one of these repaints, and that is the fix rather than a detail.
+     *
+     * `BeautifyEdit` has always dropped the applied state when a word arrives or
+     * leaves — the undo window really was over. What nothing did was *say so*,
+     * so the key went on showing ↺ for a rephrase that could no longer be
+     * undone, and pressing it rephrased instead (#166). A glyph that lies about
+     * what the key will do is worse than no glyph on a surface this small.
+     *
+     * Unconditional because the alternative is comparing the old state to the
+     * new in three places to save a `findViewById` and four setters on a tap
+     * that already does more work than that.
+     */
     fun onCommitted(text: String) {
         edit = edit.plus(text)
+        onStateChanged()
     }
 
     fun onDeleted(count: Int) {
         edit = edit.minus(count)
+        onStateChanged()
     }
 
     fun onPhraseCleared() {
         edit = edit.cleared()
+        onStateChanged()
+    }
+
+    /**
+     * Any other key was pressed, so the rephrase is accepted (#166).
+     *
+     * Undo is offered for the moment right after a rephrase, not indefinitely.
+     * Once the user has moved on — spoken it, walked it with the arrows, added
+     * a word, sent it — the sentence in the field is the one they chose, and a
+     * ↺ still sitting there is an invitation to lose it by accident.
+     */
+    fun onAccepted() {
+        if (!edit.canUndo) return
+        edit = edit.accepted()
+        onStateChanged()
     }
 
     /**
@@ -125,10 +155,27 @@ class BeautifyController(
             undo()
             return
         }
-        if (working || !edit.canBeautify || typed.isEmpty()) return
-        val remote = client ?: return
+        if (working) return
+        // Silence was the worst of the three answers this key could give (#166).
+        // A press with nothing to rephrase is what happens after typing on the
+        // letter keyboard, after the host app empties its own field, and after a
+        // phrase is forgotten because the field moved on -- and all three looked
+        // exactly like a keyboard that had stopped working.
+        if (!edit.canBeautify || typed.isEmpty()) {
+            announce(R.string.kb_beautify_empty)
+            return
+        }
+        val remote = client ?: run {
+            announce(R.string.kb_beautify_unavailable)
+            return
+        }
 
         working = true
+        // Said as well as drawn. The glyph answers "did my tap land?" for anyone
+        // watching the key; this answers it for the user who cannot see it, and
+        // TalkBack does not announce a content-description change on a view that
+        // has just been disabled.
+        announce(R.string.kb_beautify_working)
         onStateChanged()
         remote.beautify(typed = typed, language = dominantLanguage(typed), variant = edit.variant) { outcome ->
             working = false
@@ -149,7 +196,7 @@ class BeautifyController(
      * what this keyboard put there.
      */
     private fun apply(sentence: String) {
-        if (!replaceTail(edit.inField, sentence)) {
+        if (connection()?.replaceTail(edit.inField, sentence) != true) {
             announce(R.string.kb_beautify_changed)
             edit = edit.cleared()
             return
@@ -161,7 +208,7 @@ class BeautifyController(
     /** Puts back the exact words the user tapped, checked the same way. */
     private fun undo() {
         val applied = edit.applied ?: return
-        if (!replaceTail(applied, edit.typed)) {
+        if (connection()?.replaceTail(applied, edit.typed) != true) {
             announce(R.string.kb_beautify_changed)
             edit = edit.cleared()
         } else {
@@ -170,31 +217,34 @@ class BeautifyController(
         }
         onStateChanged()
     }
+}
 
-    /**
-     * Replaces [expected] immediately before the cursor with [replacement],
-     * refusing if the field does not actually end with [expected].
-     *
-     * **The check is the whole point.** The host app can rewrite its own field at
-     * any moment — an autocorrect, a paste, a chat app clearing the box when a
-     * message sends — and a blind `deleteSurroundingText` of the length we think
-     * we wrote would delete whatever happens to be there instead. Refusing costs
-     * a rephrase; guessing costs somebody's message.
-     *
-     * `beginBatchEdit` so the host sees one change rather than a delete followed
-     * by an insert: an app watching its own field would otherwise see it
-     * momentarily empty and may act on that.
-     */
-    private fun replaceTail(expected: String, replacement: String): Boolean {
-        if (expected.isEmpty()) return false
-        val ic = connection() ?: return false
-        if (ic.getTextBeforeCursor(expected.length, 0)?.toString() != expected) return false
-        ic.beginBatchEdit()
-        val deleted = ic.deleteSurroundingText(expected.length, 0)
-        val inserted = ic.commitText(replacement, 1)
-        ic.endBatchEdit()
-        return deleted && inserted
-    }
+/**
+ * Replaces [expected] immediately before the cursor with [replacement],
+ * refusing if the field does not actually end with [expected].
+ *
+ * **The check is the whole point.** The host app can rewrite its own field at
+ * any moment — an autocorrect, a paste, a chat app clearing the box when a
+ * message sends — and a blind `deleteSurroundingText` of the length we think we
+ * wrote would delete whatever happens to be there instead. Refusing costs a
+ * rephrase; guessing costs somebody's message.
+ *
+ * `beginBatchEdit` so the host sees one change rather than a delete followed by
+ * an insert: an app watching its own field would otherwise see it momentarily
+ * empty and may act on that.
+ *
+ * A free function rather than a member because it needs nothing from the
+ * controller but the connection it is called on, and [BeautifyController] is at
+ * the size where the next thing added to it has to earn its place.
+ */
+private fun InputConnection.replaceTail(expected: String, replacement: String): Boolean {
+    if (expected.isEmpty()) return false
+    if (getTextBeforeCursor(expected.length, 0)?.toString() != expected) return false
+    beginBatchEdit()
+    val deleted = deleteSurroundingText(expected.length, 0)
+    val inserted = commitText(replacement, 1)
+    endBatchEdit()
+    return deleted && inserted
 }
 
 /**
