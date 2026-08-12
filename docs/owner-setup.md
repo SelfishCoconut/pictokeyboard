@@ -13,7 +13,7 @@ actually worked rather than only looked like it did.
 | 2 | `database` and `functions` removed from the required checks | **done** (2026-08-11) |
 | 3 | Play Console answers | **yours** — at listing time |
 | 4 | Upload key, and the secrets CI reads | **yours** — two commands, [`signing.md`](./signing.md) |
-| 5 | Privacy policy, when sentence help ships | not yet — same release as #46 |
+| 5 | Privacy policy, for the model and the bell | **done** (#152) |
 | 6 | Play Console account, and the closed test it requires | **yours** — start this first, it takes weeks |
 
 The site is published and both pages load:
@@ -171,9 +171,17 @@ wait — but not past the first person who sideloads.
 
 ## 5. Also before any public release
 
-- **Update the privacy policy when sentence help ships (#46).** The model runs
-  on the device and nothing is sent anywhere, but the policy currently does not
-  mention a model existing at all. One paragraph, both languages, same release.
+- **~~Update the privacy policy when sentence help ships (#46).~~** Done in
+  #152, in both languages: the model, the 347 MB download from Hugging Face,
+  and `CALL_PHONE` for the bell.
+
+  **One thing here is still yours.** `CALL_PHONE` may require a declaration
+  form in the Play Console — it is on Google's sensitive list, and the app's
+  justification is short and true: one key, pressed by a person who cannot
+  speak, dials a number their own caregiver typed into the app. Nothing reads
+  the call log, nothing places a call the user did not press. Check whether the
+  console asks for it at listing time; `docs/play-data-safety.md` treats it as
+  blocking until you confirm either way.
 
 - **Stale secrets.** `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are still set
   on the repository. Nothing on `main` reads them since #119. They are still

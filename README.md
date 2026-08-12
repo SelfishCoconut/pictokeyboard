@@ -31,9 +31,14 @@ text field.
 
 ## Demo & download
 
-- 📦 **[Download the MVP APK](https://github.com/SelfishCoconut/pictokeyboard/releases/latest/download/Pictokeyboard-MVP.apk)** — sideload on Android 8.0+
+- 📦 **[Latest release](https://github.com/SelfishCoconut/pictokeyboard/releases/latest)** — sideload on Android 8.0+
 - ▶️ **[Watch the demo video](https://github.com/SelfishCoconut/pictokeyboard/releases/latest/download/demo.mp4)**
 - 📄 **[Visual guide (PDF)](media/PictoKeyboard-guia-visual.pdf)** — picture instructions for caregivers
+
+> The published release is still **v0.1.0**, the June MVP. It predates the
+> removal of the server, board files, Android 16, the word arrows, the bell and
+> sentence help. Until a v0.2.0 is signed and published, build from `main` —
+> the two commands are under [Build & install](#build--install).
 
 ## Key features
 
@@ -44,6 +49,22 @@ text field.
   colour so the user can associate pictos with their category. Categories can
   be the seeded defaults *or* fully custom, each with its own frame colour.
 - **Tap = type + speak:** the picto's text is inserted and read aloud (TTS).
+- **Walk the phrase with arrows.** ◀ and ▶ select a word *in the host app's own
+  field* — a real selection, so the user sees it highlighted — and read it
+  aloud; backspace then removes that word rather than the last one. Reach the
+  wrong word, take it out, tap the right one.
+- **A red bell that calls for help.** Put a caregiver's number in Settings and
+  the keyboard gets a bell that rings it, after a four‑second countdown you can
+  cancel and a spoken warning saying who is being called. No number, no bell.
+- **Sentence help — a language model on the phone** *(experimental, off by
+  default)*. Tap `yo querer agua`, press ✨, and it becomes **"Quiero agua."**;
+  press again to get your exact words back. It runs a 347 MB Qwen3 0.6B model
+  in its own process, downloaded only if you ask for it. **It cannot put words
+  in your mouth:** a validator enforces that the content words coming out are a
+  subset of the ones you tapped, so it may add articles and conjugation but
+  never a thing about the world you did not choose, and negation is checked
+  separately and more strictly. If nothing passes, your words are left exactly
+  as typed. See [`docs/sentence-help-model.md`](docs/sentence-help-model.md).
 - **ARASAAC integration:** search ARASAAC during setup; images are downloaded
   and cached locally so the keyboard works **fully offline** afterwards.
 - **Bilingual:** Spanish and English picto text + TTS voice, selectable per
@@ -52,6 +73,9 @@ text field.
   feedback, toggled with a two‑finger double‑tap.
 - **PIN‑protected setup**, configurable grid (columns / rows / captions),
   adjustable speech rate & pitch.
+- **High contrast** — pure black and white, heavier strokes and thicker text —
+  applied to the keyboard as well as to the setup app, and a haptic tick that
+  confirms a key was hit for someone who cannot watch the field.
 - **Boards travel as files.** Export a board — or the whole device — as a single
   `.pkb`, photographs included, and send it through the share sheet to any app:
   WhatsApp, Gmail, Drive, Nearby Share. Importing adds, and never overwrites
@@ -100,9 +124,27 @@ flowchart TD
     REPO --> BACKUP["📦 .pkb export / import<br/>board graph + media"]
     REPO --> ARASAAC["🌐 ARASAAC client"]
 
+    subgraph llm[":llm — a separate process"]
+        LLM["🧠 Sentence help<br/>Qwen3 0.6B on LiteRT‑LM"]
+        VALID["🛡️ Validator<br/>no content word you did not tap"]
+        LLM --> VALID
+    end
+
+    IME -.->|"press ✨, over a binder"| LLM
+    LLM --> WEIGHTS[("💾 347 MB of weights<br/>downloaded on request")]
+
     BACKUP -.->|"share sheet"| SHARE["📤 Another caregiver's phone"]
     ARASAAC -.->|"setup only, then cached"| API["api.arasaac.org"]
+    WEIGHTS -.->|"once, if you ask for it"| HF["huggingface.co"]
 ```
+
+**Why the model is a process and not a class.** The weights and the runtime's
+arenas are roughly a gigabyte resident, and a keyboard is the one app on the
+phone that must never be the thing Android kills — losing it mid‑sentence takes
+away somebody's voice. Putting the model behind a binder means the system can
+reclaim all of it under pressure and the keyboard simply carries on without the
+✨ key. Every failure on that boundary — a dead binder, no weights, a model that
+will not load — is reported as *unavailable* and never as an exception.
 
 <details>
 <summary><b>Module layout</b></summary>
@@ -116,6 +158,12 @@ data/pkb     .pkb export/import — a ZIP holding the board graph and the
              photographs it refers to, addressed by the SHA‑256 of their bytes
 data/backup  the legacy one‑board JSON, kept so old backups still import
 data/repo    PictoRepository (single source of truth, seeding)
+sentence/    the model: capability check, download and SHA-256 verify, prompts,
+             the validator that decides what may reach the field, benchmark
+sentence/llm the :llm process — AIDL, the client's end of the binder, and the
+             LiteRT-LM engine, which exists only on the far side of it
+tts/         TtsManager: one voice per word, so a mixed-language board reads
+             correctly rather than in whichever voice the phone prefers
 ui/          Jetpack Compose setup app (onboarding, categories, pictos,
              ARASAAC search, settings, about/credits)
 di/          ServiceLocator (lightweight manual DI shared by Activity + IME)
@@ -135,7 +183,8 @@ di/          ServiceLocator (lightweight manual DI shared by Activity + IME)
 
 Requirements: **Android Studio** (Ladybug or newer) or the Android SDK with
 JDK 21. The project compiles against `compileSdk 37` and targets
-`targetSdk 34`, `minSdk 26` (Android 8.0). Bytecode targets Java 17.
+`targetSdk 36` (Android 16), `minSdk 26` (Android 8.0). Bytecode targets
+Java 17.
 
 ### Android Studio (recommended)
 1. `File ▸ Open` this folder. Studio downloads Gradle 9.6.1 and the SDK.
@@ -163,7 +212,9 @@ echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 4. Build the board under **Categories & pictos** (search ARASAAC, add pictos).
 5. Optionally set an **admin PIN** in **Settings** to lock the setup screens.
 
-The ⚙ key on the keyboard reopens this setup app; the 🌐 key switches keyboards.
+The 🌐 key on the keyboard switches to another keyboard. Reopen the setup app
+from its own launcher icon: the keyboard has no key that opens it, and the only
+activity it ever starts is the assistance call.
 
 ## Licensing & attribution
 
@@ -191,9 +242,18 @@ and photographs stay on the device. The keyboard honours
 `IME_FLAG_NO_PERSONALIZED_LEARNING` and never records anything from a password
 field.
 
-The only outbound request the app makes is to ARASAAC, for a pictogram image
-during setup, carrying no identifier of any kind. `AppHasNoAccountsTest` fails
+The app makes outbound requests to exactly two places, neither carrying any
+identifier: **ARASAAC**, for a pictogram image during setup, and **Hugging
+Face**, only if you switch on sentence help and ask for the model — a single
+347 MB download of a file whose SHA‑256 is pinned in the source. Nothing else
+leaves, and nothing you write is part of either. `AppHasNoAccountsTest` fails
 the build if any source file so much as imports an authentication stack.
+
+The app asks for three permissions and no others: `INTERNET` and
+`ACCESS_NETWORK_STATE`, for the two downloads above, and **`CALL_PHONE`**, used
+by one key — the assistance bell — to dial the number a caregiver typed in.
+Without the grant the bell falls back to opening the dialler with the number in
+it, so the call still happens; it just takes one more tap.
 
 The other side of that: **nothing is backed up for you.** A phone that is lost
 or reset takes the boards with it, so export a `.pkb` and keep it somewhere.
