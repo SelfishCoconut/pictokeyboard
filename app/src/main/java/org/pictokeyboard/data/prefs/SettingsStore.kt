@@ -83,18 +83,6 @@ data class Settings(
      */
     val sentenceHelp: Boolean = false,
     /**
-     * Run the model with `SentenceValidator` switched off (#167).
-     *
-     * **A debug-build diagnostic, and nothing else.** The switch that sets it is
-     * not composed outside a debug build, and `SentenceService` puts it through
-     * `ValidatorBypass.allowed` against `BuildConfig.DEBUG` before it can change
-     * what a rephrase does — so this field being true in a shipped build would
-     * still leave the harness on. It lives here rather than in a debug-only
-     * store because the keyboard and the settings screen are different
-     * processes, and DataStore is how they already agree on everything else.
-     */
-    val sentenceUnvalidated: Boolean = false,
-    /**
      * Who the keyboard's bell calls, and what to call them (#144).
      *
      * Empty by default, and empty is not a disabled feature — it is the absence
@@ -165,7 +153,6 @@ class SettingsStore(private val context: Context) {
             hapticFeedback = p[KEY_HAPTICS] ?: true,
             highContrast = p[KEY_HIGH_CONTRAST] ?: false,
             sentenceHelp = p[KEY_SENTENCE_HELP] ?: false,
-            sentenceUnvalidated = p[KEY_SENTENCE_UNVALIDATED] ?: false,
             assistanceName = p[KEY_ASSIST_NAME].orEmpty(),
             assistanceNumber = p[KEY_ASSIST_NUMBER].orEmpty(),
             // Absent rather than zeroed when it has never run, so "not yet
@@ -187,9 +174,6 @@ class SettingsStore(private val context: Context) {
     suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
     suspend fun setHighContrast(value: Boolean) = edit { it[KEY_HIGH_CONTRAST] = value }
     suspend fun setSentenceHelp(value: Boolean) = edit { it[KEY_SENTENCE_HELP] = value }
-
-    /** Debug builds only; see [Settings.sentenceUnvalidated] (#167). */
-    suspend fun setSentenceUnvalidated(value: Boolean) = edit { it[KEY_SENTENCE_UNVALIDATED] = value }
 
     /**
      * Both halves of the assistance contact, written together.
@@ -313,7 +297,6 @@ class SettingsStore(private val context: Context) {
         private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
         private val KEY_HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
         private val KEY_SENTENCE_HELP = booleanPreferencesKey("sentence_help")
-        private val KEY_SENTENCE_UNVALIDATED = booleanPreferencesKey("sentence_unvalidated")
         private val KEY_ASSIST_NAME = stringPreferencesKey("assistance_name")
         private val KEY_ASSIST_NUMBER = stringPreferencesKey("assistance_number")
         private val KEY_SPEED_LOAD = intPreferencesKey("sentence_load_millis")

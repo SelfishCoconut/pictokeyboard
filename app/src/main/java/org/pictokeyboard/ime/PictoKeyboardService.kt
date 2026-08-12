@@ -153,6 +153,10 @@ class PictoKeyboardService : InputMethodService() {
             connection = { currentInputConnection },
             onStateChanged = ::renderBeautifyKey,
             announce = ::announce,
+            // The language of the words, not of the interface -- a board may
+            // mix them, and an English voice reading `Quiero agua` is not the
+            // sentence (#186).
+            speak = { tts.speak(it, board?.language ?: settings.defaultLanguage) },
         )
     }
 
@@ -544,10 +548,6 @@ class PictoKeyboardService : InputMethodService() {
             // effect the next time the keyboard appears, without the caregiver
             // having to restart anything.
             beautify.setEnabled(settings.sentenceHelp)
-            // Debug builds only, and inert everywhere else: the model process
-            // puts it through ValidatorBypass.allowed before it means anything
-            // (#167).
-            beautify.unvalidated = settings.sentenceUnvalidated
             renderBeautifyKey()
             // Same reason: the caregiver may have set, changed or removed the
             // number since the keyboard was last on screen, and the bell has to

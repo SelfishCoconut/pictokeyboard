@@ -420,7 +420,7 @@
     <!-- Ayuda con la frase (#48) -->
     <string name="settings_group_sentence">Ayuda con la frase</string>
     <string name="settings_sentence_help">Decirlo mejor</string>
-    <string name="settings_sentence_help_desc">Añade al teclado un botón que reescribe las palabras tocadas como una frase. Nunca añade una palabra que no hayas tocado, y una pulsación devuelve tus palabras.</string>
+    <string name="settings_sentence_help_desc">Añade al teclado un botón que reescribe las palabras tocadas como una frase. La frase se lee en voz alta para poder oírla, y una pulsación devuelve tus palabras.</string>
     <string name="settings_sentence_help_privacy">Las frases se escriben en este móvil, con un modelo guardado en él. Nada de lo que escribes se envía a ningún sitio.</string>
     <string name="settings_sentence_model">Modelo: %1$s</string>
     <string name="settings_sentence_model_size">%1$d MB de descarga, una sola vez.</string>

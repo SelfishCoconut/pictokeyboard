@@ -125,10 +125,10 @@ and where it is enforced:
 - The app tallies how often each pictogram is used, on-device, to order the most
   used first. It is a count per pictogram, not a record of what was said.
 - **Password fields are excluded** from that tally.
-- A **debug** build logs what the model was asked and what it answered, to help
-  judge the model itself (#167). That branch is behind `BuildConfig.DEBUG`, which
-  is a compile-time constant R8 removes from the release build, so nothing is
-  written to logcat by the app anybody installs. Recorded here because it is a
+- A **debug** build logs what the model was asked, what it answered, and what the
+  validator made of it (#167, #186). That branch is behind `BuildConfig.DEBUG`,
+  which is a compile-time constant R8 removes from the release build, so nothing
+  is written to logcat by the app anybody installs. Recorded here because it is a
   real place typed content goes, in one build type, and this file is where the
   claim "nowhere else" has to survive being checked.
 - `EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING` is honoured — when a host app

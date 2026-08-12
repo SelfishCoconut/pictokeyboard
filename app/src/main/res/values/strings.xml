@@ -438,7 +438,7 @@
     <!-- Sentence help (#48) -->
     <string name="settings_group_sentence">Sentence help</string>
     <string name="settings_sentence_help">Say it better</string>
-    <string name="settings_sentence_help_desc">Adds a button to the keyboard that rewrites the tapped words as a sentence. It never adds a word you did not tap, and one press puts your words back.</string>
+    <string name="settings_sentence_help_desc">Adds a button to the keyboard that rewrites the tapped words as a sentence. The sentence is read out loud so it can be heard, and one press puts your words back.</string>
     <string name="settings_sentence_help_privacy">Sentences are written on this phone, by a model stored on it. Nothing you type is sent anywhere.</string>
     <string name="settings_sentence_model">Model: %1$s</string>
     <string name="settings_sentence_model_size">%1$d MB to download, once.</string>
