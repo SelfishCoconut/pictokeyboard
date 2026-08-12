@@ -75,6 +75,44 @@ is required**, because the app has no account creation.
 adult on the child's behalf, setup sits behind a PIN, and nothing in the app
 ever asks for the name, age or diagnosis of the person using the keyboard.
 
+## Sentence help: a model on the phone, and one download
+
+Switching sentence help on (#43, #44) downloads about 347 MB of model weights
+from `huggingface.co`, once, and runs them in a **separate process** (`:llm`) on
+the device. It is off until a caregiver turns it on, so an install that never
+does never contacts them.
+
+| Question | Answer |
+|---|---|
+| Is typed content sent anywhere? | **No.** The words go over a binder to a process on the same phone. |
+| Is the download data collection? | No. It is the app *fetching* a file; the request names the file and carries the IP address, as any download does. |
+| Is anything reported back? | No. There is no telemetry, no "model used" ping, and nothing to send it to. |
+
+This is the second destination in the binary, and it is the reason the privacy
+policy no longer says there is only one. Both are fetches.
+
+## The assistance contact and CALL_PHONE
+
+The keyboard's bell (#144) calls one number a caregiver typed in.
+
+- The name and number are stored **on the device**, in the app's own settings.
+  They are never transmitted, so they are not "collected" in the Data Safety
+  sense — but the policy says out loud that they are stored, because a stored
+  phone number sounds worse than it is until it is explained.
+- **No contacts permission.** The number is typed, not looked up. Asking for the
+  address book to save eleven digits would be the wrong trade for every
+  caregiver who never uses the feature.
+- `CALL_PHONE` is requested at runtime, and **only once a number has been
+  entered**. An install that never sets one is never asked.
+- Refusing it is supported: the bell falls back to `ACTION_DIAL`, which opens
+  the dialler with the number filled in.
+
+> **Confirm before submitting:** as of writing, `CALL_PHONE` is *not* on Play's
+> restricted-permissions list — that list is the Call Log and SMS groups,
+> `MANAGE_EXTERNAL_STORAGE`, `QUERY_ALL_PACKAGES` and friends — so no
+> Permissions Declaration Form is required for it. That list changes. Check it
+> in the Console rather than trusting this line.
+
 ## Keyboards get the strict review tier
 
 An IME can observe the text field it types into, so expect the question "what
@@ -82,7 +120,8 @@ can this keyboard see, and where does it go?" to be asked directly. The answer,
 and where it is enforced:
 
 - Typed content is delivered to the host app and **nowhere else**. There is no
-  network call anywhere in the IME.
+  network call anywhere in the IME — including with sentence help on, where the
+  words cross a binder to another process on the same phone and never a socket.
 - The app tallies how often each pictogram is used, on-device, to order the most
   used first. It is a count per pictogram, not a record of what was said.
 - **Password fields are excluded** from that tally.
@@ -126,10 +165,16 @@ time.
 ## The checks these answers come from
 
 ```sh
-# Permissions: expect exactly INTERNET and ACCESS_NETWORK_STATE, and no CAMERA.
+# Permissions: expect exactly INTERNET, ACCESS_NETWORK_STATE and CALL_PHONE,
+# and no CAMERA and no READ_CONTACTS.
 grep -n "uses-permission" app/src/main/AndroidManifest.xml
 
-# Everything that leaves the device. Expect ARASAAC and nothing else.
+# Everything that leaves the device. Two hosts are actually contacted --
+# arasaac.org and huggingface.co -- and both are fetches that carry nothing the
+# user typed. The command also prints links the app only ever *displays*
+# (creativecommons.org, apache.org, arasaac.org/terms-of-use, and our own
+# privacy URL); those are never requested by the app. Anything outside those two
+# groups is a finding.
 grep -rhoE 'https?://[a-zA-Z0-9./-]+' --include='*.kt' app/src/main/java | sort -u
 
 # No authentication stack anywhere in the app. This is the assertion that keeps
@@ -147,11 +192,15 @@ grep -rn "NO_PERSONALIZED_LEARNING\|TYPE_TEXT_VARIATION_PASSWORD" \
 
 ## Still to do before the first upload
 
-- **Update the privacy policy when sentence help ships (#46).** The model runs
-  on the device and nothing is sent anywhere, but the policy currently does not
-  mention a model existing at all. One paragraph, both languages, same release.
 - The store listing itself: icon, feature graphic, screenshots, content rating
-  questionnaire, and the target-audience answers.
+  questionnaire, and the target-audience answers. **The screenshots are stale** —
+  they predate the phrase keys, the crop frame, the category preview and the
+  board FAB.
+- Confirm the `CALL_PHONE` declaration question above in the Console.
+
+> The privacy policy was updated for sentence help and the bell in #151, in both
+> languages, in the release that ships them — which is the rule this file keeps
+> restating and the one that is easiest to miss.
 
 > If accounts ever return from the `marketplace` branch, **this table and the
 > public privacy policy change in the same release that ships them** — not

@@ -18,10 +18,8 @@
     <!-- Board tabs and the phrase keys (#36, #148) -->
     <string name="kb_board_tab_role">Board</string>
     <string name="kb_speak_all">Say the whole phrase</string>
-    <string name="kb_clear_sentence">Start a new phrase</string>
     <!-- Both spoken, because since #148 nothing on screen changes when they happen. -->
     <string name="kb_sentence_empty">Nothing written yet</string>
-    <string name="kb_sentence_cleared">Starting a new phrase.</string>
     <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
     <!-- Sentence help (#46, #48). "Beautify" is the sparkle; undo is the arrow. -->
     <string name="kb_beautify">Say it better</string>
@@ -222,7 +220,10 @@
     <string name="add_from_categories_title">Add existing pictos</string>
     <string name="add_from_categories_empty">No pictos in other categories yet.</string>
     <string name="crop_title">Crop image</string>
-    <string name="crop_hint">Pinch to zoom, drag to position. The square area becomes the picto.</string>
+    <string name="crop_hint">Pinch to zoom, drag to position. Whatever is inside the frame becomes the picto; the dimmed part is cut off.</string>
+    <string name="crop_a11y">Image being cropped. Pinch to zoom and drag to position it inside the square frame.</string>
+    <string name="crop_rotate_left">Rotate left</string>
+    <string name="crop_rotate_right">Rotate right</string>
     <string name="crop_use">Use</string>
     <string name="crop_failed">Couldn\'t crop that image.</string>
 

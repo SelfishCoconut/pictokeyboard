@@ -13,10 +13,8 @@
     <!-- Pestañas de tablero y teclas de la frase (#36, #148) -->
     <string name="kb_board_tab_role">Tablero</string>
     <string name="kb_speak_all">Decir la frase entera</string>
-    <string name="kb_clear_sentence">Empezar una frase nueva</string>
     <!-- Ambas se dicen, porque desde #148 no cambia nada en pantalla al pulsarlas. -->
     <string name="kb_sentence_empty">Todavía no has escrito nada</string>
-    <string name="kb_sentence_cleared">Empezando una frase nueva.</string>
     <string name="kb_empty_hint">Aún no hay categorías. Abre los ajustes para configurar el tablero.</string>
     <!-- Ayuda con la frase (#46, #48). -->
     <string name="kb_beautify">Decirlo mejor</string>
@@ -207,7 +205,10 @@
     <string name="add_from_categories_title">Añadir pictos existentes</string>
     <string name="add_from_categories_empty">Aún no hay pictos en otras categorías.</string>
     <string name="crop_title">Recortar imagen</string>
-    <string name="crop_hint">Pellizca para ampliar, arrastra para colocar. El área cuadrada será el picto.</string>
+    <string name="crop_hint">Pellizca para ampliar, arrastra para colocar. Lo que quede dentro del marco será el picto; la parte oscurecida se recorta.</string>
+    <string name="crop_a11y">Imagen que se está recortando. Pellizca para ampliar y arrastra para colocarla dentro del marco cuadrado.</string>
+    <string name="crop_rotate_left">Girar a la izquierda</string>
+    <string name="crop_rotate_right">Girar a la derecha</string>
     <string name="crop_use">Usar</string>
     <string name="crop_failed">No se pudo recortar la imagen.</string>
 

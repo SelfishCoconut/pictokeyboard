@@ -290,7 +290,6 @@ object ViewStyles {
         R.id.key_backspace,
         R.id.key_beautify,
         R.id.key_speak,
-        R.id.key_clear,
         R.id.key_switch,
         R.id.key_enter,
     )

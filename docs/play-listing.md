@@ -48,8 +48,7 @@ parents, teachers and speech therapists who set it up for them.
 WORKS ANYWHERE YOU ALREADY TYPE
 
 PictoKeyboard is a real keyboard, not a separate app you have to copy and paste
-out of. Wherever a text field appears, it can be your keyboard, and the words go
-straight in.
+out of. Wherever a text field appears, the words go straight in.
 
 BUILT AROUND ONE PERSON
 
@@ -69,6 +68,14 @@ Every picture is spoken as it is tapped, in its own language. A board can mix
 Spanish and English, and each word is read in the voice that belongs to it. You
 can set the speaking rate and pitch.
 
+CALLING FOR HELP
+
+The keyboard can say "I want water". It could not say "come here, something is
+wrong" to somebody in another room. Enter one name and one number, and a red
+bell appears that calls them. It says who it is ringing out loud and waits a few
+seconds, so a bell pressed by accident can be stopped with a second press. Leave
+it empty and there is no bell.
+
 FOR PEOPLE WHO CANNOT SEE THE SCREEN
 
 Blind mode turns the keyboard into a gesture surface. Swipe up and down to move
@@ -76,9 +83,18 @@ between categories, left and right between pictures, and each one is spoken as
 you land on it. Tap to repeat it, double-tap to write it. Two fingers,
 double-tap, turns the mode on and off from anywhere.
 
-There is also a high contrast mode — pure black and white, thicker borders and
-heavier text — for low vision, and it applies to the keyboard as well as to the
-setup screens.
+There is also a high contrast mode — pure black and white, thicker borders,
+heavier text — for low vision, on the keyboard as well as the setup screens.
+
+SAYING IT BETTER (EXPERIMENTAL, OFF UNTIL YOU ASK)
+
+Tapping pictures gives you "I wanting water". Sentence help turns that into "I
+want water" — and never adds a word nobody tapped, so it cannot put words in
+anybody's mouth. One press puts your own words back.
+
+It runs a model on the phone itself, so nothing typed is sent anywhere. That
+costs a large download, so it stays off until somebody chooses it, and can be
+deleted at any time.
 
 NO ACCOUNT, AND NOWHERE TO SEND YOUR DATA
 
@@ -87,15 +103,15 @@ and the app's own settings stay on the device — they are never copied to a clo
 account, not ours and not anyone's. We collect nothing about you because there
 is nowhere for it to go.
 
-The app reaches the internet for exactly one thing: ARASAAC, to search their
-symbol library and download the pictures you pick. That request carries your
-search word and nothing else — no name, no account, no identifier, and nothing
-that was ever typed on the keyboard.
+The app reaches the internet for two things, and both are downloads. ARASAAC, to
+search their symbol library and fetch the pictures you pick — that request
+carries your search word and nothing else. And, only if you switch sentence help
+on, the model file itself. Neither carries a name, an account, an identifier, or
+anything that was ever typed on the keyboard.
 
-To move a board to another phone, or to give one to another family, export it as
-a file and send it however you already talk to them — WhatsApp, email, Drive,
-Nearby Share. Photographs travel with it. Importing never overwrites what is
-already there.
+To move a board to another phone, or give one to another family, export it as a
+file and send it however you already talk — WhatsApp, email, Drive, Nearby
+Share. Photographs travel with it. Importing never overwrites what is there.
 
 Because nothing is stored online, an exported file is the only backup there is.
 Keep one somewhere safe.
@@ -113,7 +129,7 @@ BY-NC-SA. PictoKeyboard is free and will stay free — the licence is
 non-commercial, and so is this app.
 ```
 
-`3161 characters.` *(limit 4000)*
+`3993 characters.` *(limit 4000)*
 
 ## Español
 
@@ -159,6 +175,14 @@ Cada imagen se pronuncia al tocarla, en su propio idioma. Un tablero puede
 mezclar español e inglés, y cada palabra se lee con la voz que le corresponde.
 Puedes ajustar la velocidad y el tono.
 
+PEDIR AYUDA
+
+El teclado sabe decir «quiero agua». No sabía decir «ven, pasa algo» a alguien
+que está en otra habitación. Introduce un nombre y un número de teléfono y
+aparece en el teclado una campana roja que llama. Dice en voz alta a quién va a
+llamar y espera unos segundos, para que una campana pulsada sin querer pueda
+pararse con una segunda pulsación. Si dejas el número vacío, no hay campana.
+
 PARA QUIEN NO PUEDE VER LA PANTALLA
 
 El modo ciego convierte el teclado en una superficie de gestos. Desliza arriba y
@@ -178,10 +202,11 @@ las palabras que se pronuncian y los ajustes se quedan en el dispositivo: nunca
 se copian a ninguna cuenta en la nube, ni nuestra ni de nadie. No recogemos nada
 tuyo porque no hay adónde llevarlo.
 
-La aplicación sale a internet para una sola cosa: ARASAAC, para buscar en su
-biblioteca de símbolos y descargar las imágenes que elijas. Esa petición lleva la
-palabra que buscas y nada más: ni nombre, ni cuenta, ni identificador, ni nada de
-lo que se haya escrito con el teclado.
+La aplicación sale a internet para dos cosas, y las dos son descargas. ARASAAC,
+para buscar en su biblioteca de símbolos y traer las imágenes que elijas —esa
+petición lleva la palabra que buscas y nada más—. Y, solo si activas la ayuda con
+la frase, el archivo del modelo. Ninguna lleva un nombre, una cuenta, un
+identificador ni nada de lo que se haya escrito con el teclado.
 
 Para llevar un tablero a otro móvil, o dárselo a otra familia, expórtalo como
 archivo y mándalo por donde ya habléis: WhatsApp, correo, Drive, Nearby Share.
@@ -203,7 +228,7 @@ BY-NC-SA. PictoKeyboard es gratuito y seguirá siéndolo: la licencia es no
 comercial, y esta aplicación también.
 ```
 
-`3363 caracteres.` *(límite 4000)*
+`3862 caracteres.` *(límite 4000)*
 
 ## Graphics
 
