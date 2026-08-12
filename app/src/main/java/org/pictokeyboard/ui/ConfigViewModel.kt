@@ -96,6 +96,7 @@ class ConfigViewModel : ViewModel() {
                     download = state,
                     installed = state is DownloadState.Done,
                     bytesOnDisk = modelStore.bytesOnDisk(),
+                    resumable = modelStore.partialBytes() > 0,
                 )
                 // Timed the moment there is something to time, so the caregiver
                 // finds out whether this phone is fast enough before they hand
@@ -156,6 +157,7 @@ class ConfigViewModel : ViewModel() {
         capability = deviceCapability.check(),
         installed = modelStore.isDownloaded(),
         bytesOnDisk = modelStore.bytesOnDisk(),
+        resumable = modelStore.partialBytes() > 0,
     )
 
     val categories: StateFlow<List<CategoryEntity>> =

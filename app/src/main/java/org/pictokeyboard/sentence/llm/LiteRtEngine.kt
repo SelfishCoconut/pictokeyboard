@@ -15,7 +15,6 @@ import org.pictokeyboard.sentence.ModelStore
 import org.pictokeyboard.sentence.Prompts
 import org.pictokeyboard.sentence.SentenceEngine
 import org.pictokeyboard.sentence.TypedWord
-import java.io.File
 
 /**
  * The model itself, on LiteRT-LM.
@@ -47,6 +46,9 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
     suspend fun load(): Boolean = withContext(Dispatchers.IO) {
         if (engine != null) return@withContext true
         if (!store.isDownloaded()) return@withContext false
+        // Before the engine is told where its cache is, because LiteRT will not
+        // make the directory and says so only in logcat (#155).
+        if (!store.prepareCache()) Log.w(TAG, "No weight cache directory; every load will repack")
         runCatching {
             Engine(
                 EngineConfig(
@@ -58,7 +60,7 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
                     // demand, not a streaming chat.
                     backend = Backend.CPU(),
                     maxNumTokens = MAX_TOKENS,
-                    cacheDir = File(store.file.parentFile, "cache").absolutePath,
+                    cacheDir = store.cacheDirectory.absolutePath,
                 ),
             ).also {
                 it.initialize()
