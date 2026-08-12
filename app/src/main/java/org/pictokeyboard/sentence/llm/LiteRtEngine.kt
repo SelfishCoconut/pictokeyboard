@@ -6,6 +6,7 @@ import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.ThinkingConfig
 import kotlinx.coroutines.Dispatchers
@@ -82,10 +83,54 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
     ): String? =
         withContext(Dispatchers.Default) {
             val active = engine ?: return@withContext null
+            // PROBE prompt -- throwaway
+            if (variant == 0) {
+                val full = Prompts.systemPrompt(language)
+                val rulesOnly = full.substringBefore("Ejemplos:").trimEnd()
+                val pairs = listOf(
+                    "yo querer agua" to "Quiero agua.",
+                    "mamá venir casa" to "Mamá viene a casa.",
+                    "yo no querer comer" to "No quiero comer.",
+                    "galleta" to "Una galleta.",
+                    "yo estar cansado" to "Estoy cansado.",
+                )
+                val shots = pairs.flatMap {
+                    listOf(
+                        com.google.ai.edge.litertlm.Message.user(it.first),
+                        com.google.ai.edge.litertlm.Message.model(it.second),
+                    )
+                }
+                val cases = listOf(
+                    "A inline-examples" to (full to emptyList()),
+                    "B fewshot-turns" to (rulesOnly to shots),
+                )
+                for ((label, cfg) in cases) {
+                    val out = runCatching {
+                        active.createConversation(
+                            ConversationConfig(
+                                systemInstruction = Contents.of(cfg.first),
+                                initialMessages = cfg.second,
+                                samplerConfig = samplerFor(0),
+                                thinkingConfig = ThinkingConfig(enableThinking = false),
+                                maxOutputToken = ModelSpec.MAX_OUTPUT_TOKENS,
+                            ),
+                        ).use { c -> c.sendMessage(Prompts.userTurn(typed)).contents.toString() }
+                    }.getOrElse { "ERR: " + it.message }
+                    Log.w("ProbePrompt", label + " | " + Prompts.userTurn(typed) + " -> " + out.replace("\n", " / "))
+                }
+            }
             runCatching {
                 active.createConversation(
                     ConversationConfig(
                         systemInstruction = Contents.of(Prompts.systemPrompt(language, avoid)),
+                        // The worked examples, as a conversation the model has
+                        // already had rather than a document it is finishing
+                        // (#184). Written into the instruction as text, a 0.6B
+                        // model copies them out verbatim -- `agua querer ir
+                        // casa` came back as "Una galleta.", a line lifted whole
+                        // from the prompt. Same model, same temperature, as
+                        // turns: "Agua quiere ir a casa."
+                        initialMessages = exampleTurns(language),
                         samplerConfig = samplerFor(variant),
                         // The `nothink` build should not emit a reasoning trace
                         // anyway; saying so explicitly means a swapped-in model
@@ -102,6 +147,17 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
                 null
             }
         }
+
+    /**
+     * The worked examples as alternating user and model turns (#184).
+     *
+     * Built per conversation rather than cached, because a board may mix
+     * languages and the language of the *words* decides which set is right --
+     * the same reason `Prompts` keeps one instruction per language rather than
+     * naming the language inside one.
+     */
+    private fun exampleTurns(language: String): List<Message> =
+        Prompts.examples(language).flatMap { listOf(Message.user(it.tapped), Message.model(it.sentence)) }
 
     /**
      * Temperature still climbs with the variant, and it is **not** what makes a
