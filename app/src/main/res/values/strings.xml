@@ -451,7 +451,7 @@
     <string name="settings_sentence_failed_disk">There is not enough space left on the phone.</string>
     <string name="settings_sentence_failed_corrupt">The download did not arrive intact and was discarded. Please try again.</string>
     <string name="settings_sentence_no_processor">This phone\'s processor cannot run the sentence model.</string>
-    <string name="settings_sentence_no_memory">This phone does not have enough memory to run the sentence model.</string>
+    <string name="settings_sentence_tight_memory">This phone has %1$d MB of memory, and the sentence model needs about a gigabyte while it runs. It may be slow, and the phone may close it when other apps are busy. You can still try it, and delete it if it does not work well here.</string>
     <string name="settings_sentence_no_storage">There is not enough space for the sentence model. It needs about %1$d MB.</string>
 
     <!-- Timing it on the phone it will run on (#145) -->
