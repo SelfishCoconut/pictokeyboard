@@ -15,6 +15,14 @@ data class SentenceModelState(
     val installed: Boolean = false,
     val download: DownloadState = DownloadState.Idle,
     val bytesOnDisk: Long = 0,
+    /**
+     * Whether a half-finished download is waiting to be picked up.
+     *
+     * Asked directly rather than inferred from [bytesOnDisk], which counts
+     * everything the feature occupies — including the repacked weight cache,
+     * which is not something anybody resumes (#155).
+     */
+    val resumable: Boolean = false,
     /** True while the model is being timed on this phone (#145). */
     val benchmarking: Boolean = false,
 )

@@ -179,7 +179,7 @@ private fun ModelRow(
                             // A resumed download is a different promise from a
                             // fresh one, and on a metered connection the
                             // difference is the whole decision.
-                            if (model.bytesOnDisk > 0) {
+                            if (model.resumable) {
                                 R.string.settings_sentence_resume
                             } else {
                                 R.string.settings_sentence_download
