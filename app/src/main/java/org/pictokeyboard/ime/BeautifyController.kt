@@ -117,12 +117,18 @@ class BeautifyController(
     }
 
     /**
-     * Any other key was pressed, so the rephrase is accepted (#166).
+     * The user moved on, so the rephrase is accepted (#166).
      *
-     * Undo is offered for the moment right after a rephrase, not indefinitely.
-     * Once the user has moved on — spoken it, walked it with the arrows, added
-     * a word, sent it — the sentence in the field is the one they chose, and a
-     * ↺ still sitting there is an invitation to lose it by accident.
+     * Undo is offered for the moment right after a rephrase, not indefinitely:
+     * once the sentence has been sent, or the user has gone off to the letter
+     * keyboard, a ↺ still sitting on the key is an invitation to lose it.
+     *
+     * **Which presses count is the keyboard's call, not this class's** (#173),
+     * and it is a narrow list — see `PictoKeyboardService.KEEPS_UNDO`. Reading
+     * the sentence back with 🔊, walking it with the arrows and ringing the bell
+     * all leave the window open, because none of them is moving on. The first
+     * two are how somebody checks a rephrase they cannot read, and a check that
+     * destroys what it is checking is worse than no check.
      */
     fun onAccepted() {
         if (!edit.canUndo) return

@@ -407,12 +407,10 @@ class PictoKeyboardService : InputMethodService() {
                 // otherwise overwrite it. Everything except the arrows and the
                 // backspace that acts on the selection lets go of it first.
                 if (id !in KEEPS_SELECTION) phrase.navigator.stop()
-                // Reaching for any other key is taken as accepting the rephrase
-                // (#166). Undo is for the moment right after one, not for the
-                // rest of the sentence: once the user has spoken it, walked it
-                // or added to it, a ↺ still sitting on the key is an invitation
-                // to lose the sentence they chose by pressing it by accident.
-                if (id != R.id.key_beautify) beautify.onAccepted()
+                // Moving on from a rephrase accepts it and closes the undo
+                // window (#166) -- but only the keys that actually move on
+                // (#173).
+                if (id !in KEEPS_UNDO) beautify.onAccepted()
                 action()
             }
         }
@@ -1105,6 +1103,34 @@ class PictoKeyboardService : InputMethodService() {
             R.id.key_prev_word,
             R.id.key_next_word,
             R.id.key_backspace,
+        )
+
+        /**
+         * The keys that leave a rephrase undoable (#173).
+         *
+         * These are the ones that only *read* the phrase. 🔊 speaks it back and
+         * the arrows walk it word by word saying each one (#143) — which is how
+         * somebody who cannot read the field checks what the model did. Closing
+         * the undo window there would mean the act of checking destroys the
+         * thing being checked. The bell is not about the sentence at all: it
+         * calls for help (#144), and losing your own words because you rang for
+         * somebody is not a trade anybody would choose.
+         *
+         * The asymmetry is what settles it. Undoing by accident costs one
+         * rephrase — press ✨ again and the model has another go. Losing the
+         * undo costs the words the user tapped, and nothing brings those back.
+         *
+         * Everything absent from this set still ends the window: the send, the
+         * switch to the letter keyboard, and — through [BeautifyEdit.plus] and
+         * [BeautifyEdit.minus] rather than through here — space, backspace and
+         * every picto tap.
+         */
+        private val KEEPS_UNDO = setOf(
+            R.id.key_beautify,
+            R.id.key_speak,
+            R.id.key_assistance,
+            R.id.key_prev_word,
+            R.id.key_next_word,
         )
 
         /**
