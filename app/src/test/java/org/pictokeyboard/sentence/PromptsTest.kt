@@ -63,6 +63,58 @@ class PromptsTest {
         assertEquals(Prompts.systemPrompt("es"), Prompts.systemPrompt("es", listOf("  ", ".")))
     }
 
+    // --- #182: a reasoning block is not a candidate --------------------------
+
+    /**
+     * The exact shape Qwen3.5 produces, captured off the device.
+     *
+     * Its non-thinking mode opens every assistant turn with an *empty* think
+     * block, so "the first non-empty line" was `<think>` and the validator was
+     * asked to judge a tag as a sentence.
+     */
+    @Test
+    fun `an empty reasoning block is not the sentence`() {
+        assertEquals("Quiero agua.", Prompts.firstCandidate("<think>\n\n</think>\nQuiero agua."))
+    }
+
+    @Test
+    fun `a reasoning block with reasoning in it is dropped whole`() {
+        val raw = "<think>\nThe user tapped agua. I should say it naturally.\n</think>\nQuiero agua."
+        assertEquals("Quiero agua.", Prompts.firstCandidate(raw))
+    }
+
+    /** Whatever surrounds the tags, including the model's usual quoting. */
+    @Test
+    fun `the quote stripping still applies after the block`() {
+        assertEquals("Quiero agua.", Prompts.firstCandidate("  <think></think>\n\n  \"Quiero agua.\"\nI rewrote it."))
+    }
+
+    /**
+     * The model spent its whole budget thinking and never wrote a sentence.
+     * Nothing is the honest answer — the validator records that as EMPTY, which
+     * is a different thing from inventing a word.
+     */
+    @Test
+    fun `an unterminated block leaves no candidate`() {
+        assertEquals("", Prompts.firstCandidate("<think>\nstill thinking, and out of tokens"))
+    }
+
+    /**
+     * Only a block the turn *opens* with is a wrapper. One appearing after a
+     * sentence is not, and cutting from there would throw away an answer the
+     * model had already given.
+     */
+    @Test
+    fun `a block after the answer does not eat the answer`() {
+        assertEquals("Quiero agua.", Prompts.firstCandidate("Quiero agua.\n<think>was that right?</think>"))
+    }
+
+    /** The model this ships with today emits no block at all. */
+    @Test
+    fun `output with no block is untouched`() {
+        assertEquals("Quiero agua.", Prompts.firstCandidate("Quiero agua.\nI rewrote your sentence."))
+    }
+
     /**
      * Just the retry clause.
      *
