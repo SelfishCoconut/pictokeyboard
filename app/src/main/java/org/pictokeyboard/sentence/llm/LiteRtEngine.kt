@@ -74,18 +74,13 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
         }
     }
 
-    override suspend fun generate(
-        typed: List<TypedWord>,
-        language: String,
-        variant: Int,
-        avoid: List<String>,
-    ): String? =
+    override suspend fun generate(typed: List<TypedWord>, language: String, variant: Int): String? =
         withContext(Dispatchers.Default) {
             val active = engine ?: return@withContext null
             runCatching {
                 active.createConversation(
                     ConversationConfig(
-                        systemInstruction = Contents.of(Prompts.systemPrompt(language, avoid)),
+                        systemInstruction = Contents.of(Prompts.systemPrompt(language)),
                         samplerConfig = samplerFor(variant),
                         // The `nothink` build should not emit a reasoning trace
                         // anyway; saying so explicitly means a swapped-in model

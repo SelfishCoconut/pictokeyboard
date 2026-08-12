@@ -22,12 +22,17 @@ import org.pictokeyboard.sentence.llm.SentenceClient
  * @param announce says what happened, out loud and to TalkBack: a rephrase
  *   changes text the user may not be able to read back, so the fact that it
  *   happened cannot be carried by the field alone.
+ * @param speak reads the new sentence itself, in the phrase's own language.
+ *   Since #186 the model may add words, and this is what makes that a fair
+ *   trade: the person hears what they are about to say while ↺ is still on the
+ *   key. A sentence somebody can neither read nor hear is one they cannot judge.
  */
 class BeautifyController(
     private val context: Context,
     private val connection: () -> InputConnection?,
     private val onStateChanged: () -> Unit,
     private val announce: (Int) -> Unit,
+    private val speak: (String) -> Unit,
 ) {
 
     var edit = BeautifyEdit()
@@ -38,18 +43,6 @@ class BeautifyController(
         private set
 
     private var client: SentenceClient? = null
-
-    /**
-     * Ask the model process to answer without the validator (#167).
-     *
-     * A `var` set from the keyboard's settings flow rather than a parameter on
-     * [press], because it is a standing state of the app and not a property of
-     * one press — and because it is inert in a shipped build either way:
-     * `SentenceService` puts it through `ValidatorBypass.allowed` against
-     * `BuildConfig.DEBUG`, and the switch that sets it is not composed at all
-     * outside a debug build.
-     */
-    var unvalidated: Boolean = false
 
     /**
      * True when the feature is on and the weights are on this phone.
@@ -195,18 +188,13 @@ class BeautifyController(
         // has just been disabled.
         announce(R.string.kb_beautify_working)
         onStateChanged()
-        remote.beautify(
-            typed = typed,
-            language = dominantLanguage(typed),
-            variant = edit.variant,
-            unvalidated = unvalidated,
-        ) { outcome ->
+        remote.beautify(typed = typed, language = dominantLanguage(typed), variant = edit.variant) { outcome ->
             working = false
             when (outcome) {
                 is BeautifyOutcome.Sentence -> apply(outcome.text)
-                // "It ran, and would not say it any other way without putting
-                // words in your mouth." The words are left exactly as typed,
-                // which is what #45 requires when nothing passes the validator.
+                // "It ran, and had nothing to say." The words are left exactly
+                // as typed, which is what #46 requires when the model answers
+                // with nothing usable.
                 BeautifyOutcome.NothingPassed -> announce(R.string.kb_beautify_nothing)
                 BeautifyOutcome.Unavailable -> announce(R.string.kb_beautify_unavailable)
             }
@@ -226,6 +214,8 @@ class BeautifyController(
         }
         edit = edit.applying(sentence)
         announce(R.string.kb_beautify_applied)
+        // The sentence itself, not just the fact that there is one (#186).
+        speak(sentence)
     }
 
     /** Puts back the exact words the user tapped, checked the same way. */

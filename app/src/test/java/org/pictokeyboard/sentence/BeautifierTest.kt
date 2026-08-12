@@ -6,11 +6,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * #45's safety property, as a behaviour rather than a rule.
+ * What the rephrase loop does now that the validator does not decide (#186).
  *
  * The engine is scripted, so these run with no weights, no `:llm` process and no
- * device — which is the point: whether a model may put words in someone's mouth
+ * device — which is the point: what the keyboard will put in somebody's field
  * must not be a question that needs 347 MB and an emulator to answer.
+ *
+ * `SentenceValidatorTest` still covers the judgement itself. It is still made,
+ * still recorded, and still the thing #42 scores; it simply no longer refuses.
  */
 class BeautifierTest {
 
@@ -18,114 +21,93 @@ class BeautifierTest {
         pairs.map { TypedWord(it.first, it.second) }
 
     /** Hands back the scripted answers in order, then repeats the last one. */
-    private fun engineReturning(vararg answers: String?) = SentenceEngine { _, _, variant, _ ->
+    private fun engineReturning(vararg answers: String?) = SentenceEngine { _, _, variant ->
         answers.getOrNull(variant) ?: answers.lastOrNull()
     }
 
+    private val aguaPhrase get() = words("yo" to "es", "querer" to "es", "agua" to "es")
+
     @Test
-    fun `a clean expansion is accepted`() = runTest {
-        val result = Beautifier(engineReturning("Quiero agua.")).beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
+    fun `a clean expansion is used`() = runTest {
+        val result = Beautifier(engineReturning("Quiero agua.")).beautify(aguaPhrase, "es")
         assertEquals(Beautified.Sentence("Quiero agua."), result)
     }
 
     /**
-     * The failure this whole milestone exists to prevent: the model inventing a
-     * contrast the user never expressed.
+     * The decision in #186, as a behaviour. This was the case that used to cost
+     * three generations and end in "left as you wrote it".
      */
     @Test
-    fun `an invented content word is rejected, and a clean retry wins`() = runTest {
-        val beautifier = Beautifier(
-            engineReturning("Estoy bien, pero quiero comida.", "Estoy bien y quiero comida."),
-        )
-        val result = beautifier.beautify(
-            typed = words("yo" to "es", "bien" to "es", "querer" to "es", "comida" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.Sentence("Estoy bien y quiero comida."), result)
-        assertEquals(listOf(Rejection.ADDED_CONTENT_WORD), beautifier.lastRejections.map { it.reason })
+    fun `a sentence that adds a word is used anyway`() = runTest {
+        val result = Beautifier(engineReturning("Quiero agua fría.")).beautify(aguaPhrase, "es")
+        assertEquals(Beautified.Sentence("Quiero agua fría."), result)
     }
 
+    /** Including a negation the user never tapped — asked directly, and decided. */
     @Test
-    fun `nothing is shown when every attempt invents something`() = runTest {
-        val beautifier = Beautifier(engineReturning("Quiero agua fría."))
-        val result = beautifier.beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.NothingPassed, result)
-        assertEquals(ModelSpec.MAX_ATTEMPTS, beautifier.lastRejections.size)
-    }
-
-    /** Adding a negation reverses the meaning, which is worse than clumsy grammar. */
-    @Test
-    fun `an added negation is rejected`() = runTest {
-        val beautifier = Beautifier(engineReturning("No quiero agua."))
-        val result = beautifier.beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.NothingPassed, result)
-        assertTrue(beautifier.lastRejections.all { it.reason == Rejection.ADDED_NEGATION })
-    }
-
-    /** And dropping one the user tapped reverses it just as completely. */
-    @Test
-    fun `a dropped negation is rejected`() = runTest {
-        val beautifier = Beautifier(engineReturning("Quiero comer."))
-        val result = beautifier.beautify(
-            typed = words("yo" to "es", "no" to "es", "querer" to "es", "comer" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.NothingPassed, result)
-        assertTrue(beautifier.lastRejections.all { it.reason == Rejection.DROPPED_NEGATION })
-    }
-
-    @Test
-    fun `a keeper of the user's negation is accepted`() = runTest {
-        val result = Beautifier(engineReturning("No quiero comer.")).beautify(
-            typed = words("yo" to "es", "no" to "es", "querer" to "es", "comer" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.Sentence("No quiero comer."), result)
-    }
-
-    @Test
-    fun `an unreachable model is unavailable, not a rejection`() = runTest {
-        val result = Beautifier(engineReturning(null)).beautify(
-            typed = words("yo" to "es", "querer" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.Unavailable, result)
+    fun `a sentence that adds a negation is used anyway`() = runTest {
+        val result = Beautifier(engineReturning("No quiero agua.")).beautify(aguaPhrase, "es")
+        assertEquals(Beautified.Sentence("No quiero agua."), result)
     }
 
     /**
-     * A rejected candidate must not simply be asked for again at the same
-     * sampler position, or the retry returns the same sentence and the same
-     * rejection, three times, for nothing.
+     * Not enforced, but not forgotten either. This is what `SentenceService`
+     * logs and what #42 scores, and it is the only record that a word was added
+     * to somebody's sentence.
      */
     @Test
-    fun `each attempt asks for a different variant`() = runTest {
-        val seen = mutableListOf<Int>()
-        val engine = SentenceEngine { _, _, variant, _ ->
-            seen += variant
+    fun `what the validator made of it is still recorded`() = runTest {
+        val beautifier = Beautifier(engineReturning("Quiero agua fría."))
+        beautifier.beautify(aguaPhrase, "es")
+        assertEquals(
+            listOf(Discarded("Quiero agua fría.", Rejection.ADDED_CONTENT_WORD, listOf("fría."))),
+            beautifier.lastFindings,
+        )
+    }
+
+    @Test
+    fun `a sentence the validator is happy with leaves no finding`() = runTest {
+        val beautifier = Beautifier(engineReturning("Quiero agua."))
+        beautifier.beautify(aguaPhrase, "es")
+        assertTrue(beautifier.lastFindings.isEmpty())
+    }
+
+    /** One generation, not three. The wait is the thing this buys back. */
+    @Test
+    fun `a usable answer is asked for exactly once`() = runTest {
+        var calls = 0
+        val engine = SentenceEngine { _, _, _ ->
+            calls++
             "Quiero agua fría."
         }
-        Beautifier(engine).beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-            variant = 5,
-        )
-        assertEquals(listOf(5, 6, 7), seen)
+        Beautifier(engine).beautify(aguaPhrase, "es")
+        assertEquals(1, calls)
+    }
+
+    /** Empty is the one answer that cannot be used, and the only retry left. */
+    @Test
+    fun `an empty answer is retried`() = runTest {
+        val beautifier = Beautifier(engineReturning("   ", "Quiero agua."))
+        assertEquals(Beautified.Sentence("Quiero agua."), beautifier.beautify(aguaPhrase, "es"))
+    }
+
+    @Test
+    fun `nothing usable at all leaves the user's words alone`() = runTest {
+        val result = Beautifier(engineReturning("")).beautify(aguaPhrase, "es")
+        assertEquals(Beautified.NothingPassed, result)
+    }
+
+    @Test
+    fun `a model that cannot be reached is unavailable, not empty`() = runTest {
+        val result = Beautifier(engineReturning(null)).beautify(aguaPhrase, "es")
+        assertEquals(Beautified.Unavailable, result)
     }
 
     /** Never call a model to rephrase nothing. */
     @Test
     fun `an empty phrase never reaches the model`() = runTest {
         var called = false
-        val engine = SentenceEngine { _, _, _, _ ->
+        val engine = SentenceEngine { _, _, _ ->
             called = true
             "anything"
         }
@@ -136,155 +118,27 @@ class BeautifierTest {
     /** Small models wrap answers in quotes and explain themselves afterwards. */
     @Test
     fun `only the first line is taken, and quotes are stripped`() = runTest {
-        val result = Beautifier(engineReturning("\"Quiero agua.\"\nI rewrote your sentence.")).beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
+        val result = Beautifier(engineReturning("\"Quiero agua.\"\nI rewrote your sentence."))
+            .beautify(aguaPhrase, "es")
         assertEquals(Beautified.Sentence("Quiero agua."), result)
+    }
+
+    /** A second press is a fresh question, and moves the sampler with it. */
+    @Test
+    fun `the variant is passed through to the model`() = runTest {
+        val seen = mutableListOf<Int>()
+        val engine = SentenceEngine { _, _, variant ->
+            seen += variant
+            "Quiero agua."
+        }
+        Beautifier(engine).beautify(aguaPhrase, "es", variant = 5)
+        assertEquals(listOf(5), seen)
     }
 
     @Test
     fun `English works the same way`() = runTest {
-        val beautifier = Beautifier(engineReturning("I want some cold water.", "I want the water."))
-        val result = beautifier.beautify(
-            typed = words("I" to "en", "want" to "en", "water" to "en"),
-            language = "en",
-        )
+        val result = Beautifier(engineReturning("I want the water."))
+            .beautify(words("I" to "en", "want" to "en", "water" to "en"), "en")
         assertEquals(Beautified.Sentence("I want the water."), result)
-        assertEquals(listOf(Rejection.ADDED_CONTENT_WORD), beautifier.lastRejections.map { it.reason })
-    }
-
-    // --- #167: what was thrown away, and what happens without the harness ----
-
-    /**
-     * The candidate text, not only the reason it went.
-     *
-     * *"Left as you wrote it"* reads the same whether the harness threw away a
-     * good sentence or the model produced nonsense, and those want opposite
-     * fixes. #165 was the first kind and was found by hand-tracing the lexicon,
-     * because nothing recorded what the model had actually said.
-     */
-    @Test
-    fun `a discarded candidate keeps its text alongside the verdict`() = runTest {
-        val beautifier = Beautifier(engineReturning("Quiero agua fría.", "Quiero agua."))
-        beautifier.beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
-        // The offending word arrives as it appeared, punctuation included: this
-        // is what gets printed, and a log that says `fría.` is showing what was
-        // in the sentence rather than a tidied version of it.
-        assertEquals(
-            listOf(Discarded("Quiero agua fría.", Rejection.ADDED_CONTENT_WORD, listOf("fría."))),
-            beautifier.lastRejections,
-        )
-    }
-
-    /**
-     * With the harness off, the model's first answer stands — invented word and
-     * all. That is the whole diagnostic value of it, and the whole reason
-     * `ValidatorBypass` will not let a shipped build ask for it.
-     */
-    @Test
-    fun `without the validator, a candidate that adds a word is applied anyway`() = runTest {
-        val beautifier = Beautifier(engineReturning("Quiero agua fría ahora mismo."))
-        val result = beautifier.beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-            validate = false,
-        )
-        assertEquals(Beautified.Sentence("Quiero agua fría ahora mismo."), result)
-        assertTrue("nothing was discarded", beautifier.lastRejections.isEmpty())
-    }
-
-    /** Empty is still empty: there would be nothing to put in the field. */
-    @Test
-    fun `without the validator, an empty answer is still nothing`() = runTest {
-        val result = Beautifier(engineReturning("   ")).beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-            validate = false,
-        )
-        assertEquals(Beautified.NothingPassed, result)
-    }
-
-    /** The harness is on unless somebody says otherwise, at every call site. */
-    @Test
-    fun `validation is the default`() = runTest {
-        val result = Beautifier(engineReturning("Quiero agua fría.")).beautify(
-            typed = words("yo" to "es", "querer" to "es", "agua" to "es"),
-            language = "es",
-        )
-        assertEquals(Beautified.NothingPassed, result)
-    }
-
-    // --- #177: what makes a retry actually different -------------------------
-
-    /** Records the avoid-list handed to the model on each attempt, in order. */
-    private class Recorder(private vararg val answers: String) : SentenceEngine {
-        val seen = mutableListOf<List<String>>()
-        override suspend fun generate(
-            typed: List<TypedWord>,
-            language: String,
-            variant: Int,
-            avoid: List<String>,
-        ): String? {
-            seen += avoid
-            return answers.getOrNull(seen.size - 1) ?: answers.lastOrNull()
-        }
-    }
-
-    private val aguaPhrase get() = words("yo" to "es", "querer" to "es", "agua" to "es")
-
-    @Test
-    fun `the first attempt is asked plainly`() = runTest {
-        val engine = Recorder("Quiero agua.")
-        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
-        assertEquals(listOf(emptyList<String>()), engine.seen)
-    }
-
-    /**
-     * The point of #177. The variant used to be the only thing that changed
-     * between attempts, and on the shipped model it changes nothing — so the
-     * retry asked the identical question and got the identical rejection, three
-     * times, for three times the wait.
-     */
-    @Test
-    fun `a word the validator rejected is named in the next attempt`() = runTest {
-        val engine = Recorder("Quiero agua fría.", "Quiero agua.")
-        val result = Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
-
-        assertEquals(Beautified.Sentence("Quiero agua."), result)
-        assertEquals(2, engine.seen.size)
-        assertEquals(listOf("fría."), engine.seen[1])
-    }
-
-    /** They accumulate: attempt three knows about attempts one and two. */
-    @Test
-    fun `every rejected word so far is named, not only the last`() = runTest {
-        val engine = Recorder("Quiero agua fría.", "Quiero agua caliente.", "Quiero agua.")
-        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
-        assertEquals(listOf("fría.", "caliente."), engine.seen[2])
-    }
-
-    /**
-     * A negation rejection carries no word list, and there is nothing useful to
-     * tell the model — "do not add a negation" is already in the prompt.
-     */
-    @Test
-    fun `a rejection with no words to name adds nothing`() = runTest {
-        val engine = Recorder("No quiero agua.", "Quiero agua.")
-        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
-        assertTrue(engine.seen[1].isEmpty())
-    }
-
-    /** Each press starts its own question; nothing leaks from the last one. */
-    @Test
-    fun `a fresh call is asked plainly again`() = runTest {
-        val engine = Recorder("Quiero agua fría.", "Quiero agua.")
-        val beautifier = Beautifier(engine)
-        beautifier.beautify(typed = aguaPhrase, language = "es")
-        beautifier.beautify(typed = aguaPhrase, language = "es", variant = 1)
-        assertEquals(emptyList<String>(), engine.seen[2])
     }
 }

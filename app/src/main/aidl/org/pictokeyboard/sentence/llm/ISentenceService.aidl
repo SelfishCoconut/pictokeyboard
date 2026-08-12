@@ -17,12 +17,6 @@ interface ISentenceService {
      *
      * `variant` cycles the sampler, which is what makes pressing Beautify again
      * offer a different sentence instead of the same one.
-     *
-     * `unvalidated` asks for the answer with SentenceValidator switched off
-     * (#167), so the prompt and the weights can be judged on their own. It is a
-     * request, not an instruction: the service runs it through
-     * ValidatorBypass.allowed against BuildConfig.DEBUG, which is false in every
-     * shipped build. Sending true from a release build changes nothing.
      */
     void beautify(
         int requestId,
@@ -30,7 +24,6 @@ interface ISentenceService {
         in String[] wordLanguages,
         String language,
         int variant,
-        boolean unvalidated,
         ISentenceCallback callback);
 
     /**

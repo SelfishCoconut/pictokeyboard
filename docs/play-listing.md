@@ -89,12 +89,11 @@ heavier text — for low vision, on the keyboard as well as the setup screens.
 SAYING IT BETTER (EXPERIMENTAL, OFF UNTIL YOU ASK)
 
 Tapping pictures gives you "I wanting water". Sentence help turns that into "I
-want water" — and never adds a word nobody tapped, so it cannot put words in
-anybody's mouth. One press puts your own words back.
+want water" and reads it aloud, so you hear what it will say. It may add a small
+word to make the sentence work; one press puts your own words back.
 
-It runs a model on the phone itself, so nothing typed is sent anywhere. That
-costs a large download, so it stays off until somebody chooses it, and can be
-deleted at any time.
+It runs on the phone itself, so nothing typed is sent anywhere. That costs a
+large download, so it stays off until asked for, and can be deleted at any time.
 
 NO ACCOUNT, AND NOWHERE TO SEND YOUR DATA
 
@@ -129,7 +128,7 @@ BY-NC-SA. PictoKeyboard is free and will stay free — the licence is
 non-commercial, and so is this app.
 ```
 
-`3993 characters.` *(limit 4000)*
+`3994 characters.` *(limit 4000)*
 
 ## Español
 
@@ -196,8 +195,8 @@ más marcados, para baja visión. Se aplica al teclado y a la configuración.
 DECIRLO MEJOR (EXPERIMENTAL, APAGADO HASTA QUE LO PIDAS)
 
 Tocando imágenes sale «yo querer agua». La ayuda con la frase lo convierte en
-«Quiero agua», y nunca añade una palabra que nadie haya tocado, así que no puede
-poner palabras en boca de nadie. Una pulsación devuelve tus palabras.
+«Quiero agua» y la lee en voz alta, para oír qué va a decir. Puede añadir alguna
+palabra pequeña para que funcione; una pulsación devuelve tus palabras.
 
 Funciona con un modelo dentro del propio móvil, así que nada de lo que se
 escribe sale de ahí. Cuesta una descarga grande, y por eso está apagado hasta
@@ -233,9 +232,9 @@ BY-NC-SA. PictoKeyboard es gratuito y seguirá siéndolo: la licencia es no
 comercial, y esta aplicación también.
 ```
 
-`3996 caracteres.` *(límite 4000)*
+`3998 caracteres.` *(límite 4000)*
 
-> **Cuatro caracteres de margen.** Spanish runs about a tenth longer than the
+> **Dos caracteres de margen.** Spanish runs about a tenth longer than the
 > same English, so the two descriptions cannot be sentence-for-sentence
 > translations and still both fit. This one says everything the English one
 > says, in fewer words. Anything added here has to displace something.

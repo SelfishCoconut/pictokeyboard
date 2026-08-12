@@ -22,7 +22,7 @@ package org.pictokeyboard.sentence
 object Prompts {
 
     /** Bumped on any change to the text below, and recorded with eval results. */
-    const val VERSION = 2
+    const val VERSION = 3
 
     /**
      * The examples do most of the work at this size. Each one is a real shape
@@ -78,67 +78,14 @@ object Prompts {
     /**
      * The system instruction for [language], falling back to English.
      *
-     * @param avoid words an earlier attempt was rejected for inventing (#177).
-     *   Empty on a first attempt, which is the ordinary case.
+     * No longer takes anything to avoid (#186). #177 fed the words a rejected
+     * candidate had invented back into the next attempt's prompt, which was the
+     * one thing that measurably made a retry different — but with the validator
+     * no longer refusing anything (#186) there are no rejections to feed back,
+     * and the retry it existed for does not happen.
      */
-    fun systemPrompt(language: String, avoid: List<String> = emptyList()): String {
-        val base = if (language == "es") SPANISH else ENGLISH
-        return base + avoidClause(language, avoid)
-    }
-
-    /**
-     * The one thing that measurably makes a retry different (#177).
-     *
-     * The variant was supposed to do this by moving the sampler, and on this
-     * model it does not: swept on a device at seeds 1 and 2, `agua` came back as
-     * *"Una galleta."* at every temperature from 0.0 to 1.5 and only moved at
-     * 2.0 — where the answer degrades to *"Una agua."*. The whole 0.2–0.95 ladder
-     * `LiteRtEngine` was climbing sits inside that flat region, so three attempts
-     * bought three copies of the same rejection.
-     *
-     * Naming the rejected word moved it on the first try, at the temperature the
-     * feature actually runs at: *"Una galleta."* became *"agua."*. That is the
-     * difference between a prompt nudge and a sampler nudge — the prompt really
-     * did change, and a model that cannot be shaken loose by randomness can be
-     * told.
-     *
-     * **What did not work, so that nobody adds it back.** A second clause naming
-     * the previous *answer* — `Ya escribiste «Quiero.». Escríbelo de otra
-     * manera.` — was built, shipped to the device, and confirmed present in the
-     * prompt by logging it. The model returned `Quiero.` again, and again. A ban
-     * on a word it can simply not say is obeyed; an instruction to find another
-     * phrasing, when it believes there is only one, is not. That clause is gone
-     * rather than left in to dilute a 0.6B model's context with an instruction it
-     * ignores.
-     *
-     * **Still not the safety mechanism.** [SentenceValidator] checks the answer
-     * whatever this said, exactly as with every other rule in this file. A model
-     * that ignores the clause is caught the same way it was before.
-     */
-    private fun avoidClause(language: String, avoid: List<String>): String {
-        // A non-empty list can still have nothing to say -- a "word" that was
-        // pure punctuation comes out blank -- and a clause about nothing is two
-        // wasted lines in a small model's context.
-        val words = avoid.map(::bareWord).filter { it.isNotEmpty() }.distinct()
-        if (words.isEmpty()) return ""
-        val named = words.joinToString(", ")
-        return if (language == "es") {
-            "\n\nNo uses estas palabras, no las ha tocado nadie: $named."
-        } else {
-            "\n\nDo not use these words, nobody tapped them: $named."
-        }
-    }
-
-    /**
-     * A rejected word as it should appear in the clause.
-     *
-     * The validator reports the word as it stood in the candidate, punctuation
-     * and all — `galleta.` — because that is what makes a log honest about what
-     * was in the sentence. A prompt wants the word.
-     */
-    private fun bareWord(word: String): String = word.trim().trim { it in PUNCTUATION }
-
-    private const val PUNCTUATION = ".,;:!?¡¿\"'»«"
+    fun systemPrompt(language: String): String =
+        if (language == "es") SPANISH else ENGLISH
 
     /**
      * The user turn: the tapped words, and nothing else.

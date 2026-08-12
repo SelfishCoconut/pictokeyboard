@@ -114,66 +114,70 @@ somebody free the space by removing the thing filling it.
 
 ## The prompt
 
-`Prompts.kt`, version 1. One prompt per language, written *in* that language:
+`Prompts.kt`, version 3. One prompt per language, written *in* that language:
 a 0.6B model told in English to answer in Spanish drifts back into English
-mid-sentence, and that failure is silent — the validator would accept
-`I want water` as an expansion of `yo querer agua`, because every content word
-maps and only the language is wrong.
+mid-sentence, and that failure is silent — every content word maps and only the
+language is wrong, so nothing downstream would notice.
 
-The prompt is **not** the safety mechanism. Every rule it states is enforced
-again by `SentenceValidator` after generation, and a candidate that breaks one is
-discarded whatever the prompt said. The rules are in the prompt because a model
-that has been told them fails less often, which means fewer retries and a faster
-answer.
+The rules are in the prompt because a model that has been told them fails less
+often. Since #186 they are the *only* thing asking: `SentenceValidator` still
+judges every candidate and still records what it found, but it no longer refuses
+one.
 
-## Seeing what the model said, not only what survived
+## The validator judges, and no longer decides
 
-*"Left as you wrote it"* is one message covering two opposite situations: the
-model wrote a good sentence and `SentenceValidator` threw it away, or the model
-wrote nonsense. Until #167 there was no way to tell them apart from the running
-app. #165 — the harness reading `irme` as a word nobody tapped — was found by
-hand-tracing the lexicon, which is the wrong way round; one press with the log on
-would have shown it.
+#45 built `SentenceValidator` as a gate. Content lemmas out ⊆ content lemmas in,
+negation matched exactly, verdict final, no repair path: a candidate that added a
+word was discarded whole and the user's own words stood.
 
-Two things, both **debug builds only**:
+**#186 took the veto away, deliberately and on the owner's call.** The gate
+refused a great deal that somebody would have wanted — tapping `agua` alone can
+only become *"Quiero agua."* by adding a verb nobody tapped — and it rested on
+the assumption that a wrong sentence is unrecoverable. It is not. ✨ becomes ↺,
+and since #173 that undo survives 🔊, the bell, and everything else that does not
+change the text.
 
-- **The discarded candidates are printed.** `Beautifier` has always collected
-  every rejected candidate and nothing ever read it. `SentenceService` now logs
-  one line per attempt to `PictoKeyboardLlm` — the tapped words, what came back,
-  the verdict, and the words that caused it.
+What was missing was never a stricter filter. It was **knowing what the sentence
+says**, which is why the keyboard now reads the rephrase aloud as it arrives, in
+the language of the words rather than of the interface. The person tapping
+pictures may not read; hearing *"Quiero ir a casa"* while ↺ is still on the key is
+what makes the trade a fair one.
 
-  ```
-  adb logcat -s PictoKeyboardLlm
-  [es v0 validated] yo querer ir casa -> nothing passed
-    discarded "Quiero irme a casa." ADDED_CONTENT_WORD [irme]
-  ```
+The judgement stays whole — it is what `SentenceService` logs, what #42 scores,
+and the only record that a word was added to somebody's sentence. Keeping it
+intact while removing its veto is also what makes the decision reversible.
 
-  Guarded because it prints somebody's half of a conversation, and logcat is
-  readable by anyone with the phone plugged in. `BuildConfig.DEBUG` is a
-  compile-time constant, so R8 removes the branch from a release build.
+Two things went with the veto:
 
-- **The harness can be switched off.** Settings → Sentence help grows a switch,
-  *below* the model row and only once the weights are installed, that applies the
-  model's first answer with no check at all. That is how the prompt and the
-  weights get judged on their own, which is #42's question and cannot be answered
-  while every answer is filtered.
+- **The retry loop.** With nothing refused there is nothing to retry, so the
+  three attempts collapse to one. #177's avoid-list — which fed a rejected
+  candidate's invented words back into the next prompt, and was the only thing
+  that measurably made a retry different — has nothing left to feed.
+- **#167's debug bypass.** It existed to see the model without the filter. There
+  is no filter, so every build shows what the bypass showed.
 
-**The bypass cannot ship, and that is the point rather than a formality.**
-Content lemmas out ⊆ content lemmas in is the one property that makes it honest
-to say this keyboard speaks *as* the user and never *for* them. An installable
-build where a 0.6B model's invention goes into a non-speaking person's message,
-in their name, with nobody able to read it back and check, is not a diagnostic —
-it is the failure the whole milestone was designed around. The right fix for a
-harness that rejects good sentences is a better harness (#165), not no harness.
+## Seeing what the model said
 
-So the decision is in one function, `ValidatorBypass.allowed(requested,
-debugBuild)`, which takes the build type as an argument rather than reading
-`BuildConfig.DEBUG` itself — an inline check could only ever assert itself from a
-debug build, where `BuildConfig.DEBUG` is true. `ValidatorBypassTest` asks the
-release question directly, and then reads every source file to check that nothing
-hardcodes `validate = false` around the back. `SentenceBenchmark` (#145) always
-runs validated, whatever the switch says, because the figure has to describe the
-feature as it ships.
+*"Left as you wrote it"* used to cover two opposite situations: a good sentence
+thrown away, or nonsense. #167 made the difference visible from the running app,
+and it has earned that several times over since — it is how #165, #177, #182 and
+#184 were all found. It stays useful now that nothing is refused, because the
+question has changed from *"why was this rejected"* to *"what did it add"*.
+
+`SentenceService` logs one line per attempt to `PictoKeyboardLlm`, plus one for
+whatever the validator made of it:
+
+```
+adb logcat -s PictoKeyboardLlm
+[es v0] yo querer ir casa -> "Quiero ir a casa."
+  judged "Quiero ir a casa." ADDED_CONTENT_WORD [a]
+```
+
+**Debug builds only**, because it prints somebody's half of a conversation and
+logcat is readable by anyone with the phone plugged in. `BuildConfig.DEBUG` is a
+compile-time constant, so R8 removes the branch from a release build, and
+`docs/play-data-safety.md` records that this is the one build type where typed
+content reaches anywhere but the host app.
 
 ## Attribution
 
@@ -214,9 +218,9 @@ it may be slow, and that turning it off costs nothing.
   licensing, availability and size — all of which are facts — plus a prediction
   about quality, which is not. The prompt is versioned so that when #42 exists,
   its scores have something to attach to.
-  **#145 measures speed, not quality.** A candidate the validator throws away
-  still counts towards the timing, because the phone took exactly as long either
-  way. The two questions are deliberately separate.
+  **#145 measures speed, not quality.** The phone takes as long as it takes
+  whatever the sentence turns out to be. The two questions are deliberately
+  separate.
 - The failure path is exercised end to end: a deliberately corrupt 347 MB file
   produces `INVALID_ARGUMENT: Invalid magic number`, `LiteRtEngine` returns false
   rather than taking the process with it, and Settings says the test did not

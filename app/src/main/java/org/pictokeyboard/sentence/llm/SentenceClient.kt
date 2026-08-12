@@ -93,16 +93,11 @@ class SentenceClient(private val context: Context) {
      * a time — a second press replaces the first — and a reply for a superseded
      * request is dropped rather than applied, which is what stops a slow answer
      * for one field landing in the next one.
-     *
-     * @param unvalidated asks for the model's own answer with the harness off
-     *   (#167). Passed on as a request; `SentenceService` decides, and it says no
-     *   in every build that is not a debug one.
      */
     fun beautify(
         typed: List<TypedWord>,
         language: String,
         variant: Int,
-        unvalidated: Boolean,
         onResult: (BeautifyOutcome) -> Unit,
     ) {
         val remote = service
@@ -144,7 +139,6 @@ class SentenceClient(private val context: Context) {
                 typed.map { it.language }.toTypedArray(),
                 language,
                 variant,
-                unvalidated,
                 callback,
             )
         }.onFailure {
