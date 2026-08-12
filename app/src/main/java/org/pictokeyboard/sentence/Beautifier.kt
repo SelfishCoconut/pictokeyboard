@@ -30,13 +30,20 @@ sealed interface Beautified {
 fun interface SentenceEngine {
 
     /**
-     * @param variant which attempt this is. It steers the sampler away from the
-     *   answer already given, which is what makes "Beautify again" cycle rather
-     *   than return the same sentence, and what makes a retry after a rejection
-     *   worth doing at all.
+     * @param variant which attempt this is. It moves the sampler — though on
+     *   the shipped model that turns out to change very little, which is why
+     *   [avoid] exists (#177).
+     * @param avoid content words an earlier attempt was rejected for inventing.
+     *   This, not [variant], is what actually makes a retry different on the
+     *   shipped model (#177).
      * @return the raw text, or null if the model could not be reached.
      */
-    suspend fun generate(typed: List<TypedWord>, language: String, variant: Int): String?
+    suspend fun generate(
+        typed: List<TypedWord>,
+        language: String,
+        variant: Int,
+        avoid: List<String>,
+    ): String?
 }
 
 /**
@@ -67,6 +74,7 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
     var lastRejections: List<Discarded> = emptyList()
         private set
 
+
     /**
      * @param validate false runs the model with the harness off (#167). Only
      *   `SentenceService` may pass it, only after [ValidatorBypass.allowed] has
@@ -87,10 +95,27 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
         // the starting state and the answer if every attempt is rejected, which
         // is exactly the condition "carry on trying".
         while (typed.isNotEmpty() && attempt < attempts && outcome == Beautified.NothingPassed) {
-            // The variant advances with each retry as well as with each press, so
-            // a rejected candidate is not simply asked for again at the same
-            // sampler position -- which would return the same rejected candidate.
-            outcome = attemptOnce(typed, language, variant + attempt, validate, discarded)
+            // Every word a previous attempt was rejected for goes into the next
+            // attempt's prompt (#177). The variant still advances, but it is no
+            // longer what this loop depends on: measured on a device, this model
+            // returns the identical candidate at every temperature the feature
+            // can use, so a retry that only moved the sampler bought nothing but
+            // the wait. Naming the word moves it.
+            outcome = attemptOnce(
+                typed = typed,
+                language = language,
+                ask = Ask(
+                    variant = variant + attempt,
+                    validate = validate,
+                    // Only the invented words are worth naming: a candidate
+                    // rejected over a negation carries no word list, and an
+                    // empty one has nothing to name.
+                    avoid = discarded
+                        .filter { it.reason == Rejection.ADDED_CONTENT_WORD }
+                        .flatMap { it.words },
+                ),
+                discarded = discarded,
+            )
             attempt++
         }
 
@@ -102,11 +127,11 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
     private suspend fun attemptOnce(
         typed: List<TypedWord>,
         language: String,
-        variant: Int,
-        validate: Boolean,
+        ask: Ask,
         discarded: MutableList<Discarded>,
     ): Beautified {
-        val raw = engine.generate(typed, language, variant) ?: return Beautified.Unavailable
+        val (variant, validate, avoid) = ask
+        val raw = engine.generate(typed, language, variant, avoid) ?: return Beautified.Unavailable
         val candidate = Prompts.firstCandidate(raw)
         val verdict = when {
             // The harness off, so the model can be judged on its own (#167).
@@ -132,3 +157,14 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
  * harness fired, and only the text says whether it was right to.
  */
 data class Discarded(val candidate: String, val reason: Rejection, val words: List<String>)
+
+/**
+ * One question for the model: which sampler position, whether the answer will be
+ * checked, and what it must not say again.
+ *
+ * A holder rather than four more parameters. `attemptOnce` was at detekt's limit
+ * and the three belong together anyway — they are what distinguishes this
+ * attempt from the last one.
+ */
+private data class Ask(val variant: Int, val validate: Boolean, val avoid: List<String>)
+

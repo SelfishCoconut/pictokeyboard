@@ -18,7 +18,7 @@ class BeautifierTest {
         pairs.map { TypedWord(it.first, it.second) }
 
     /** Hands back the scripted answers in order, then repeats the last one. */
-    private fun engineReturning(vararg answers: String?) = SentenceEngine { _, _, variant ->
+    private fun engineReturning(vararg answers: String?) = SentenceEngine { _, _, variant, _ ->
         answers.getOrNull(variant) ?: answers.lastOrNull()
     }
 
@@ -109,7 +109,7 @@ class BeautifierTest {
     @Test
     fun `each attempt asks for a different variant`() = runTest {
         val seen = mutableListOf<Int>()
-        val engine = SentenceEngine { _, _, variant ->
+        val engine = SentenceEngine { _, _, variant, _ ->
             seen += variant
             "Quiero agua fría."
         }
@@ -125,7 +125,7 @@ class BeautifierTest {
     @Test
     fun `an empty phrase never reaches the model`() = runTest {
         var called = false
-        val engine = SentenceEngine { _, _, _ ->
+        val engine = SentenceEngine { _, _, _, _ ->
             called = true
             "anything"
         }
@@ -216,5 +216,75 @@ class BeautifierTest {
             language = "es",
         )
         assertEquals(Beautified.NothingPassed, result)
+    }
+
+    // --- #177: what makes a retry actually different -------------------------
+
+    /** Records the avoid-list handed to the model on each attempt, in order. */
+    private class Recorder(private vararg val answers: String) : SentenceEngine {
+        val seen = mutableListOf<List<String>>()
+        override suspend fun generate(
+            typed: List<TypedWord>,
+            language: String,
+            variant: Int,
+            avoid: List<String>,
+        ): String? {
+            seen += avoid
+            return answers.getOrNull(seen.size - 1) ?: answers.lastOrNull()
+        }
+    }
+
+    private val aguaPhrase get() = words("yo" to "es", "querer" to "es", "agua" to "es")
+
+    @Test
+    fun `the first attempt is asked plainly`() = runTest {
+        val engine = Recorder("Quiero agua.")
+        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
+        assertEquals(listOf(emptyList<String>()), engine.seen)
+    }
+
+    /**
+     * The point of #177. The variant used to be the only thing that changed
+     * between attempts, and on the shipped model it changes nothing — so the
+     * retry asked the identical question and got the identical rejection, three
+     * times, for three times the wait.
+     */
+    @Test
+    fun `a word the validator rejected is named in the next attempt`() = runTest {
+        val engine = Recorder("Quiero agua fría.", "Quiero agua.")
+        val result = Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
+
+        assertEquals(Beautified.Sentence("Quiero agua."), result)
+        assertEquals(2, engine.seen.size)
+        assertEquals(listOf("fría."), engine.seen[1])
+    }
+
+    /** They accumulate: attempt three knows about attempts one and two. */
+    @Test
+    fun `every rejected word so far is named, not only the last`() = runTest {
+        val engine = Recorder("Quiero agua fría.", "Quiero agua caliente.", "Quiero agua.")
+        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
+        assertEquals(listOf("fría.", "caliente."), engine.seen[2])
+    }
+
+    /**
+     * A negation rejection carries no word list, and there is nothing useful to
+     * tell the model — "do not add a negation" is already in the prompt.
+     */
+    @Test
+    fun `a rejection with no words to name adds nothing`() = runTest {
+        val engine = Recorder("No quiero agua.", "Quiero agua.")
+        Beautifier(engine).beautify(typed = aguaPhrase, language = "es")
+        assertTrue(engine.seen[1].isEmpty())
+    }
+
+    /** Each press starts its own question; nothing leaks from the last one. */
+    @Test
+    fun `a fresh call is asked plainly again`() = runTest {
+        val engine = Recorder("Quiero agua fría.", "Quiero agua.")
+        val beautifier = Beautifier(engine)
+        beautifier.beautify(typed = aguaPhrase, language = "es")
+        beautifier.beautify(typed = aguaPhrase, language = "es", variant = 1)
+        assertEquals(emptyList<String>(), engine.seen[2])
     }
 }
