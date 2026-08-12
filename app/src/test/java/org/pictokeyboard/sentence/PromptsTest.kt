@@ -115,13 +115,48 @@ class PromptsTest {
         assertEquals("Quiero agua.", Prompts.firstCandidate("Quiero agua.\nI rewrote your sentence."))
     }
 
+    // --- #184: the examples are turns, not text ------------------------------
+
+    /**
+     * The regression guard for #184.
+     *
+     * An example written into the instruction is text a small model continues
+     * rather than a pattern it applies: measured on a device, `agua querer ir
+     * casa` came back as *"Una galleta."*, lifted whole out of the prompt. They
+     * belong in `initialMessages`, and this fails if anybody moves them back.
+     */
+    @Test
+    fun `no worked example is written into the instruction`() {
+        for (language in listOf("es", "en")) {
+            val prompt = Prompts.systemPrompt(language)
+            for (example in Prompts.examples(language)) {
+                assertFalse("$language names an example's answer", prompt.contains(example.sentence))
+                assertFalse("$language names an example's input", prompt.contains(example.tapped))
+            }
+        }
+    }
+
+    @Test
+    fun `both languages have examples, written in their own language`() {
+        assertTrue(Prompts.examples("es").isNotEmpty())
+        assertTrue(Prompts.examples("en").isNotEmpty())
+        assertTrue(Prompts.examples("es").any { it.sentence.contains("Quiero") })
+        assertTrue(Prompts.examples("en").any { it.sentence.contains("I want") })
+    }
+
+    /** An unknown language falls back to English, exactly as the instruction does. */
+    @Test
+    fun `an unknown language gets the same set as English`() {
+        assertEquals(Prompts.examples("en"), Prompts.examples("fr"))
+    }
+
     /**
      * Just the retry clause.
      *
-     * Asserted on rather than the whole prompt because the Spanish prompt's own
-     * examples contain `galleta -> Una galleta.`, so a `contains` over the whole
-     * thing is answered by the example rather than by the clause — which is how
-     * two of these tests passed the wrong thing on the first run.
+     * Asserted on rather than the whole prompt because a `contains` over the
+     * whole thing can be answered by the instruction rather than by the clause —
+     * which is how two of these tests passed the wrong thing on their first run,
+     * back when the examples still lived in the instruction text.
      */
     private fun clause(language: String, avoid: List<String>): String =
         Prompts.systemPrompt(language, avoid).removePrefix(Prompts.systemPrompt(language))

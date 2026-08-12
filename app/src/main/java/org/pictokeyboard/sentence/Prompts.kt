@@ -22,13 +22,46 @@ package org.pictokeyboard.sentence
 object Prompts {
 
     /** Bumped on any change to the text below, and recorded with eval results. */
-    const val VERSION = 2
+    const val VERSION = 3
 
     /**
      * The examples do most of the work at this size. Each one is a real shape
      * from the seeded boards — a bare verb chain, a negation, a single word, and
      * one that is already a sentence and must come back untouched.
+     *
+     * **They are turns, not text** (#184). Written into the instruction as lines
+     * of `entrada -> salida`, a 0.6B model does not read them as a pattern to
+     * apply; it reads them as text to continue, and copies. Measured on a device:
+     * `agua querer ir casa` — four tapped words — came back as *"Una galleta."*,
+     * a line lifted whole out of the prompt. As `Role.USER`/`Role.MODEL` pairs
+     * the same model answered *"Agua quiere ir a casa."*
+     *
+     * `LiteRtEngine` hands these to `ConversationConfig.initialMessages`, so the
+     * model sees a short conversation it has already had rather than a document
+     * it is finishing.
      */
+    data class Example(val tapped: String, val sentence: String)
+
+    private val SPANISH_EXAMPLES = listOf(
+        Example("yo querer agua", "Quiero agua."),
+        Example("mamá venir casa", "Mamá viene a casa."),
+        Example("yo no querer comer", "No quiero comer."),
+        Example("galleta", "Una galleta."),
+        Example("yo estar cansado", "Estoy cansado."),
+    )
+
+    private val ENGLISH_EXAMPLES = listOf(
+        Example("I want water", "I want water."),
+        Example("mum come home", "Mum is coming home."),
+        Example("I not want eat", "I do not want to eat."),
+        Example("biscuit", "A biscuit."),
+        Example("I be tired", "I am tired."),
+    )
+
+    /** The worked examples for [language], to be sent as turns before the real one. */
+    fun examples(language: String): List<Example> =
+        if (language == "es") SPANISH_EXAMPLES else ENGLISH_EXAMPLES
+
     private val SPANISH = """
         Eres parte de un teclado de pictogramas. El usuario toca imágenes y sale una
         lista de palabras sueltas. Tu trabajo es escribir esa lista como una frase
@@ -43,13 +76,6 @@ object Prompts {
           ha puesto. Si el usuario la ha puesto, consérvala.
         - Si la lista ya es una frase correcta, devuélvela igual.
         - Responde solo con la frase. Sin comillas y sin explicaciones.
-
-        Ejemplos:
-        yo querer agua -> Quiero agua.
-        mamá venir casa -> Mamá viene a casa.
-        yo no querer comer -> No quiero comer.
-        galleta -> Una galleta.
-        yo estar cansado -> Estoy cansado.
     """.trimIndent()
 
     private val ENGLISH = """
@@ -66,13 +92,6 @@ object Prompts {
           not tap one. If the user did tap one, keep it.
         - If the list is already a correct sentence, return it unchanged.
         - Reply with the sentence only. No quotes and no explanation.
-
-        Examples:
-        I want water -> I want water.
-        mum come home -> Mum is coming home.
-        I not want eat -> I do not want to eat.
-        biscuit -> A biscuit.
-        I be tired -> I am tired.
     """.trimIndent()
 
     /**
