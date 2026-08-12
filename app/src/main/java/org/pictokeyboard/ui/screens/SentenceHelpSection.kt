@@ -40,9 +40,16 @@ internal fun SentenceHelpSection(
     onBenchmark: () -> Unit,
 ) {
     val capability = model.capability
-    if (capability !is Capability.Ready) {
-        // Said instead of offering a download that would fail, which is the
-        // whole point of checking before rather than after 347 MB.
+    // Said instead of offering a download that would fail, which is the whole
+    // point of checking before rather than after 347 MB.
+    //
+    // **Only while there is a download to refuse** (#171). Once the weights are
+    // on the phone the keyboard has the ✨ key up and is using them, and a
+    // Settings screen still saying "this phone cannot" is telling the caregiver
+    // something the person holding the keyboard can see is untrue. It also hid
+    // the Delete button behind "there is not enough space" — refusing to let
+    // somebody free the space by removing the very thing filling it.
+    if (!model.installed && !capability.isReady) {
         UnavailableHere(capability)
         return
     }
@@ -70,6 +77,17 @@ internal fun SentenceHelpSection(
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+
+    // A warning rather than a refusal, and above the download button rather than
+    // instead of it (#171). The caregiver decides; this screen's job is to make
+    // sure they decide knowing.
+    if (capability is Capability.TightMemory) {
+        Text(
+            stringResource(R.string.settings_sentence_tight_memory, megabytes(capability.totalBytes)),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
 
     ModelRow(model = model, onDownload = onDownload, onCancel = onCancel, onDelete = onDelete)
     if (model.installed) SpeedRow(speed, model.benchmarking, onBenchmark)
@@ -213,18 +231,23 @@ private fun DownloadProgress(state: DownloadState.Running, onCancel: () -> Unit)
     }
 }
 
-/** Why this phone is not being offered the feature, in words it can act on. */
+/**
+ * Why this phone is not being offered the feature, in words it can act on.
+ *
+ * Only the two answers that are checked facts reach here: there is no 32-bit
+ * ARM build of the runtime, and 347 MB does not fit in what is free. Memory is
+ * not one of them any more (#171) — the phone gets the feature and a warning.
+ */
 @Composable
 private fun UnavailableHere(capability: Capability) {
     val text = when (capability) {
         Capability.UnsupportedProcessor -> stringResource(R.string.settings_sentence_no_processor)
-        is Capability.NotEnoughMemory -> stringResource(R.string.settings_sentence_no_memory)
         is Capability.NotEnoughStorage -> stringResource(
             R.string.settings_sentence_no_storage,
             megabytes(capability.neededBytes),
         )
 
-        Capability.Ready -> return
+        Capability.Ready, is Capability.TightMemory -> return
     }
     Text(stringResource(R.string.settings_sentence_help), style = MaterialTheme.typography.titleMedium)
     Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

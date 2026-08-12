@@ -44,17 +44,26 @@ object ModelSpec {
     const val DISPLAY_NAME = "Qwen3 0.6B (int4)"
 
     /**
-     * Total device RAM below which the feature is not offered at all.
+     * Total device RAM below which the feature is offered with a warning.
      *
      * The weights are 347 MB, and the runtime needs room for those plus a KV
      * cache and its own arenas — call it a gigabyte resident in the `:llm`
      * process. On a 2 GB phone that is most of what the system has left after
      * the foreground app, and the thing Android would kill to get it back is
-     * whichever process is cheapest to lose. Telling someone plainly that their
-     * phone cannot do this is much better than letting them spend 347 MB of
-     * their data allowance finding out.
+     * whichever process is cheapest to lose. Worth saying before somebody spends
+     * 347 MB of their data allowance finding out.
+     *
+     * **It was a floor, and the floor was wrong** (#171). Below this number the
+     * feature used to be refused outright — and then a 2.4 GB emulator ran it,
+     * repeatedly, at the same moment Settings was telling its owner the phone
+     * did not have enough memory. One data point does not prove a phone this
+     * size is comfortable; it does prove "cannot" was the wrong word, and every
+     * phone excluded by a number nobody measured is a person who did not get the
+     * feature. So this warns now, and #145's benchmark is the honest test:
+     * measured on the phone in the caregiver's hand rather than reasoned about
+     * here.
      */
-    const val MIN_TOTAL_RAM_BYTES = 3L * 1024 * 1024 * 1024
+    const val TIGHT_TOTAL_RAM_BYTES = 3L * 1024 * 1024 * 1024
 
     /**
      * LiteRT-LM 0.16.0 ships `arm64-v8a` and `x86_64` only — there is no 32-bit
