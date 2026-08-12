@@ -192,10 +192,10 @@ grep -rn "NO_PERSONALIZED_LEARNING\|TYPE_TEXT_VARIATION_PASSWORD" \
 
 ## Still to do before the first upload
 
-- The store listing itself: icon, feature graphic, screenshots, content rating
-  questionnaire, and the target-audience answers. **The screenshots are stale** —
-  they predate the phrase keys, the crop frame, the category preview and the
-  board FAB.
+- The store listing itself: the content rating questionnaire and the
+  target-audience answers, which can only be answered in the Console. The icon,
+  the feature graphic and the screenshots are in `media/`, and the screenshots
+  were recaptured on 2026-08-12 against the current keyboard.
 - Confirm the `CALL_PHONE` declaration question above in the Console.
 
 > The privacy policy was updated for sentence help and the bell in #151, in both

@@ -148,77 +148,82 @@ PictoKeyboard convierte el teclado del móvil en una cuadrícula de imágenes.
 Toca una imagen y escribe la palabra en la aplicación en la que estés —
 Mensajes, WhatsApp, correo, notas — y la dice en voz alta.
 
-Está pensado para personas a las que les resultan más fáciles las imágenes que
-las letras, y para las madres, padres, maestras y logopedas que se lo preparan.
+Está pensado para quienes encuentran más fáciles las imágenes que las letras, y
+para las madres, padres, maestras y logopedas que se lo preparan.
 
 FUNCIONA DONDE YA ESCRIBES
 
 PictoKeyboard es un teclado de verdad, no una aplicación aparte de la que haya
-que copiar y pegar. Donde aparezca un campo de texto, puede ser tu teclado, y
-las palabras entran directamente.
+que copiar y pegar. Donde aparezca un campo de texto, las palabras entran
+directamente.
 
 HECHO PARA UNA PERSONA CONCRETA
 
-Aquí no hay un vocabulario cerrado que te venga dado. Empieza por el conjunto de
-pictogramas que trae la aplicación y hazlo suyo:
+Aquí no hay un vocabulario cerrado. Empieza por los pictogramas que trae la
+aplicación y hazlo suyo:
 
 • Añade imágenes de la biblioteca de ARASAAC, con miles de símbolos
 • Usa tus propias fotografías: su cocina, su parada de autobús, su abuela
-• Escribe qué dice cada imagen, y qué pronuncia, en español o en inglés
+• Escribe qué dice cada imagen y qué pronuncia, en español o en inglés
 • Agrupa las imágenes en categorías, cada una con su color y su borde
 • Ajusta cuántas filas y columnas caben en la pantalla
-• Ten varios tableros para sitios distintos o días distintos
+• Ten varios tableros para sitios o días distintos
 
 HABLA MIENTRAS ESCRIBE
 
 Cada imagen se pronuncia al tocarla, en su propio idioma. Un tablero puede
 mezclar español e inglés, y cada palabra se lee con la voz que le corresponde.
-Puedes ajustar la velocidad y el tono.
+Puedes ajustar velocidad y tono.
 
 PEDIR AYUDA
 
 El teclado sabe decir «quiero agua». No sabía decir «ven, pasa algo» a alguien
-que está en otra habitación. Introduce un nombre y un número de teléfono y
-aparece en el teclado una campana roja que llama. Dice en voz alta a quién va a
-llamar y espera unos segundos, para que una campana pulsada sin querer pueda
-pararse con una segunda pulsación. Si dejas el número vacío, no hay campana.
+que está en otra habitación. Introduce un nombre y un número y aparece una
+campana roja que llama. Dice en voz alta a quién va a llamar y espera unos
+segundos, para que una pulsación sin querer pueda pararse con una segunda. Si
+dejas el número vacío, no hay campana.
 
 PARA QUIEN NO PUEDE VER LA PANTALLA
 
 El modo ciego convierte el teclado en una superficie de gestos. Desliza arriba y
 abajo para cambiar de categoría, a izquierda y derecha para cambiar de imagen, y
 cada una se pronuncia al llegar a ella. Un toque la repite, un toque doble la
-escribe. Con dos dedos, un toque doble activa y desactiva el modo desde
-cualquier sitio.
+escribe. Con dos dedos, un toque doble activa y desactiva el modo.
 
-También hay un modo de alto contraste — blanco y negro puros, bordes más
-marcados y texto más grueso — para baja visión, y se aplica tanto al teclado
-como a las pantallas de configuración.
+También hay un modo de alto contraste, en blanco y negro y con bordes y textos
+más marcados, para baja visión. Se aplica al teclado y a la configuración.
+
+DECIRLO MEJOR (EXPERIMENTAL, APAGADO HASTA QUE LO PIDAS)
+
+Tocando imágenes sale «yo querer agua». La ayuda con la frase lo convierte en
+«Quiero agua», y nunca añade una palabra que nadie haya tocado, así que no puede
+poner palabras en boca de nadie. Una pulsación devuelve tus palabras.
+
+Funciona con un modelo dentro del propio móvil, así que nada de lo que se
+escribe sale de ahí. Cuesta una descarga grande, y por eso está apagado hasta
+que alguien lo pida y se puede borrar cuando se quiera.
 
 SIN CUENTA, Y SIN NINGÚN SITIO ADONDE MANDAR TUS DATOS
 
 No hay registro, ni inicio de sesión, ni servidor. Los tableros, las fotografías,
-las palabras que se pronuncian y los ajustes se quedan en el dispositivo: nunca
-se copian a ninguna cuenta en la nube, ni nuestra ni de nadie. No recogemos nada
-tuyo porque no hay adónde llevarlo.
+las palabras y los ajustes se quedan en el dispositivo, y nunca se copian a
+ninguna cuenta en la nube. No recogemos nada tuyo porque no hay adónde llevarlo.
 
-La aplicación sale a internet para dos cosas, y las dos son descargas. ARASAAC,
-para buscar en su biblioteca de símbolos y traer las imágenes que elijas —esa
-petición lleva la palabra que buscas y nada más—. Y, solo si activas la ayuda con
-la frase, el archivo del modelo. Ninguna lleva un nombre, una cuenta, un
-identificador ni nada de lo que se haya escrito con el teclado.
+La aplicación sale a internet solo para dos descargas: los símbolos de ARASAAC
+que elijas, y —únicamente si activas la ayuda con la frase— el archivo del
+modelo. Ninguna lleva un nombre, una cuenta, un identificador ni nada de lo que
+se haya escrito con el teclado.
 
 Para llevar un tablero a otro móvil, o dárselo a otra familia, expórtalo como
-archivo y mándalo por donde ya habléis: WhatsApp, correo, Drive, Nearby Share.
-Las fotografías van con él. Importar nunca sobrescribe lo que ya tienes.
-
-Como no se guarda nada en internet, el archivo exportado es la única copia de
-seguridad que hay. Guarda una en un sitio seguro.
+archivo y mándalo por donde ya habléis: WhatsApp, correo, Drive. Las fotografías
+van con él, e importar nunca sobrescribe lo que ya tienes. Como no se guarda nada
+en internet, ese archivo es la única copia de seguridad que hay: guarda una en un
+sitio seguro.
 
 SE CONFIGURA UNA VEZ Y SE DEJA EN PAZ
 
 La configuración puede quedar detrás de un PIN, para que el tablero siga como lo
-montaste mientras el teclado sigue disponible.
+montaste y el teclado siga disponible.
 
 SOBRE LOS PICTOGRAMAS
 
@@ -228,7 +233,12 @@ BY-NC-SA. PictoKeyboard es gratuito y seguirá siéndolo: la licencia es no
 comercial, y esta aplicación también.
 ```
 
-`3862 caracteres.` *(límite 4000)*
+`3996 caracteres.` *(límite 4000)*
+
+> **Cuatro caracteres de margen.** Spanish runs about a tenth longer than the
+> same English, so the two descriptions cannot be sentence-for-sentence
+> translations and still both fit. This one says everything the English one
+> says, in fewer words. Anything added here has to displace something.
 
 ## Graphics
 
@@ -238,9 +248,22 @@ comercial, y esta aplicación también.
 | Feature graphic | 1024 × 500 PNG or JPEG | `media/play/feature-graphic.png` |
 | Phone screenshots | 2–8, min 320 px, max 3840 px | `media/play/screenshots/` |
 
-Screenshots are 1080 × 2400 from an emulator, in Spanish, on a clean install.
-They are the app as it actually is — no mocked-up device frames and no captions
-promising anything the build does not do.
+Screenshots are 1080 × 2400 from an emulator, in Spanish, light theme. They are
+the app as it actually is — no mocked-up device frames and no captions promising
+anything the build does not do.
+
+| File | What it shows |
+|---|---|
+| `01-boards.png` | the board list, with the live preview and the FAB |
+| `02-categories.png` | the seven seeded categories, their colours and their counts |
+| `03-keyboard.png` | the keyboard in a real field, with the current toolbar |
+| `04-sentence-help.png` | the same phrase after ✨ rewrote it |
+| `05-settings.png` | language, keyboard and high contrast |
+
+**Recaptured 2026-08-12.** The set they replace showed a sentence bar that #148
+removed and a ✕ key that #159 removed, on a toolbar in an order that no longer
+exists — which is the failure mode to watch for here. Screenshots go stale
+silently, and the store is the one place nobody on the project looks.
 
 ## Content rating
 
