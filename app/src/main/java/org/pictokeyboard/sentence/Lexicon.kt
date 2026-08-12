@@ -28,6 +28,10 @@ internal data class Lexicon(
     val suffixes: List<String>,
     /** Vowel changes a stem takes under stress, undone before comparing. */
     val stemChanges: List<Pair<Regex, String>> = emptyList(),
+    /** Pronouns the language glues onto the end of a verb, longest first. */
+    val enclitics: List<String> = emptyList(),
+    /** The endings a pronoun in [enclitics] is allowed to be glued to. */
+    val encliticHosts: List<String> = emptyList(),
 ) {
     companion object {
         fun of(language: String): Lexicon =
@@ -59,6 +63,8 @@ internal data class Lexicon(
             irregulars = SPANISH_IRREGULARS,
             suffixes = SPANISH_SUFFIXES,
             stemChanges = SPANISH_STEM_CHANGES,
+            enclitics = SPANISH_ENCLITICS,
+            encliticHosts = SPANISH_ENCLITIC_HOSTS,
         )
 
         val English = Lexicon(
@@ -131,6 +137,38 @@ private val SPANISH_FUNCTION_WORDS = setOf(
 )
 
 /**
+ * The pronouns Spanish glues onto the end of a verb, longest first (#165).
+ *
+ * *Quiero irme a casa* is the natural sentence for `yo querer ir casa`, and
+ * without this rule `irme` shares no key with the `ir` the user tapped, so it
+ * reads as a word the model invented and the whole expansion is thrown away.
+ * Every verb this keyboard is likely to carry has the same problem —
+ * *levantarme*, *ducharme*, *sentarme*, *comerla*, *ayudarte*.
+ *
+ * Only the singles are listed. A chain of two — *dármelo*, *comérselo* — is
+ * reached by stripping twice, which is cheaper than enumerating the pairs and
+ * cannot miss one.
+ */
+private val SPANISH_ENCLITICS = listOf(
+    "nos", "los", "las", "les", "me", "te", "se", "lo", "la", "le", "os",
+)
+
+/**
+ * What an enclitic may attach to, and the reason this rule is safe.
+ *
+ * Spanish only glues a pronoun onto an infinitive, a gerund or an imperative,
+ * so requiring the remainder to *look like one* is what keeps [WordKey]'s
+ * bargain: it may say no when the answer was yes, and must not say yes when the
+ * answer was no. Without the check, *gente* would strip to *gen* and *sala* to
+ * *sa*, and ordinary nouns would start licensing verbs.
+ *
+ * Imperatives are deliberately absent. *Dame* leaves *da*, which is not a shape
+ * any rule here can tell from the end of a noun, and inventing one to catch it
+ * would cost exactly the safety the rest of this buys.
+ */
+private val SPANISH_ENCLITIC_HOSTS = listOf("ar", "er", "ir", "ando", "iendo")
+
+/**
  * Spanish inflections no suffix rule reaches, mapped to the stem their lemma
  * reduces to. Only content verbs are here — the copulas and auxiliaries are
  * function words above and never need matching.
@@ -144,6 +182,12 @@ private val SPANISH_IRREGULARS = mapOf(
     "voy" to "ir", "vas" to "ir", "va" to "ir", "vamos" to "ir", "van" to "ir",
     "iba" to "ir", "iban" to "ir", "ire" to "ir", "ira" to "ir", "vaya" to "ir",
     "yendo" to "ir", "ido" to "ir", "ir" to "ir",
+    // `ir` is the shortest verb in the language, and the enclitic rule cannot
+    // reach it: taking `me` off `irme` leaves two letters, which is below the
+    // stem length everything else here is protected by. Listing the five forms
+    // is cheaper than lowering that floor for every noun in the board.
+    "irme" to "ir", "irte" to "ir", "irse" to "ir", "irnos" to "ir", "iros" to "ir",
+    "vamonos" to "ir", "vete" to "ir",
     // hacer
     "hago" to "hac", "haces" to "hac", "hace" to "hac", "hacemos" to "hac",
     "hacen" to "hac", "hice" to "hac", "hizo" to "hac", "hicieron" to "hac",
