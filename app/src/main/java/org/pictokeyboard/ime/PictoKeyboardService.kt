@@ -397,8 +397,7 @@ class PictoKeyboardService : InputMethodService() {
             R.id.key_backspace to { backspace() },
             R.id.key_enter to { onEnter() },
             R.id.key_beautify to { beautify.press(typedWords()) },
-            R.id.key_speak to { phrase.speakAll() },
-            R.id.key_clear to { clearSentence() },
+            R.id.key_speak to { speakPhrase() },
             R.id.key_assistance to { assistance.press() },
         ).forEach { (id, action) ->
             normalView.findViewById<View>(id).setOnClickListener {
@@ -797,6 +796,11 @@ class PictoKeyboardService : InputMethodService() {
     private fun onPictoTapped(picto: PictoEntity) {
         val text = picto.spokenText.ifBlank { picto.label }
         if (text.isBlank()) return
+        // Checked before the word joins the phrase, not after: if the field has
+        // moved on -- a message sent, the box emptied by its own app -- this word
+        // begins a new phrase rather than extending one that is no longer there
+        // (#159).
+        forgetPhraseIfFieldMovedOn()
         val committed = phrase.add(text, picto.language, settings.addSpaceAfter)
         if (committed != null) beautify.onCommitted(committed) else beautify.onPhraseCleared()
         if (settings.speakOnTap) tts.speak(text, picto.language)
@@ -893,16 +897,30 @@ class PictoKeyboardService : InputMethodService() {
     // --- The phrase ---------------------------------------------------------
 
     /**
-     * Empties the bar and leaves the field alone.
+     * Reads the phrase back, after checking the field still holds it (#159).
      *
-     * Deliberately asymmetric with backspace: ✕ means "I have finished with this
-     * phrase", not "undo what I said". Reaching into the host field to delete a
-     * sentence the user already sent would be the one destructive thing on this
-     * keyboard.
+     * The check is here rather than inside [PhraseController] because only the
+     * service can see both halves. Immediately after a rephrase the field holds
+     * the model's sentence while the record holds the words the user tapped —
+     * they disagree deliberately, and undo depends on the record surviving — so
+     * a blind check would throw away exactly the state that makes undo work.
      */
-    private fun clearSentence() {
-        phrase.clear(aloud = true)
-        beautify.onPhraseCleared()
+    private fun speakPhrase() {
+        forgetPhraseIfFieldMovedOn()
+        phrase.speakAll()
+    }
+
+    /**
+     * Drops a phrase the field no longer holds, unless a rephrase is applied.
+     *
+     * Both halves go together, exactly as ✕ used to take them: the record that
+     * 🔊 reads, and the literal characters Beautify tracks. Forgetting only the
+     * first leaves Beautify comparing a string from the abandoned phrase against
+     * the field, which refuses every rephrase from then on.
+     */
+    private fun forgetPhraseIfFieldMovedOn() {
+        if (beautify.edit.canUndo) return
+        if (phrase.forgetIfFieldMovedOn()) beautify.onPhraseCleared()
     }
 
     private fun commit(text: String) {
