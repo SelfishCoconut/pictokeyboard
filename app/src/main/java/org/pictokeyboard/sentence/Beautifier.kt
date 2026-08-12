@@ -55,17 +55,31 @@ fun interface SentenceEngine {
  */
 class Beautifier(private val engine: SentenceEngine, private val validator: SentenceValidator = SentenceValidator()) {
 
-    /** Rejections from the last call, in order, for the eval harness and the log. */
-    var lastRejections: List<Verdict.Rejected> = emptyList()
+    /**
+     * What the last call generated and threw away, in order.
+     *
+     * The candidate text is kept beside the verdict, not just the verdict
+     * (#167). Without it, *"Left as you wrote it"* is the same sentence whether
+     * the model wrote something good that the harness refused or wrote nonsense
+     * — and those want opposite fixes. `SentenceService` logs this in a debug
+     * build; #42's eval harness is the other reader.
+     */
+    var lastRejections: List<Discarded> = emptyList()
         private set
 
+    /**
+     * @param validate false runs the model with the harness off (#167). Only
+     *   `SentenceService` may pass it, only after [ValidatorBypass.allowed] has
+     *   agreed, and that never agrees outside a debug build.
+     */
     suspend fun beautify(
         typed: List<TypedWord>,
         language: String,
         variant: Int = 0,
         attempts: Int = ModelSpec.MAX_ATTEMPTS,
+        validate: Boolean = true,
     ): Beautified {
-        val rejections = mutableListOf<Verdict.Rejected>()
+        val discarded = mutableListOf<Discarded>()
         var outcome: Beautified = Beautified.NothingPassed
         var attempt = 0
 
@@ -76,29 +90,45 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
             // The variant advances with each retry as well as with each press, so
             // a rejected candidate is not simply asked for again at the same
             // sampler position -- which would return the same rejected candidate.
-            outcome = attemptOnce(typed, language, variant + attempt, rejections)
+            outcome = attemptOnce(typed, language, variant + attempt, validate, discarded)
             attempt++
         }
 
-        lastRejections = rejections
+        lastRejections = discarded
         return outcome
     }
 
-    /** One generation, judged. [rejections] collects what was thrown away and why. */
+    /** One generation, judged. [discarded] collects what was thrown away and why. */
     private suspend fun attemptOnce(
         typed: List<TypedWord>,
         language: String,
         variant: Int,
-        rejections: MutableList<Verdict.Rejected>,
+        validate: Boolean,
+        discarded: MutableList<Discarded>,
     ): Beautified {
         val raw = engine.generate(typed, language, variant) ?: return Beautified.Unavailable
         val candidate = Prompts.firstCandidate(raw)
-        return when (val verdict = validator.check(typed, candidate, language)) {
+        val verdict = when {
+            // The harness off, so the model can be judged on its own (#167).
+            // Empty is still empty -- there is nothing to put in the field, and
+            // that is a fact about the output rather than a rule about meaning.
+            !validate -> if (candidate.isBlank()) Verdict.Rejected(Rejection.EMPTY) else Verdict.Accepted
+            else -> validator.check(typed, candidate, language)
+        }
+        return when (verdict) {
             is Verdict.Accepted -> Beautified.Sentence(candidate)
             is Verdict.Rejected -> {
-                rejections += verdict
+                discarded += Discarded(candidate, verdict.reason, verdict.words)
                 Beautified.NothingPassed
             }
         }
     }
 }
+
+/**
+ * A candidate the model produced and the loop threw away.
+ *
+ * [candidate] is the part that was missing (#167): a reason on its own says the
+ * harness fired, and only the text says whether it was right to.
+ */
+data class Discarded(val candidate: String, val reason: Rejection, val words: List<String>)

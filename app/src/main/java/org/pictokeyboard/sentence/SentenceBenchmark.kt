@@ -80,7 +80,12 @@ class SentenceBenchmark(private val context: Context) {
         val startedAt = SystemClock.elapsedRealtime()
         val outcome = withTimeoutOrNull(GENERATE_TIMEOUT_MS) {
             suspendCancellableCoroutine { continuation ->
-                client.beautify(phraseFor(language), language, variant = 0) { continuation.resume(it) }
+                // Always with the harness on, whatever the debug switch says
+                // (#167): the figure has to describe the feature as it ships,
+                // and skipping the validator skips its retries.
+                client.beautify(phraseFor(language), language, variant = 0, unvalidated = false) {
+                    continuation.resume(it)
+                }
             }
         }
         val elapsed = SystemClock.elapsedRealtime() - startedAt

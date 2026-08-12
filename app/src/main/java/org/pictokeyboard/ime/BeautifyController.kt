@@ -40,6 +40,18 @@ class BeautifyController(
     private var client: SentenceClient? = null
 
     /**
+     * Ask the model process to answer without the validator (#167).
+     *
+     * A `var` set from the keyboard's settings flow rather than a parameter on
+     * [press], because it is a standing state of the app and not a property of
+     * one press — and because it is inert in a shipped build either way:
+     * `SentenceService` puts it through `ValidatorBypass.allowed` against
+     * `BuildConfig.DEBUG`, and the switch that sets it is not composed at all
+     * outside a debug build.
+     */
+    var unvalidated: Boolean = false
+
+    /**
      * True when the feature is on and the weights are on this phone.
      *
      * **Deliberately not "the engine has finished loading" (#157).** That is what
@@ -177,7 +189,12 @@ class BeautifyController(
         // has just been disabled.
         announce(R.string.kb_beautify_working)
         onStateChanged()
-        remote.beautify(typed = typed, language = dominantLanguage(typed), variant = edit.variant) { outcome ->
+        remote.beautify(
+            typed = typed,
+            language = dominantLanguage(typed),
+            variant = edit.variant,
+            unvalidated = unvalidated,
+        ) { outcome ->
             working = false
             when (outcome) {
                 is BeautifyOutcome.Sentence -> apply(outcome.text)

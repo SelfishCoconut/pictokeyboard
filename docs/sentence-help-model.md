@@ -103,6 +103,55 @@ discarded whatever the prompt said. The rules are in the prompt because a model
 that has been told them fails less often, which means fewer retries and a faster
 answer.
 
+## Seeing what the model said, not only what survived
+
+*"Left as you wrote it"* is one message covering two opposite situations: the
+model wrote a good sentence and `SentenceValidator` threw it away, or the model
+wrote nonsense. Until #167 there was no way to tell them apart from the running
+app. #165 — the harness reading `irme` as a word nobody tapped — was found by
+hand-tracing the lexicon, which is the wrong way round; one press with the log on
+would have shown it.
+
+Two things, both **debug builds only**:
+
+- **The discarded candidates are printed.** `Beautifier` has always collected
+  every rejected candidate and nothing ever read it. `SentenceService` now logs
+  one line per attempt to `PictoKeyboardLlm` — the tapped words, what came back,
+  the verdict, and the words that caused it.
+
+  ```
+  adb logcat -s PictoKeyboardLlm
+  [es v0 validated] yo querer ir casa -> nothing passed
+    discarded "Quiero irme a casa." ADDED_CONTENT_WORD [irme]
+  ```
+
+  Guarded because it prints somebody's half of a conversation, and logcat is
+  readable by anyone with the phone plugged in. `BuildConfig.DEBUG` is a
+  compile-time constant, so R8 removes the branch from a release build.
+
+- **The harness can be switched off.** Settings → Sentence help grows a switch,
+  *below* the model row and only once the weights are installed, that applies the
+  model's first answer with no check at all. That is how the prompt and the
+  weights get judged on their own, which is #42's question and cannot be answered
+  while every answer is filtered.
+
+**The bypass cannot ship, and that is the point rather than a formality.**
+Content lemmas out ⊆ content lemmas in is the one property that makes it honest
+to say this keyboard speaks *as* the user and never *for* them. An installable
+build where a 0.6B model's invention goes into a non-speaking person's message,
+in their name, with nobody able to read it back and check, is not a diagnostic —
+it is the failure the whole milestone was designed around. The right fix for a
+harness that rejects good sentences is a better harness (#165), not no harness.
+
+So the decision is in one function, `ValidatorBypass.allowed(requested,
+debugBuild)`, which takes the build type as an argument rather than reading
+`BuildConfig.DEBUG` itself — an inline check could only ever assert itself from a
+debug build, where `BuildConfig.DEBUG` is true. `ValidatorBypassTest` asks the
+release question directly, and then reads every source file to check that nothing
+hardcodes `validate = false` around the back. `SentenceBenchmark` (#145) always
+runs validated, whatever the switch says, because the figure has to describe the
+feature as it ships.
+
 ## Attribution
 
 Qwen3 is Apache-2.0, which requires the licence and attribution to travel with
