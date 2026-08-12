@@ -74,13 +74,18 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
         }
     }
 
-    override suspend fun generate(typed: List<TypedWord>, language: String, variant: Int): String? =
+    override suspend fun generate(
+        typed: List<TypedWord>,
+        language: String,
+        variant: Int,
+        avoid: List<String>,
+    ): String? =
         withContext(Dispatchers.Default) {
             val active = engine ?: return@withContext null
             runCatching {
                 active.createConversation(
                     ConversationConfig(
-                        systemInstruction = Contents.of(Prompts.systemPrompt(language)),
+                        systemInstruction = Contents.of(Prompts.systemPrompt(language, avoid)),
                         samplerConfig = samplerFor(variant),
                         // The `nothink` build should not emit a reasoning trace
                         // anyway; saying so explicitly means a swapped-in model
@@ -99,13 +104,28 @@ class LiteRtEngine(private val store: ModelStore) : SentenceEngine {
         }
 
     /**
-     * Temperature climbs with the variant.
+     * Temperature still climbs with the variant, and it is **not** what makes a
+     * retry different (#177).
      *
-     * The first attempt is nearly greedy, because the best answer to "say these
-     * eight words properly" is usually the obvious one. Later attempts — a
-     * second press of Beautify, or a retry after the validator rejected
-     * something — have to land somewhere else to be worth making, and at a fixed
-     * low temperature they would return the same sentence and the same rejection.
+     * It was written as though it were: nearly greedy first, warmer on each later
+     * attempt so a second press or a retry after a rejection would land somewhere
+     * else. Measured on a device, this model does not move. The same phrase, at
+     * seeds 1 and 2:
+     *
+     * | temperature | answer to `agua` |
+     * |---|---|
+     * | 0.0, 0.2, 0.6, 1.0, 1.5 | *"Una galleta."* — identical, every time |
+     * | 2.0 | *"Una agua."* — different, and worse |
+     *
+     * The entire ladder below sits inside that flat region, so three attempts
+     * bought three copies of one rejection and three times the wait. The one
+     * place the answer *did* move is also where it degrades, so climbing further
+     * is not the fix either — `Prompts` names the rejected word instead, which
+     * moved it at the temperature the feature actually runs at.
+     *
+     * Kept rather than deleted because a warmer later attempt costs nothing and
+     * may help a model less sure of itself than this one, and because the numbers
+     * are the honest record of what was tried.
      */
     private fun samplerFor(variant: Int): SamplerConfig {
         val temperature = (BASE_TEMPERATURE + variant * TEMPERATURE_STEP).coerceAtMost(MAX_TEMPERATURE)
