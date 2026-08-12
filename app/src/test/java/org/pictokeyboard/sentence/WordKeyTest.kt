@@ -94,6 +94,55 @@ class WordKeyTest {
         assertNotEquals(en("want"), en("water"))
     }
 
+    /**
+     * A pronoun glued to a verb is the same verb (#165). *Quiero irme a casa*
+     * is the natural expansion of `yo querer ir casa`, and before this rule the
+     * `irme` in it was an invented word and the sentence was thrown away.
+     */
+    @Test
+    fun aPronounGluedToAVerbIsStillThatVerb() {
+        assertSameWord("ir", "irme")
+        assertSameWord("levantar", "levantarme")
+        assertSameWord("duchar", "ducharme")
+        assertSameWord("sentar", "sentarse")
+        assertSameWord("comer", "comerla")
+        assertSameWord("ayudar", "ayudarte")
+        assertSameWord("beber", "beberlo")
+    }
+
+    /** Two of them stack, and the accent goes with the stress that moved. */
+    @Test
+    fun twoPronounsComeOffTogether() {
+        assertSameWord("dar", "dármelo")
+        assertSameWord("comer", "comérselo")
+        assertSameWord("poner", "ponérnoslo")
+    }
+
+    /** A gerund takes them too — *diciéndolo*, *lavándose*. */
+    @Test
+    fun aGerundCarriesThemAsWell() {
+        assertSameWord("lavar", "lavandose")
+        assertSameWord("comer", "comiendolo")
+    }
+
+    /**
+     * The half of the rule that keeps it honest.
+     *
+     * Every one of these ends in something on the enclitic list, and none of
+     * them is a verb with a pronoun on it. The host check — the remainder has
+     * to look like an infinitive or a gerund — is the only thing standing
+     * between this rule and ordinary nouns licensing verbs they have nothing to
+     * do with, which is the one direction [WordKey] is not allowed to fail in.
+     */
+    @Test
+    fun anOrdinaryWordThatMerelyEndsInAPronounIsLeftAlone() {
+        // Each of these reaches its verb *only* by the enclitic route, so a
+        // collision here would be this rule's doing and nothing else's.
+        assertNotEquals(es("parte"), es("parar"))
+        assertNotEquals(es("aparte"), es("aparar"))
+        assertNotEquals(es("gente"), es("generar"))
+    }
+
     @Test
     fun aWordWithNothingInItHasNoKey() {
         assertEquals(null, es("¿"))
