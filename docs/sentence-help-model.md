@@ -145,8 +145,39 @@ it may be slow, and that turning it off costs nothing.
   **#145 measures speed, not quality.** A candidate the validator throws away
   still counts towards the timing, because the phone took exactly as long either
   way. The two questions are deliberately separate.
-- No run against the real weights has happened yet on hardware anybody would use.
-  The benchmark's *failure* path is exercised end to end — a deliberately corrupt
-  347 MB file produces `INVALID_ARGUMENT: Invalid magic number`, `LiteRtEngine`
-  returns false rather than taking the process with it, and Settings says the test
-  did not finish — but no real number has been produced by this code yet.
+- The failure path is exercised end to end: a deliberately corrupt 347 MB file
+  produces `INVALID_ARGUMENT: Invalid magic number`, `LiteRtEngine` returns false
+  rather than taking the process with it, and Settings says the test did not
+  finish.
+
+## The first real run
+
+Everything above was written before the weights had ever been downloaded. They
+now have been, on an `x86_64` emulator with 3.8 GB of RAM — a device that only
+just clears `DeviceCapability`'s floor, so treat these as a slow phone rather
+than a good one.
+
+| | measured |
+|---|---|
+| One sentence, weights warm | **1.7 s** — inside #44's two-second budget |
+| Loading, paid once per keyboard session | **2.2 s** |
+| Resident in `:llm` with the model loaded | ~1.0 GB |
+
+`yo querer agua` → *"Quiero agua."* and `yo querer` → *"Quiero."*, with undo
+returning the tapped words exactly.
+
+**Both numbers were about three times worse before #156.** LiteRT was handed a
+cache directory that nothing created, so XNNPACK could neither read nor write
+the repacked weights and did the repacking on *every* load: 6.0 s to load and
+3.0 s per sentence. It failed silently — the runtime logs it and carries on —
+which is why it survived to a real-weights run and why the fix is pinned by a
+test that asserts on the directory rather than on an exception.
+
+Two consequences worth carrying into any later model change:
+
+- **The cache is 323 MB**, nearly the size of the weights again, so deleting the
+  model deletes the cache and the "delete the model (N MB)" figure counts both.
+  It said 331 MB while the feature occupied 654 MB.
+- **The first sentence is not the first sentence of the day.** `:llm` is a
+  separate process precisely so Android can reclaim it, so the 2.2 s load is
+  paid every time the keyboard comes back cold, which is often.
