@@ -76,18 +76,41 @@ rather than ~1.2 GB at f32. **The quality cost has not been measured** — that 
 #42's job, and until the eval set exists this is an assumption rather than a
 finding. It is recorded here as an assumption on purpose.
 
-## The floor, and what happens below it
+## What is refused, what is warned about, and why they differ
 
-`ModelSpec.MIN_TOTAL_RAM_BYTES` is 3 GB of *total* device RAM. The weights are
-347 MB; the runtime needs those plus a KV cache and its own arenas, so budget
-about a gigabyte resident in `:llm`. On a 2 GB phone that is most of what is left
-after the foreground app, and the process Android reclaims first is whichever is
-cheapest to lose.
+Two of the three checks are facts. There is no 32-bit ARM build of the runtime,
+so on `armeabi-v7a` the native library is simply absent; and 347 MB plus its
+`.part` does not go into a filesystem with less than that free. Both of those
+refuse the download outright, because offering one would be offering something
+that cannot happen. Storage is judged after the processor, because it is the only
+one that can change: a phone that is full today can be cleared tonight, while a
+processor cannot.
 
-Below the floor — or on a 32-bit processor, or with no room on disk — Settings
-says so plainly instead of offering a download that would fail. Storage is judged
-last of the three, because it is the only one that can change: a phone that is
-full today can be cleared tonight, while a processor cannot.
+Memory is not a fact of that kind, and **it used to be treated as one** (#171).
+`ModelSpec.TIGHT_TOTAL_RAM_BYTES` is 3 GB of *total* device RAM: the weights are
+347 MB, the runtime needs those plus a KV cache and its own arenas, so budget
+about a gigabyte resident in `:llm`, which on a 2 GB phone is most of what is
+left after the foreground app — and the process Android reclaims first is
+whichever is cheapest to lose. That reasoning is still the reason for the number.
+What it does not support is the word *cannot*: a 2.4 GB emulator ran the model
+repeatedly, in a few seconds, with no reclaim, while Settings told its owner the
+phone did not have enough memory for it. One data point does not make 2.4 GB
+comfortable. It does show that a number nobody measured was shutting people out.
+
+So below the floor the feature is offered with the sentence attached — it may be
+slow, the phone may close it, delete it if it does not work here — and the
+decision belongs to the caregiver. This is the same judgement #145 already made
+about speed: a phone over the two-second budget is *told*, not refused, because
+somebody with no other way to build a sentence may well decide four seconds is
+worth it. `SentenceBenchmark` is also the honest version of this check, since it
+measures the phone in the caregiver's hand rather than reasoning about it here.
+
+**Once the weights are installed, Settings stops refusing anything.** The
+keyboard gates its ✨ key on `ModelStore.isDownloaded()` and never on RAM, so a
+Settings screen that says "this phone cannot" while the keyboard is visibly
+rephrasing is telling two people different things about the same phone. It also
+hid the Delete button behind "there is not enough space", which refused to let
+somebody free the space by removing the thing filling it.
 
 ## The prompt
 

@@ -433,7 +433,7 @@
     <string name="settings_sentence_failed_disk">No queda espacio suficiente en el móvil.</string>
     <string name="settings_sentence_failed_corrupt">La descarga no ha llegado íntegra y se ha descartado. Inténtalo de nuevo.</string>
     <string name="settings_sentence_no_processor">El procesador de este móvil no puede ejecutar el modelo de frases.</string>
-    <string name="settings_sentence_no_memory">Este móvil no tiene memoria suficiente para ejecutar el modelo de frases.</string>
+    <string name="settings_sentence_tight_memory">Este móvil tiene %1$d MB de memoria, y el modelo de frases necesita cerca de un gigabyte mientras funciona. Puede ir lento, y el móvil puede cerrarlo cuando otras aplicaciones estén ocupadas. Aun así puedes probarlo, y borrarlo si aquí no funciona bien.</string>
     <string name="settings_sentence_no_storage">No hay espacio suficiente para el modelo de frases. Necesita unos %1$d MB.</string>
 
     <!-- Medirlo en el móvil en el que va a funcionar (#145) -->
