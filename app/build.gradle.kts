@@ -53,7 +53,7 @@ android {
         // the run number, which is monotonic. A local build gets 1, which is
         // fine because a locally-built artifact never reaches the console.
         versionCode = releaseSecret("VERSION_CODE")?.toInt() ?: 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
