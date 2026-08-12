@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import org.pictokeyboard.R
@@ -76,6 +80,7 @@ internal fun NewCategoryChooserSheet(
     val suggested by produceState(initialValue = emptyList<org.pictokeyboard.data.db.UsageEntity>()) {
         value = loadSuggested()
     }
+    var previewing by remember { mutableStateOf<CategoryOffer?>(null) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -85,55 +90,214 @@ internal fun NewCategoryChooserSheet(
                 .padding(bottom = Spacing.xxl),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
+            when (val offer = previewing) {
+                null -> ChooserList(
+                    language = language,
+                    suggestedName = suggestedName,
+                    suggested = suggested,
+                    onBlank = onBlank,
+                    onTemplate = onTemplate,
+                    onSuggested = onSuggested,
+                    onPreview = { previewing = it },
+                )
+
+                else -> CategoryPreview(offer = offer, onBack = { previewing = null })
+            }
+        }
+    }
+}
+
+/** The list of ways to make a category, before one has been chosen. */
+@Composable
+private fun ChooserList(
+    language: String,
+    suggestedName: String,
+    suggested: List<UsageEntity>,
+    onBlank: () -> Unit,
+    onTemplate: (CategoryTemplate) -> Unit,
+    onSuggested: (List<UsageEntity>) -> Unit,
+    onPreview: (CategoryOffer) -> Unit,
+) {
+    val suggestedAccent = MaterialTheme.colorScheme.primary
+    val suggestedSubtitle = stringResource(R.string.category_suggested_desc)
+
+    Text(stringResource(R.string.category_add), style = MaterialTheme.typography.headlineSmall)
+    Text(
+        stringResource(R.string.category_new_subtitle),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    if (suggested.isNotEmpty()) {
+        ChooserCard(
+            // The one option that is not a category colour, so it takes
+            // the product accent. It used to be a hardcoded teal -- the
+            // last of the old brand palette hiding in a Composable.
+            accent = suggestedAccent,
+            title = suggestedName,
+            subtitle = suggestedSubtitle,
+            thumbs = suggested.mapNotNull { it.arasaacId }.take(CHOOSER_THUMBS)
+                .map { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
+            highlighted = true,
+            onClick = {
+                onPreview(
+                    CategoryOffer(
+                        title = suggestedName,
+                        accent = suggestedAccent,
+                        pictos = suggested.map { OfferedPicto(it.arasaacId, it.label) },
+                        onAccept = { onSuggested(suggested) },
+                    ),
+                )
+            },
+        )
+    }
+
+    // No preview here: there is nothing in a blank category to look at, and
+    // making the caregiver confirm an empty list would be ceremony.
+    ChooserCard(
+        accent = MaterialTheme.colorScheme.outline,
+        title = stringResource(R.string.category_blank),
+        subtitle = stringResource(R.string.category_blank_desc),
+        thumbs = emptyList(),
+        onClick = onBlank,
+    )
+
+    Text(
+        stringResource(R.string.category_from_template),
+        style = MaterialTheme.typography.labelLarge,
+        modifier = Modifier.padding(top = 4.dp),
+    )
+    TemplateCards(language = language, onTemplate = onTemplate, onPreview = onPreview)
+}
+
+/** One card per pre-built category, each opening its own preview. */
+@Composable
+private fun TemplateCards(
+    language: String,
+    onTemplate: (CategoryTemplate) -> Unit,
+    onPreview: (CategoryOffer) -> Unit,
+) {
+    CategoryTemplates.all.forEach { template ->
+        val accent = Color(template.color)
+        val title = template.name(language)
+        ChooserCard(
+            accent = accent,
+            title = title,
+            subtitle = stringResource(R.string.category_pictos_count, template.pictos.size),
+            thumbs = template.pictos.take(CHOOSER_THUMBS)
+                .map { ArasaacUrls.image(it.arasaacId, ArasaacUrls.THUMB) },
+            onClick = {
+                onPreview(
+                    CategoryOffer(
+                        title = title,
+                        accent = accent,
+                        pictos = template.pictos.map {
+                            OfferedPicto(it.arasaacId, if (language == "en") it.en else it.es)
+                        },
+                        onAccept = { onTemplate(template) },
+                    ),
+                )
+            },
+        )
+    }
+}
+
+/**
+ * A category the sheet is offering, flattened so the preview needs one shape
+ * rather than one per source.
+ */
+private data class CategoryOffer(
+    val title: String,
+    val accent: Color,
+    val pictos: List<OfferedPicto>,
+    val onAccept: () -> Unit,
+)
+
+/** One symbol inside an offer, already resolved into the board's language. */
+private data class OfferedPicto(val arasaacId: Int?, val word: String)
+
+/**
+ * Everything an offered category would add, before it is added.
+ *
+ * The chooser card shows four thumbnails and no words, and tapping it used to
+ * create the category outright — so a caregiver accepted eight to twelve symbols
+ * they had never seen, and found out what was in *Animales* by reading the
+ * category afterwards and deleting what did not belong. Undoing that is a
+ * per-picto job.
+ *
+ * Two taps rather than one, and the second is the cheap one: this is the step
+ * where a caregiver decides whether a template fits the person they are building
+ * for, which is the only judgement in the whole flow that they alone can make.
+ */
+@Composable
+private fun CategoryPreview(offer: CategoryOffer, onBack: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .background(offer.accent, CircleShape),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(offer.title, style = MaterialTheme.typography.headlineSmall)
             Text(
-                stringResource(R.string.category_add),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-            Text(
-                stringResource(R.string.category_new_subtitle),
+                stringResource(R.string.category_pictos_count, offer.pictos.size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
-            if (suggested.isNotEmpty()) {
-                ChooserCard(
-                    // The one option that is not a category colour, so it takes
-                    // the product accent. It used to be a hardcoded teal -- the
-                    // last of the old brand palette hiding in a Composable.
-                    accent = MaterialTheme.colorScheme.primary,
-                    title = suggestedName,
-                    subtitle = stringResource(R.string.category_suggested_desc),
-                    thumbs = suggested.mapNotNull { it.arasaacId }.take(CHOOSER_THUMBS)
-                        .map { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
-                    highlighted = true,
-                    onClick = { onSuggested(suggested) },
-                )
-            }
-
-            ChooserCard(
-                accent = MaterialTheme.colorScheme.outline,
-                title = stringResource(R.string.category_blank),
-                subtitle = stringResource(R.string.category_blank_desc),
-                thumbs = emptyList(),
-                onClick = onBlank,
-            )
-
-            Text(
-                stringResource(R.string.category_from_template),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            CategoryTemplates.all.forEach { template ->
-                ChooserCard(
-                    accent = Color(template.color),
-                    title = template.name(language),
-                    subtitle = stringResource(R.string.category_pictos_count, template.pictos.size),
-                    thumbs = template.pictos.take(CHOOSER_THUMBS)
-                        .map { ArasaacUrls.image(it.arasaacId, ArasaacUrls.THUMB) },
-                    onClick = { onTemplate(template) },
-                )
-            }
         }
+    }
+
+    // Chunked rather than a LazyVerticalGrid: this sits inside the sheet's own
+    // vertical scroll, and a lazy grid nested in a scrolling parent has no
+    // bounded height to measure against. A template is a dozen symbols at most,
+    // so there is nothing here worth virtualising.
+    offer.pictos.chunked(PREVIEW_COLUMNS).forEach { row ->
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), modifier = Modifier.fillMaxWidth()) {
+            row.forEach { picto ->
+                OfferedPictoTile(picto = picto, accent = offer.accent, modifier = Modifier.weight(1f))
+            }
+            // Keeps a short last row's tiles the same width as a full row's,
+            // instead of letting three symbols stretch across four columns.
+            repeat(PREVIEW_COLUMNS - row.size) { Box(modifier = Modifier.weight(1f)) }
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spacing.sm),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = onBack) { Text(stringResource(R.string.back)) }
+        Button(onClick = offer.onAccept) { Text(stringResource(R.string.add)) }
+    }
+}
+
+/** One symbol in the preview: the picture the communicator sees, over the word it says. */
+@Composable
+private fun OfferedPictoTile(picto: OfferedPicto, accent: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        AsyncImage(
+            model = picto.arasaacId?.let { ArasaacUrls.image(it, ArasaacUrls.THUMB) },
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(PictoTheme.colors.tile, RoundedCornerShape(8.dp))
+                .border(2.dp, accent, RoundedCornerShape(8.dp))
+                .padding(3.dp),
+        )
+        Text(
+            picto.word,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -329,3 +493,6 @@ private fun CategoryEditForm(
 
 /** Thumbnails previewed on a chooser card. */
 private const val CHOOSER_THUMBS = 4
+
+/** Symbols per row once the whole category is being shown. */
+private const val PREVIEW_COLUMNS = 4
