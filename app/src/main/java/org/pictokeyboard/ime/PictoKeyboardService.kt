@@ -1,7 +1,6 @@
 package org.pictokeyboard.ime
 
 import android.content.Context
-import android.graphics.Typeface
 import android.inputmethodservice.InputMethodService
 import android.util.Log
 import android.view.KeyEvent
@@ -10,7 +9,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -72,8 +70,6 @@ class PictoKeyboardService : InputMethodService() {
     private lateinit var boardStrip: RecyclerView
     private lateinit var keyboardBody: View
     private lateinit var emptyHint: TextView
-    private lateinit var sentenceView: TextView
-    private lateinit var sentenceScroll: HorizontalScrollView
 
     private lateinit var normalView: View
     private lateinit var blindView: BlindKeyboardView
@@ -125,18 +121,17 @@ class PictoKeyboardService : InputMethodService() {
     private val showBoardTabs get() = boards.size >= 2
 
     /**
-     * The phrase written so far, the bar that shows it, and the arrows that walk
-     * it (#143). A mirror of the field, never a buffer — see [Sentence].
+     * The phrase written so far and the arrows that walk it (#143). A record of
+     * what reached the field, never a buffer holding it back — see [Sentence].
      *
-     * Held by the service rather than by the view because the input view is
-     * rebuilt on every rotation and dark-mode switch, and a phrase that vanished
-     * when the user turned their phone would be worse than no bar.
+     * Nothing draws it since #148. It is held by the service rather than by the
+     * view anyway, because the input view is rebuilt on every rotation and
+     * dark-mode switch, and 🔊 forgetting the sentence because somebody turned
+     * their phone would be worse than not offering it.
      */
     private val phrase by lazy {
         PhraseController(
             connection = { currentInputConnection },
-            strings = { uiContext },
-            palette = { palette },
             tts = tts,
             fallbackLanguage = { board?.language ?: settings.defaultLanguage },
             announce = ::announce,
@@ -147,10 +142,10 @@ class PictoKeyboardService : InputMethodService() {
      * Beautify's own state: the binder to the model process, and the exact
      * characters this keyboard put in the field (#46).
      *
-     * Beside [phrase] rather than inside it because [Sentence] is what the *bar*
-     * shows -- words, trimmed, for display and speech -- while this has to track
-     * the literal string in the host's editor, spacing and all, or a swap cannot
-     * be checked before it is made.
+     * Beside [phrase] rather than inside it because [Sentence] holds words --
+     * trimmed, each with its language, for speech -- while this has to track the
+     * literal string in the host's editor, spacing and all, or a swap cannot be
+     * checked before it is made.
      */
     private val beautify by lazy {
         BeautifyController(
@@ -160,6 +155,15 @@ class PictoKeyboardService : InputMethodService() {
             announce = ::announce,
         )
     }
+
+    /**
+     * What the keyboard says on screen, drawn in its own window (#149).
+     *
+     * Not a Toast: a Toast from this app is silently dropped, because Android
+     * suppresses them for apps whose notifications are off and this one has no
+     * reason to ask for that permission.
+     */
+    private val message = KeyboardMessage()
 
     /** The bell, and the countdown a second press cancels (#144). */
     private val assistance by lazy {
@@ -181,7 +185,7 @@ class PictoKeyboardService : InputMethodService() {
      * Kept as state rather than read on demand because it arrives from the
      * framework asynchronously, after the view is already laid out, and because
      * [chromeHeightPx] has to include it: the padding is height the grid does
-     * not get, exactly like the sentence bar above it. Zero on gesture
+     * not get, exactly like the phrase keys above it. Zero on gesture
      * navigation and on every release before 15, where the window is placed
      * above the bar and there is nothing to pay for.
      */
@@ -190,7 +194,7 @@ class PictoKeyboardService : InputMethodService() {
     /**
      * The eyes-free keyboard, which is a second keyboard sharing this shell.
      *
-     * It has no keys, no grid and no sentence bar — only gestures and a voice —
+     * It has no keys and no grid — only gestures and a voice —
      * so it lives in its own class and reaches back through [BlindHost] for the
      * board data and the few field operations it shares with the sighted one.
      */
@@ -288,6 +292,8 @@ class PictoKeyboardService : InputMethodService() {
                     resources.getDimensionPixelSize(R.dimen.kb_blind_height),
                 ),
             )
+            // Added last so it draws over both keyboards.
+            message.attach(this)
         }
 
         // The collection lives in onCreate, so these adapters are new but the
@@ -297,7 +303,6 @@ class PictoKeyboardService : InputMethodService() {
         // it belongs to the conversation, not to this instance of the view.
         categoryAdapter.submit(categories, selectedCategoryId, categoryIcons)
         applyBoardTabs()
-        phrase.render()
         refreshPictos()
 
         viewLanguage = currentAppLanguage()
@@ -370,14 +375,11 @@ class PictoKeyboardService : InputMethodService() {
         }
         keyboardBody = normalView.findViewById(R.id.keyboard_body)
         emptyHint = normalView.findViewById(R.id.empty_hint)
-        sentenceView = normalView.findViewById(R.id.sentence_text)
-        sentenceScroll = normalView.findViewById(R.id.sentence_scroll)
-        phrase.attach(sentenceView, sentenceScroll)
         applyBodyHeight()
     }
 
     /**
-     * The keys: three on the sentence bar, three in the action row.
+     * The keys: the phrase's own row, and three in the action row.
      *
      * Looked up as [View] rather than as `Button`, because half of them are not
      * buttons: the globe, the speaker and the ✕ are `AppCompatImageButton`s so
@@ -417,7 +419,7 @@ class PictoKeyboardService : InputMethodService() {
      * Everything the caregiver's own choices already drive -- tile frames,
      * category hues -- is painted by the adapters from the same palette. What is
      * left is the surface the layout hard-codes to `@color/...`: the keyboard's
-     * own background, its rules, the sentence bar and the keys.
+     * own background, its rules and the keys.
      *
      * Done here rather than by swapping a theme because an IME's input view is
      * created once and reused across every app the user types in. A theme
@@ -432,10 +434,6 @@ class PictoKeyboardService : InputMethodService() {
 
         normalView.setBackgroundColor(skin.paper)
         normalView.findViewById<View>(R.id.sentence_bar)?.setBackgroundColor(skin.paper)
-        normalView.findViewById<TextView>(R.id.sentence_text)?.apply {
-            setTextColor(skin.ink)
-            typeface = if (skin.highContrast) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-        }
         normalView.findViewById<TextView>(R.id.empty_hint)?.setTextColor(skin.inkSoft)
 
         // The two hairlines. `line` is decorative by design and becomes `ink` in
@@ -450,6 +448,7 @@ class PictoKeyboardService : InputMethodService() {
         }
 
         ViewStyles.applyKeyColors(normalView, skin)
+        message.repaint(skin)
 
         // The grid and spine are already bound; their rows must repaint with the
         // new stroke widths and label weights rather than waiting for a scroll.
@@ -487,7 +486,6 @@ class PictoKeyboardService : InputMethodService() {
             // A countdown started while writing a message must not follow the
             // user into the next app (#144).
             assistance.cancel()
-            phrase.render()
         }
     }
 
@@ -509,9 +507,7 @@ class PictoKeyboardService : InputMethodService() {
         candidatesEnd: Int,
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
-        val wasNavigating = phrase.navigator.isNavigating
         phrase.navigator.onSelectionChanged(newSelStart, newSelEnd)
-        if (wasNavigating && !phrase.navigator.isNavigating) phrase.render()
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -579,7 +575,7 @@ class PictoKeyboardService : InputMethodService() {
      *
      * The chrome above and below the board is subtracted from the *ceiling*,
      * never from the grid: the keyboard grows to carry the tab strip and the
-     * sentence bar, and only the 60% cap stops it. Taking the space out of the
+     * phrase keys, and only the 60% cap stops it. Taking the space out of the
      * board instead would spend the product on its own furniture.
      */
     private fun applyBodyHeight() {
@@ -610,7 +606,7 @@ class PictoKeyboardService : InputMethodService() {
      * Everything stacked above and below the board, in pixels.
      *
      * Read from the same dimensions the layout is built from rather than
-     * hardcoded, so a change to the sentence bar's height cannot silently cost
+     * hardcoded, so a change to the key row's height cannot silently cost
      * the grid a row.
      *
      * [navigationBarInsetPx] is in here for the same reason the others are: it
@@ -814,16 +810,21 @@ class PictoKeyboardService : InputMethodService() {
         phrase.sentence.parts().map { TypedWord(it.text, it.language) }
 
     /**
-     * Says what happened, out loud and to TalkBack.
+     * Says what happened, on screen and to TalkBack.
      *
-     * A rephrase changes text the user may not be able to read back, so the fact
-     * that it happened cannot be conveyed only by the field changing.
+     * Carries more weight since #148 took the phrase row: several keys now
+     * change nothing the user can see — ✕ forgets a phrase that was never drawn,
+     * a rephrase rewrites text the user may not be able to read back — and this
+     * is the only thing that says so.
+     *
+     * [long] is for the bell alone, whose message has to outlast a four-second
+     * countdown rather than a moment's confirmation.
      */
-    private fun announce(resId: Int, vararg args: Any) {
-        if (!::sentenceView.isInitialized) return
-        val message = uiContext.getString(resId, *args)
-        sentenceView.announceForAccessibility(message)
-        android.widget.Toast.makeText(uiContext, message, android.widget.Toast.LENGTH_SHORT).show()
+    private fun announce(resId: Int, vararg args: Any, long: Boolean = false) {
+        if (!::normalView.isInitialized) return
+        val text = uiContext.getString(resId, *args)
+        normalView.announceForAccessibility(text)
+        message.show(text, long)
     }
 
     /** Hidden when there is no model, and Undo once a rephrase is in place. */
@@ -849,13 +850,6 @@ class PictoKeyboardService : InputMethodService() {
 
     /** Present only when there is a number to ring, and Stop while it counts. */
     private fun renderAssistanceKey() {
-        // The countdown is over, however it ended -- stopped, or placed. Giving
-        // the row back here rather than on the events means a call that went out
-        // does not leave "Calling Ana" sitting above the next sentence.
-        if (!assistance.pending && phrase.alert != null) {
-            phrase.alert = null
-            phrase.render()
-        }
         if (!::normalView.isInitialized) return
         val key = normalView.findViewById<View>(R.id.key_assistance) ?: return
         key.visibility = if (assistance.isConfigured) View.VISIBLE else View.GONE
@@ -868,22 +862,23 @@ class PictoKeyboardService : InputMethodService() {
     }
 
     /**
-     * Says what the bell is doing, out loud as well as on screen.
+     * Says what the bell is doing, on three channels at once.
      *
-     * Out loud is not decoration here. The user who presses this may not be able
-     * to read the row it changed, and "a call is starting and you have a few
-     * seconds to stop it" is the one message on this keyboard where missing it
-     * costs somebody else's afternoon.
+     * It used to take the phrase row for the whole four seconds; #148 took that
+     * row away, and "a call is starting and you can still stop it" is the one
+     * message on this keyboard where missing it costs somebody else's afternoon.
+     * So it is carried by all of:
+     *
+     * - a **long** toast, which lasts about three and a half of the four seconds
+     * - the **bell itself**, which stays in its armed face until the countdown
+     *   ends however it ends — that one is the only cue that covers the whole
+     *   window, and the only one still there if the toast is missed
+     * - the name **spoken aloud**, for the user who cannot read either
      */
     private fun onCallEvent(event: CallEvent) {
-        // The phrase row carries the countdown, and gives the phrase back the
-        // moment it ends — whether the call went out or was stopped.
-        phrase.alert = (event as? CallEvent.Starting)
-            ?.let { uiContext.getString(R.string.kb_assistance_calling, it.name) }
-        phrase.render()
         when (event) {
             is CallEvent.Starting -> {
-                announce(R.string.kb_assistance_calling, event.name)
+                announce(R.string.kb_assistance_calling, event.name, long = true)
                 tts.speak(
                     uiContext.getString(R.string.kb_assistance_calling_spoken, event.name),
                     settings.defaultLanguage,
@@ -895,7 +890,7 @@ class PictoKeyboardService : InputMethodService() {
         }
     }
 
-    // --- The sentence bar ---------------------------------------------------
+    // --- The phrase ---------------------------------------------------------
 
     /**
      * Empties the bar and leaves the field alone.
@@ -906,7 +901,7 @@ class PictoKeyboardService : InputMethodService() {
      * keyboard.
      */
     private fun clearSentence() {
-        phrase.clear()
+        phrase.clear(aloud = true)
         beautify.onPhraseCleared()
     }
 
@@ -959,13 +954,10 @@ class PictoKeyboardService : InputMethodService() {
         val attribution =
             if (picto.arasaacId != null) uiContext.getString(R.string.arasaac_share_attribution) else null
         scope.launch {
-            imageSharer.send(picto, frameColor, attribution, ::currentTarget) { resId ->
-                android.widget.Toast.makeText(
-                    this@PictoKeyboardService,
-                    resId,
-                    android.widget.Toast.LENGTH_SHORT,
-                ).show()
-            }
+            // Through the same channel, and for the same reason: a Toast here
+            // was dropped too, so "this field can't receive images" was a
+            // long-press that appeared to do nothing at all (#149).
+            imageSharer.send(picto, frameColor, attribution, ::currentTarget, ::announce)
         }
     }
 
@@ -1037,11 +1029,11 @@ class PictoKeyboardService : InputMethodService() {
     // job; the keyboard's job is to talk.
 
     /**
-     * Writes a pictogram straight to the field, with no sentence bar involved.
+     * Writes a pictogram straight to the field, with no phrase record involved.
      *
-     * The eyes-free keyboard's way in. It has no bar to mirror, and a phrase
-     * accumulating invisibly behind a keyboard nobody can see is exactly the
-     * buffer this app refuses to have.
+     * The eyes-free keyboard's way in. It has no 🔊 and no ✨ to feed, so there
+     * is nothing for a record to be for — and a phrase accumulating behind a
+     * keyboard nobody can see is exactly the buffer this app refuses to have.
      */
     private fun writeStraightToField(picto: PictoEntity) {
         val text = picto.spokenText.ifBlank { picto.label }
@@ -1056,6 +1048,7 @@ class PictoKeyboardService : InputMethodService() {
         // A countdown outliving the keyboard would place a call from a service
         // the user has already dismissed.
         assistance.release()
+        message.release()
         // Released explicitly: an unbound service is what lets Android reclaim
         // the model's process, and leaking the binding would keep several
         // hundred megabytes alive after the keyboard is gone.

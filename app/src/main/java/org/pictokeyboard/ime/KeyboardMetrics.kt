@@ -38,7 +38,7 @@ internal object KeyboardMetrics {
      * Tile height as a fraction of tile width — 4:3, wider than tall.
      *
      * Square tiles are the obvious choice for square artwork, and they are what
-     * the keyboard drew until the board strip and the sentence bar arrived above
+     * the keyboard drew until the board strip and the phrase keys arrived above
      * the grid (#36). Chrome has to be paid for out of something, and a quarter
      * off each row's height buys a whole extra row of words in the same space.
      * The pictogram inside still fits its own aspect, so it loses a quarter of
@@ -69,7 +69,7 @@ internal object KeyboardMetrics {
      *
      * [categoryStripPx] is the category spine down the leading edge, and
      * [chromePx] everything stacked above and below the body — the board tabs,
-     * the sentence bar, the action row. Chrome is subtracted from the ceiling
+     * the phrase keys, the action row. Chrome is subtracted from the ceiling
      * rather than from the grid: **the keyboard grows, the grid does not
      * shrink**. Squeezing the thing the product exists for to make room for the
      * furniture around it is the wrong saving, so the keyboard simply asks for

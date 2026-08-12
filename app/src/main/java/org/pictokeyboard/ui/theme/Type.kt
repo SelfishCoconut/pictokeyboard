@@ -14,7 +14,7 @@ import org.pictokeyboard.R
  * **Atkinson Hyperlegible** was engineered by the Braille Institute for low
  * vision — its `I`/`l`/`1` and `b`/`d`/`p`/`q` are drawn so they cannot be
  * confused. It sets everything the person with the impairment reads: picto
- * labels, category names, the sentence bar, the blind-mode caption. It also sets
+ * labels, category names, the keyboard's own captions. It also sets
  * the app's headings, which ties the caregiver's tool visually to the surface it
  * configures.
  *

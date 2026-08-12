@@ -3,17 +3,20 @@ package org.pictokeyboard.ime
 import org.pictokeyboard.tts.TtsManager
 
 /**
- * The phrase built so far, as the sentence bar shows it.
+ * The phrase built so far, as this keyboard committed it.
  *
- * **A mirror, never a buffer.** Every picto is committed to the host field the
- * instant it is tapped, exactly as before; this only remembers what went past so
- * it can be displayed and re-spoken. That distinction is the whole safety
- * argument: a buffer can strand a finished sentence behind a send button the
- * user never finds, and for someone whose only voice is this keyboard, a stranded
- * sentence is a conversation that did not happen.
+ * **A record, never a buffer.** Every picto reaches the host field the instant
+ * it is tapped; this only remembers what went past. That distinction is the
+ * whole safety argument: a buffer can strand a finished sentence behind a send
+ * button the user never finds, and for someone whose only voice is this
+ * keyboard, a stranded sentence is a conversation that did not happen.
  *
- * Each word keeps its own language, because a board may mix them and a Spanish
- * voice reading an English word is not the word.
+ * **Nothing draws this any more** (#148) — the strip that did was a second copy
+ * of what the host's own field already showed. It survives because the field's
+ * characters are not enough to act on: each word keeps the language it was
+ * written in, which 🔊 needs to pick a voice and Beautify needs to pick a
+ * prompt, and neither can recover that from a string. A board may mix languages,
+ * and a Spanish voice reading an English word is not the word.
  *
  * Immutable, and pure — the keyboard holds one of these and replaces it. That
  * keeps the interesting behaviour (what survives a delete, what a target change
@@ -28,8 +31,8 @@ data class Sentence(val words: List<TtsManager.Part> = emptyList()) {
     /**
      * Drops the last word, mirroring a backspace.
      *
-     * Backspace deletes a whole word from the field, so the bar has to lose
-     * exactly one too or the two drift apart and the bar stops being a mirror.
+     * Backspace deletes a whole word from the field, so the record has to lose
+     * exactly one too, or 🔊 reads back a phrase the field no longer holds.
      */
     fun dropLast(): Sentence = if (words.isEmpty()) this else Sentence(words.dropLast(1))
 
@@ -56,46 +59,14 @@ data class Sentence(val words: List<TtsManager.Part> = emptyList()) {
             )
         }
 
-    /** Empties the bar. The field is deliberately left alone — see [Sentence]. */
+    /** Forgets the phrase. The field is deliberately left alone — see [Sentence]. */
     fun cleared(): Sentence = Sentence()
 
     /** Just the words, for aligning this phrase against the field's own. */
     fun texts(): List<String> = words.map { it.text }
 
-    /**
-     * Where the word at [index] sits inside [display], so it can be highlighted.
-     *
-     * Computed rather than stored because [display] is built on demand and the
-     * separator is this class's business: a caller that measured the string
-     * itself would have to know how wide a middot is.
-     */
-    fun range(index: Int): IntRange? {
-        if (index !in words.indices) return null
-        val start = words.take(index).sumOf { it.text.length + SEPARATOR.length }
-        return start until start + words[index].text.length
-    }
-
     val isEmpty: Boolean get() = words.isEmpty()
-
-    /**
-     * What the bar shows: words separated by a middot, which reads as a phrase
-     * without implying the punctuation of one.
-     */
-    fun display(): String = words.joinToString(SEPARATOR) { it.text }
-
-    /**
-     * What a screen reader hears: the same words separated by commas.
-     *
-     * The visible middot is punctuation TalkBack pronounces — "yo middot comer
-     * middot galleta" — so the readout gets its own separator rather than having
-     * the display's typography spoken at it.
-     */
-    fun spokenDescription(): String = words.joinToString(", ") { it.text }
 
     /** The phrase for `speakSequence`, each word still in its own language. */
     fun parts(): List<TtsManager.Part> = words
-
-    private companion object {
-        const val SEPARATOR = " · "
-    }
 }

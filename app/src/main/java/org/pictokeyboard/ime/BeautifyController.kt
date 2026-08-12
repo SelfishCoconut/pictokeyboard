@@ -15,7 +15,7 @@ import org.pictokeyboard.sentence.llm.SentenceClient
  * self-contained job: hold the binder to the model process, track what the
  * keyboard put in the field, and swap one for the other safely. The service
  * keeps the parts that are genuinely its own — which key was pressed, and what
- * the sentence bar currently says.
+ * the phrase currently is.
  *
  * @param connection read on demand rather than held, because the field the user
  *   is in can change between a press and the answer coming back.
@@ -101,9 +101,9 @@ class BeautifyController(
      * One button, two jobs: rephrase, or put the typed words back.
      *
      * It becomes Undo the moment a rephrase is applied rather than being a second
-     * key. The sentence bar has room for four controls at 48dp and already has
-     * three, and an Undo that only does something in one state is a key that is
-     * dead most of the time.
+     * key. The phrase's key row divides one strip between everything that acts
+     * on the phrase, and an Undo that only does something in one state is a key
+     * that is dead most of the time.
      */
     fun press(typed: List<TypedWord>) {
         if (edit.canUndo) {

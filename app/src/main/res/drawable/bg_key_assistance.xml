@@ -25,6 +25,21 @@
             <corners android:radius="10dp" />
         </shape>
     </item>
+    <!--
+        Armed: a call is counting down and a second press stops it.
+
+        The same dark face as the press, held for the whole four seconds rather
+        than the moment of the tap. Since #148 removed the phrase row this is the
+        only cue that lasts the full window — a toast is gone before it ends —
+        and it is the one the user's eye is already on, because it is the key
+        they just pressed.
+    -->
+    <item android:state_activated="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ink" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/danger" />
