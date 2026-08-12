@@ -69,9 +69,9 @@ data class BeautifyEdit(
      * goes with it, because the next press is a fresh question rather than the
      * next answer to the old one.
      *
-     * Reached only when the user genuinely moved on — sent the sentence, or left
-     * for the letter keyboard. Speaking it, walking it and calling for help do
-     * not come here (#173).
+     * Reached only when the user genuinely moved on — sent the sentence, walked
+     * into it with the arrows, or left for the letter keyboard. Speaking it and
+     * calling for help do not come here (#173).
      */
     fun accepted(): BeautifyEdit = BeautifyEdit(typed = inField)
 
