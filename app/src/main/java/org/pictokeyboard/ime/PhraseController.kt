@@ -114,21 +114,47 @@ class PhraseController(
     /**
      * Forgets the phrase. The field is deliberately left alone.
      *
-     * Deliberately asymmetric with backspace: ✕ means "I have finished with this
-     * phrase", not "undo what I said". Reaching into the host field to delete a
-     * sentence the user already sent would be the one destructive thing on this
-     * keyboard.
-     *
-     * [aloud] because since #148 nothing on screen changes when this is pressed.
-     * The only observable effect is on what 🔊 and ✨ will do next, and a key
-     * that appears to do nothing is a key that reads as broken. Silent when the
-     * caller is a new field or an app switch rather than the user.
+     * Deliberately asymmetric with backspace: this means "that phrase is over",
+     * not "undo what I said". Reaching into the host field to delete a sentence
+     * the user already sent would be the one destructive thing on this keyboard.
      */
-    fun clear(aloud: Boolean = false) {
-        val hadWords = !sentence.isEmpty
+    fun clear() {
         sentence = sentence.cleared()
         navigator.stop()
-        if (aloud && hadWords) announce(R.string.kb_sentence_cleared)
+    }
+
+    /**
+     * Forgets the phrase once the field stops holding it (#159).
+     *
+     * This is what replaced the ✕ key rather than a smaller version of it. ✕
+     * meant "I have finished with this phrase", and after #148 took the strip
+     * there was nothing on screen to show it had worked — a key whose whole
+     * effect was invisible, which reads as broken and was the sixth of a row.
+     *
+     * The keyboard can see the field for itself. Send a message in an app that
+     * empties its box and keeps the same editor, and the words are gone from the
+     * field while the record still holds them; without this, 🔊 would read a sent
+     * sentence back on top of the next one. `align` answers exactly that question
+     * and returns null when no run of the field's words matches the record's.
+     *
+     * **Never call this while a rephrase is applied.** The field then holds the
+     * model's sentence and the record holds the typed words, so they disagree on
+     * purpose, and undo depends on the record surviving. The service checks that
+     * before calling — see `forgetPhraseIfFieldMovedOn`.
+     *
+     * Returns whether it forgot, because the record is only half of what has to
+     * go: Beautify tracks the literal characters it wrote quite separately, and
+     * leaving those behind means the next rephrase compares a string from the
+     * abandoned phrase against the field and refuses. The ✕ key cleared both, and
+     * so must whatever replaced it.
+     */
+    fun forgetIfFieldMovedOn(): Boolean {
+        if (sentence.isEmpty) return false
+        val ic = connection() ?: return false
+        val window = FieldReader.read(ic, navigator.trackedStart, navigator.trackedEnd) ?: return false
+        if (FieldWords.align(window.spans().map(window::textOf), sentence.texts()) != null) return false
+        clear()
+        return true
     }
 
     /** Speaks the whole phrase back, each word still in its own voice. */

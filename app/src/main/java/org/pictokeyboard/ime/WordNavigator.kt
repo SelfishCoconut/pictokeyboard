@@ -53,6 +53,17 @@ class WordNavigator(private val connection: () -> InputConnection?, private val 
     private var selStart = -1
     private var selEnd = -1
 
+    /**
+     * The same two numbers, for anything else that has to read the field.
+     *
+     * [FieldReader] needs them to turn "some text before the cursor" into
+     * positions when a host will not serve extracted text, and this is the only
+     * thing that tracks them — so a caller that wants to read the field the same
+     * way this does has to be able to ask (#159).
+     */
+    val trackedStart: Int get() = selStart
+    val trackedEnd: Int get() = selEnd
+
     val isNavigating: Boolean get() = selected != null
 
     /**
