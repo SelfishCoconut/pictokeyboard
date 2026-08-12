@@ -15,13 +15,42 @@
     <string name="kb_enter">Enter</string>
     <string name="kb_enter_icon" translatable="false">↵</string>
 
-    <!-- Board tabs and the sentence bar (#36) -->
+    <!-- Board tabs and the phrase keys (#36, #148) -->
     <string name="kb_board_tab_role">Board</string>
     <string name="kb_speak_all">Say the whole phrase</string>
-    <string name="kb_clear_sentence">Clear the phrase</string>
+    <string name="kb_clear_sentence">Start a new phrase</string>
+    <!-- Both spoken, because since #148 nothing on screen changes when they happen. -->
     <string name="kb_sentence_empty">Nothing written yet</string>
-    <string name="kb_sentence_a11y">Written so far: %1$s</string>
+    <string name="kb_sentence_cleared">Starting a new phrase.</string>
     <string name="kb_empty_hint">No categories yet. Open settings to set up the board.</string>
+    <!-- Sentence help (#46, #48). "Beautify" is the sparkle; undo is the arrow. -->
+    <string name="kb_beautify">Say it better</string>
+    <string name="kb_beautify_icon">\u2728</string>
+    <string name="kb_beautify_undo">Undo, put my words back</string>
+    <string name="kb_beautify_undo_icon">\u21ba</string>
+    <string name="kb_beautify_working">Working on it</string>
+    <string name="kb_beautify_applied">Sentence rewritten. Press again to put your words back.</string>
+    <string name="kb_beautify_undone">Your words are back.</string>
+    <string name="kb_beautify_nothing">Left as you wrote it.</string>
+    <string name="kb_beautify_unavailable">Sentence help is not ready.</string>
+    <string name="kb_beautify_changed">The text changed, so nothing was replaced.</string>
+
+    <!-- Walking the phrase a word at a time (#143) -->
+    <string name="kb_prev_word">Previous word</string>
+    <string name="kb_next_word">Next word</string>
+    <string name="kb_no_words">No words to move through.</string>
+    <!-- Spoken and shown when a word is picked out, so the highlight is not the only cue. -->
+    <string name="kb_word_a11y">Selected: %1$s</string>
+
+    <!-- Calling for help (#144) -->
+    <string name="kb_assistance">Call for help</string>
+    <string name="kb_assistance_calling">Calling %1$s. Press the bell again to stop.</string>
+    <!-- Spoken rather than shown, so it finishes before the call starts. -->
+    <string name="kb_assistance_calling_spoken">Calling %1$s</string>
+    <string name="kb_assistance_stop">Stop the call</string>
+    <string name="kb_assistance_stopped">Call stopped.</string>
+    <string name="kb_assistance_failed">The call could not be started.</string>
+
     <string name="img_not_ready">Picture still downloading — try again in a moment.</string>
     <string name="img_unsupported">This field can\'t receive images.</string>
     <!-- Baked onto ARASAAC pictos shared as image/sticker so attribution travels with them. -->
@@ -406,4 +435,43 @@
     <string name="category_move_body">Its symbols go with it. The board it is on now keeps everything else.</string>
     <string name="category_moved">%1$s moved to %2$s</string>
     <string name="undo">Undo</string>
+    <!-- Sentence help (#48) -->
+    <string name="settings_group_sentence">Sentence help</string>
+    <string name="settings_sentence_help">Say it better</string>
+    <string name="settings_sentence_help_desc">Adds a button to the keyboard that rewrites the tapped words as a sentence. It never adds a word you did not tap, and one press puts your words back.</string>
+    <string name="settings_sentence_help_privacy">Sentences are written on this phone, by a model stored on it. Nothing you type is sent anywhere.</string>
+    <string name="settings_sentence_model">Model: %1$s</string>
+    <string name="settings_sentence_model_size">%1$d MB to download, once.</string>
+    <string name="settings_sentence_download">Download the model</string>
+    <string name="settings_sentence_resume">Resume the download</string>
+    <string name="settings_sentence_delete">Delete the model (%1$d MB)</string>
+    <string name="settings_sentence_progress">%1$d of %2$d MB</string>
+    <string name="settings_sentence_verifying">Checking the download\u2026</string>
+    <string name="settings_sentence_failed_network">The download stopped. Your progress is kept \u2014 try again when you have a connection.</string>
+    <string name="settings_sentence_failed_disk">There is not enough space left on the phone.</string>
+    <string name="settings_sentence_failed_corrupt">The download did not arrive intact and was discarded. Please try again.</string>
+    <string name="settings_sentence_no_processor">This phone\'s processor cannot run the sentence model.</string>
+    <string name="settings_sentence_no_memory">This phone does not have enough memory to run the sentence model.</string>
+    <string name="settings_sentence_no_storage">There is not enough space for the sentence model. It needs about %1$d MB.</string>
+
+    <!-- Timing it on the phone it will run on (#145) -->
+    <string name="settings_sentence_experimental">Experimental. This is new, and on some phones it is slow. Turning it off costs nothing, and the model can be deleted to get the space back.</string>
+    <string name="settings_sentence_speed">Timed on this phone: about %1$s seconds a sentence.</string>
+    <string name="settings_sentence_speed_slow">Slower than this feature is meant to be, which is under 2 seconds. It still works — but somebody will be waiting.</string>
+    <string name="settings_sentence_speed_first">The first sentence after the keyboard opens takes about %1$s seconds longer, while the model loads.</string>
+    <string name="settings_sentence_speed_failed">The test did not finish. That is not the same as this phone being slow — try it again.</string>
+    <string name="settings_sentence_test">Time it on this phone</string>
+    <string name="settings_sentence_testing">Timing it…</string>
+
+    <!-- Calling for help (#144) -->
+    <string name="settings_group_assistance">Call for help</string>
+    <string name="settings_assistance_desc">Puts a red bell on the keyboard that calls one number. Leave this empty and there is no bell.</string>
+    <string name="settings_assistance_name">Who it calls</string>
+    <string name="settings_assistance_name_hint">A name the person using the keyboard will recognise. It is read out before the call starts.</string>
+    <string name="settings_assistance_number">Phone number</string>
+    <string name="settings_assistance_countdown">The keyboard says who it is calling and waits a few seconds first, so a bell pressed by accident can be stopped with a second press.</string>
+    <string name="settings_assistance_allow">Allow PictoKeyboard to make calls</string>
+    <string name="settings_assistance_allow_why">Without this the bell opens the phone app with the number already in it, and somebody still has to press the call button — which is the part the person using this keyboard may not be able to do.</string>
+    <string name="settings_assistance_allowed">Calls are allowed. The bell dials on its own.</string>
+    <string name="settings_assistance_remove">Remove the contact</string>
 </resources>

@@ -12,11 +12,37 @@
         android:name="android.hardware.camera.any"
         android:required="false" />
 
+    <!--
+        The keyboard's bell (#144). Asked for at runtime, and only once the
+        caregiver has actually entered a number: an install that never sets an
+        assistance contact is never asked about the phone at all.
+
+        Refusing it is a supported answer rather than a broken feature. Without
+        the grant the bell opens the dialler with the number already in it, and
+        somebody in the room finishes the call — which is worse than dialling
+        outright, because pressing the call button is exactly the step the person
+        using this keyboard may not be able to take, but it is far better than a
+        bell that does nothing.
+    -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!--
+        A phone is not a given: this app runs on tablets, and a device with no
+        dialler must be told so rather than left with a bell that silently fails.
+    -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <!-- Needed to see whether any camera app exists before offering the option;
          without it package visibility hides them all and the check says no. -->
     <queries>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
         </intent>
     </queries>
 
@@ -67,6 +93,28 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!--
+            The sentence-help model, and the only reason this app has a second
+            process (#44).
+
+            An InputMethodService is lightweight and Android kills it readily
+            under memory pressure. Several hundred megabytes of weights loaded
+            into that process would make the keyboard the obvious thing to
+            reclaim, and a keyboard that dies mid-conversation is not a glitch
+            for an AAC user: it is losing the ability to speak while speaking.
+
+            So the weights live here instead. When the system reclaims :llm the
+            keyboard notices nothing beyond a button that reports itself
+            unavailable, which is exactly how it behaves with the feature off.
+
+            Not exported: the only callers are this app's own keyboard and its
+            settings screen.
+        -->
+        <service
+            android:name=".sentence.llm.SentenceService"
+            android:exported="false"
+            android:process=":llm" />
 
         <service
             android:name=".ime.PictoKeyboardService"

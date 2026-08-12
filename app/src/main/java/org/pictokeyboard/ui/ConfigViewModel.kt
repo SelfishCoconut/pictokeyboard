@@ -3,6 +3,7 @@ package org.pictokeyboard.ui
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,6 +24,13 @@ import org.pictokeyboard.data.prefs.Settings
 import org.pictokeyboard.data.repo.BoardSummary
 import org.pictokeyboard.data.repo.IconChoice
 import org.pictokeyboard.data.seed.CategoryTemplate
+import org.pictokeyboard.sentence.BenchmarkResult
+import org.pictokeyboard.sentence.DeviceCapability
+import org.pictokeyboard.sentence.DownloadState
+import org.pictokeyboard.sentence.ModelDownloader
+import org.pictokeyboard.sentence.ModelStore
+import org.pictokeyboard.sentence.SentenceBenchmark
+import org.pictokeyboard.ui.screens.SentenceModelState
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -48,6 +56,107 @@ class ConfigViewModel : ViewModel() {
     private val backup = locator.backupManager
     private val pkb = locator.pkbBackup
     private val arasaac = locator.arasaacRepository
+
+    // --- Sentence help (#48) ------------------------------------------------
+
+    private val modelStore = ModelStore(locator.appContext)
+    private val deviceCapability = DeviceCapability(locator.appContext)
+    private var downloadJob: Job? = null
+
+    private val _sentenceModel = MutableStateFlow(readSentenceModel())
+    val sentenceModel: StateFlow<SentenceModelState> = _sentenceModel
+
+    fun setSentenceHelp(value: Boolean) = viewModelScope.launch {
+        settingsStore.setSentenceHelp(value)
+    }
+
+    /**
+     * Who the keyboard's bell rings (#144).
+     *
+     * Written on every keystroke rather than behind a Save button, so that a
+     * caregiver who types a number and walks away has still set it. There is no
+     * half-configured state to protect: an empty number simply means no bell.
+     */
+    fun setAssistanceContact(name: String, number: String) = viewModelScope.launch {
+        settingsStore.setAssistanceContact(name, number)
+    }
+
+    /**
+     * Starts, or resumes, the weights download.
+     *
+     * Held in a job rather than launched loose so [cancelModelDownload] has
+     * something to cancel: 347 MB is a long time to be unable to change your
+     * mind, and on a metered connection it is somebody's month.
+     */
+    fun downloadModel() {
+        if (downloadJob?.isActive == true) return
+        downloadJob = viewModelScope.launch {
+            ModelDownloader(modelStore, locator.largeDownloadClient).download().collect { state ->
+                _sentenceModel.value = _sentenceModel.value.copy(
+                    download = state,
+                    installed = state is DownloadState.Done,
+                    bytesOnDisk = modelStore.bytesOnDisk(),
+                )
+                // Timed the moment there is something to time, so the caregiver
+                // finds out whether this phone is fast enough before they hand
+                // it to somebody rather than by watching them wait (#145).
+                if (state is DownloadState.Done) benchmarkModel()
+            }
+        }
+    }
+
+    /**
+     * Runs the model once and records how long it took (#145).
+     *
+     * Offered again as a button, because a first run that landed while the phone
+     * was busy installing something else is a number worth being able to
+     * disbelieve. A run in progress is never started twice.
+     */
+    fun benchmarkModel() {
+        if (_sentenceModel.value.benchmarking || !modelStore.isDownloaded()) return
+        viewModelScope.launch {
+            _sentenceModel.value = _sentenceModel.value.copy(benchmarking = true)
+            val language = settingsStore.current().defaultLanguage
+            val result = SentenceBenchmark(locator.appContext).run(language)
+            // A failure is recorded as a zero rather than left blank: "we tried
+            // and it did not finish" is a different sentence from "never
+            // tried", and settings says both.
+            settingsStore.setSentenceSpeed(
+                loadMillis = (result as? BenchmarkResult.Measured)?.loadMillis?.toInt() ?: 0,
+                generateMillis = (result as? BenchmarkResult.Measured)?.generateMillis?.toInt() ?: 0,
+            )
+            _sentenceModel.value = _sentenceModel.value.copy(benchmarking = false)
+        }
+    }
+
+    /** Stops the transfer and keeps the partial file, so resuming is cheap. */
+    fun cancelModelDownload() {
+        downloadJob?.cancel()
+        downloadJob = null
+        _sentenceModel.value = readSentenceModel()
+    }
+
+    /**
+     * Deletes the weights and switches the feature off in the same move.
+     *
+     * Leaving it on with nothing to run would put the keyboard into the state
+     * where its button is hidden for a reason the caregiver cannot see.
+     */
+    fun deleteModel() = viewModelScope.launch {
+        cancelModelDownload()
+        modelStore.delete()
+        settingsStore.setSentenceHelp(false)
+        // The measurement described weights that are no longer here, and a
+        // second download may well be a different build.
+        settingsStore.clearSentenceSpeed()
+        _sentenceModel.value = readSentenceModel()
+    }
+
+    private fun readSentenceModel() = SentenceModelState(
+        capability = deviceCapability.check(),
+        installed = modelStore.isDownloaded(),
+        bytesOnDisk = modelStore.bytesOnDisk(),
+    )
 
     val categories: StateFlow<List<CategoryEntity>> =
         repo.observeActiveBoardCategories()

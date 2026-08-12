@@ -39,6 +39,10 @@ class KeyboardPalette(private val colors: PictoColors, val highContrast: Boolean
     val accent: Int = colors.accent.toArgb()
     val onAccent: Int = colors.onAccent.toArgb()
 
+    /** The alarm key, and nothing else on this surface (#144). */
+    val danger: Int = colors.danger.toArgb()
+    val onDanger: Int = colors.onDanger.toArgb()
+
     /** Always white — see the KDoc on [PictoColors.tile]. Never high-contrasted. */
     val tile: Int = colors.tile.toArgb()
     val onTile: Int = colors.onTile.toArgb()

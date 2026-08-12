@@ -32,8 +32,16 @@ data class Settings(
      * No longer the language of the vocabulary — that is `BoardEntity.language`,
      * per board. A caregiver may well run the app in Spanish while building an
      * English board for school.
+     *
+     * Defaulted from the phone rather than to a constant (#137). This value is
+     * not only a placeholder: it is what both `ConfigViewModel.settings` and the
+     * keyboard show until DataStore has read from disk, and `MainActivity` hands
+     * it straight to `setApplicationLocales` — which **restarts the activity**.
+     * A constant that disagreed with the stored value would therefore cost a
+     * visible flash of the wrong language and a second recreate on every cold
+     * start, so the placeholder has to be the same answer the store will give.
      */
-    val defaultLanguage: String = "es",
+    val defaultLanguage: String = AppLanguages.systemDefault(),
     val addSpaceAfter: Boolean = true,
     val speakOnTap: Boolean = true,
     val ttsRate: Float = 1.0f,
@@ -62,7 +70,58 @@ data class Settings(
      * the app, because the person who needs it is holding the keyboard.
      */
     val highContrast: Boolean = false,
-)
+    /**
+     * Rephrasing the sentence with the on-device model (#48).
+     *
+     * **Off by default, and that is the decision rather than a default.** Turning
+     * it on costs a 347 MB download and several hundred megabytes resident in a
+     * second process, for a feature whose whole output is optional. Nobody should
+     * pay that because they installed a keyboard.
+     *
+     * Off is also the state in which the keyboard is simplest: no extra button in
+     * the phrase's key row, nothing to wait for, nothing that can be wrong.
+     */
+    val sentenceHelp: Boolean = false,
+    /**
+     * Who the keyboard's bell calls, and what to call them (#144).
+     *
+     * Empty by default, and empty is not a disabled feature — it is the absence
+     * of one. No number means no bell on the keyboard and no call permission
+     * ever asked for, so an install that never wants this is never bothered
+     * about the phone.
+     *
+     * A number and a name rather than a contact id: looking one up would mean
+     * asking for the address book, which is a great deal to hand a keyboard in
+     * exchange for eleven digits somebody can type once.
+     */
+    val assistanceName: String = "",
+    val assistanceNumber: String = "",
+    /**
+     * What sentence help actually cost on this phone, or null if it has never
+     * been timed here (#145).
+     *
+     * `DeviceCapability` checks a processor, some memory and some disk, and none
+     * of those is speed. This is the one figure that comes from running the
+     * thing rather than from reading a spec sheet.
+     */
+    val sentenceSpeed: SentenceSpeed? = null,
+) {
+
+    /** Whether the bell has anywhere to ring. */
+    val hasAssistanceContact: Boolean get() = assistanceNumber.isNotBlank()
+}
+
+/**
+ * What one sentence cost on this phone, measured rather than predicted (#145).
+ *
+ * @param loadMillis paid once per keyboard session, by the first sentence only.
+ * @param generateMillis paid every time, and the figure #44's budget is about.
+ *   Zero means the test did not finish — which is **not** the same as this phone
+ *   being slow, and is said differently.
+ */
+data class SentenceSpeed(val loadMillis: Int, val generateMillis: Int) {
+    val measured: Boolean get() = generateMillis > 0
+}
 
 /**
  * Layout values written by a version of the app that had no boards. Every field
@@ -80,7 +139,11 @@ class SettingsStore(private val context: Context) {
 
     val settings: Flow<Settings> = context.dataStore.data.map { p ->
         Settings(
-            defaultLanguage = p[KEY_LANGUAGE] ?: "es",
+            // Absent until the caregiver picks one, so an install that has never
+            // been told otherwise follows the phone (#137) rather than sitting
+            // on a hardcoded "es". Writing a resolved value here instead would
+            // freeze the very first launch's answer forever.
+            defaultLanguage = p[KEY_LANGUAGE] ?: AppLanguages.systemDefault(),
             addSpaceAfter = p[KEY_ADD_SPACE] ?: true,
             speakOnTap = p[KEY_SPEAK] ?: true,
             ttsRate = p[KEY_TTS_RATE] ?: 1.0f,
@@ -89,6 +152,14 @@ class SettingsStore(private val context: Context) {
             blindMode = p[KEY_BLIND_MODE] ?: false,
             hapticFeedback = p[KEY_HAPTICS] ?: true,
             highContrast = p[KEY_HIGH_CONTRAST] ?: false,
+            sentenceHelp = p[KEY_SENTENCE_HELP] ?: false,
+            assistanceName = p[KEY_ASSIST_NAME].orEmpty(),
+            assistanceNumber = p[KEY_ASSIST_NUMBER].orEmpty(),
+            // Absent rather than zeroed when it has never run, so "not yet
+            // measured" and "measured and failed" stay separate answers.
+            sentenceSpeed = p[KEY_SPEED_GENERATE]?.let {
+                SentenceSpeed(loadMillis = p[KEY_SPEED_LOAD] ?: 0, generateMillis = it)
+            },
         )
     }
 
@@ -102,6 +173,34 @@ class SettingsStore(private val context: Context) {
     suspend fun setBlindMode(value: Boolean) = edit { it[KEY_BLIND_MODE] = value }
     suspend fun setHapticFeedback(value: Boolean) = edit { it[KEY_HAPTICS] = value }
     suspend fun setHighContrast(value: Boolean) = edit { it[KEY_HIGH_CONTRAST] = value }
+    suspend fun setSentenceHelp(value: Boolean) = edit { it[KEY_SENTENCE_HELP] = value }
+
+    /**
+     * Both halves of the assistance contact, written together.
+     *
+     * One call rather than two setters because a name without a number is a bell
+     * that cannot ring and a number without a name is a call the user is not told
+     * about, and neither is a state worth being able to persist.
+     */
+    /**
+     * Records a benchmark run (#145). A [generateMillis] of zero records that
+     * the test did not finish, which settings says differently from "slow".
+     */
+    suspend fun setSentenceSpeed(loadMillis: Int, generateMillis: Int) = edit {
+        it[KEY_SPEED_LOAD] = loadMillis
+        it[KEY_SPEED_GENERATE] = generateMillis
+    }
+
+    /** Forgets the measurement, because deleting the weights invalidates it. */
+    suspend fun clearSentenceSpeed() = edit {
+        it.remove(KEY_SPEED_LOAD)
+        it.remove(KEY_SPEED_GENERATE)
+    }
+
+    suspend fun setAssistanceContact(name: String, number: String) = edit {
+        it[KEY_ASSIST_NAME] = name.trim()
+        it[KEY_ASSIST_NUMBER] = number.trim()
+    }
 
     // --- Layout values inherited from before boards existed ------------------
 
@@ -197,5 +296,10 @@ class SettingsStore(private val context: Context) {
         private val KEY_BLIND_MODE = booleanPreferencesKey("blind_mode")
         private val KEY_HAPTICS = booleanPreferencesKey("haptic_feedback")
         private val KEY_HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
+        private val KEY_SENTENCE_HELP = booleanPreferencesKey("sentence_help")
+        private val KEY_ASSIST_NAME = stringPreferencesKey("assistance_name")
+        private val KEY_ASSIST_NUMBER = stringPreferencesKey("assistance_number")
+        private val KEY_SPEED_LOAD = intPreferencesKey("sentence_load_millis")
+        private val KEY_SPEED_GENERATE = intPreferencesKey("sentence_generate_millis")
     }
 }

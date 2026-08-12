@@ -26,6 +26,7 @@ import org.pictokeyboard.data.db.UsageEntity
 import org.pictokeyboard.data.prefs.LegacyBoardLayout
 import org.pictokeyboard.data.seed.CategoryTemplate
 import org.pictokeyboard.data.seed.DefaultData
+import java.io.File
 import java.util.UUID
 
 /**
@@ -590,6 +591,7 @@ class PictoRepository(
             builtin = false,
         )
         categoryDao.upsert(cat)
+        val existing = imagesByUsageIdentity()
         val pictos = records.mapIndexed { i, u ->
             async {
                 PictoEntity(
@@ -599,7 +601,11 @@ class PictoRepository(
                     spokenText = u.spokenText,
                     language = u.language,
                     arasaacId = u.arasaacId,
-                    imagePath = u.arasaacId?.let { imageCache.downloadArasaac(it) },
+                    // The picture the user has already seen, first. For an
+                    // ARASAAC symbol a re-download would do; for a photograph
+                    // nothing else exists, and taking only the second branch is
+                    // what made every photo in Suggested come out blank (#153).
+                    imagePath = existing[u.id] ?: u.arasaacId?.let { imageCache.downloadArasaac(it) },
                     position = i,
                 )
             }
@@ -607,4 +613,32 @@ class PictoRepository(
         pictoDao.upsertAll(pictos.awaitAll())
         cat
     }
+
+    /**
+     * Every picture on the phone, indexed by the identity the usage table uses.
+     *
+     * The usage row deliberately stores no path — its whole point is to survive
+     * the picto being edited, moved or deleted — so the image has to be found
+     * again from the pictos that are still here. Keyed by
+     * [UsageEntity.keyFor] with the same `spokenText.ifBlank { label }` fallback
+     * [recordUsage] applies, or the two would disagree for a picto that has only
+     * a label and the lookup would silently miss.
+     *
+     * **Only files that are really there.** A row can outlive its image — the OS
+     * clearing app cache, a restore onto a new device — and copying a dead path
+     * would hand `keyboardImageModel` something that looks resolvable and is not,
+     * costing the ARASAAC fallback that would otherwise have drawn the symbol.
+     *
+     * One `getAll` rather than a query per record: this runs once, for at most a
+     * couple of dozen records, against a table that is already small enough to
+     * be read whole elsewhere.
+     */
+    private suspend fun imagesByUsageIdentity(): Map<String, String> =
+        pictoDao.getAll()
+            .mapNotNull { picto ->
+                val path = picto.imagePath?.takeIf { File(it).isFile } ?: return@mapNotNull null
+                val text = picto.spokenText.ifBlank { picto.label }
+                if (text.isBlank()) null else UsageEntity.keyFor(picto.arasaacId, text, picto.language) to path
+            }
+            .toMap()
 }

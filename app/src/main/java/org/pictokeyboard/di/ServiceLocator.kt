@@ -40,6 +40,22 @@ class ServiceLocator(context: Context) {
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    /**
+     * A separate client for the sentence model's weights (#44).
+     *
+     * The shared one above times a read out after 30 seconds, which is right for
+     * an API call and wrong for 347 MB over a phone connection that stalls in a
+     * tunnel. This one is patient, and has no call timeout at all — the whole
+     * transfer legitimately takes minutes, and cancelling it is the user's job
+     * rather than a stopwatch's.
+     */
+    val largeDownloadClient: OkHttpClient by lazy {
+        httpClient.newBuilder()
+            .readTimeout(2, TimeUnit.MINUTES)
+            .callTimeout(0, TimeUnit.MILLISECONDS)
+            .build()
+    }
+
     private val arasaacApi: ArasaacApi = Retrofit.Builder()
         .baseUrl("https://api.arasaac.org/")
         .client(httpClient)

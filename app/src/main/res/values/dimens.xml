@@ -7,9 +7,22 @@
         with a guess at it in Kotlin, is a keyboard whose grid quietly loses a row.
     -->
     <dimen name="kb_tab_height">52dp</dimen>
-    <dimen name="kb_sentence_bar_height">48dp</dimen>
     <dimen name="kb_action_row_height">60dp</dimen>
     <dimen name="kb_hairline">1dp</dimen>
+
+    <!--
+        The phrase's keys: the arrows, backspace, speak, clear, and whichever of
+        Beautify and the bell are configured.
+
+        One row again since #148, which took the strip of text that used to sit
+        above them: it was a second copy of what the host's own field was already
+        showing. The 30dp went back to the grid rather than to the chrome.
+
+        The keys divide this row evenly, so the count they are drawn at depends
+        on how many are showing — about 62dp with the usual five, 44dp with all
+        seven.
+    -->
+    <dimen name="kb_sentence_bar_height">48dp</dimen>
 
     <!--
         The word under a tile: 14sp of bold Atkinson plus its 4dp margin and the

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    "Previous word" (#143). A solid triangle rather than a chevron: at 24dp on a
+    key this small a chevron is two thin strokes, and thin strokes are the first
+    thing to go for a user with low acuity — which is a large share of the people
+    holding this keyboard. A filled shape survives a bad screen, a smudge, and
+    being looked at from a wheelchair's distance.
+
+    Tinted like every other key glyph, so it inverts with the pressed face.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/ink"
+        android:pathData="M16,4L16,20 6,12Z" />
+</vector>

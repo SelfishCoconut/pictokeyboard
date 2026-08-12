@@ -28,4 +28,13 @@
 
     <color name="accent">#FFA8C8EC</color>
     <color name="on_accent">#FF0D131C</color>
+
+    <!--
+        A pale red rather than the light scheme's deep one. Saturated red on a
+        near-black surface is exactly the combination that blooms and smears for
+        an astigmatic eye, and the alarm key has to be readable at a glance by
+        somebody who may not be able to read its label.
+    -->
+    <color name="danger">#FFFFB4AB</color>
+    <color name="on_danger">#FF0D131C</color>
 </resources>

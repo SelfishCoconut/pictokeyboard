@@ -70,10 +70,34 @@ internal data class Lexicon(
     }
 }
 
+// Why `pero` is not a function word here, even though it is one.
+//
+// §12.5 says conjunctions may be added freely. #45's own worked example says the
+// opposite, and names this very sentence: expanding `yo bien querer comida` into
+// "estoy bien, pero quiero comida" invents `pero`, "a contrast the user never
+// expressed". Both cannot hold, and the example is the one that is right --
+// because the rule it belongs to is not really about parts of speech, it is
+// about meaning, and an adversative conjunction carries some.
+//
+// "Estoy bien y quiero comida" and "estoy bien pero quiero comida" are different
+// claims about the same words. So are "quiero agua" and "quiero agua porque
+// tengo sed". Additive and alternative connectives -- y, o, and, or -- do not do
+// this: they join what is there without asserting a relation between the halves.
+//
+// So the adversatives and causals are left out of the freely-addable sets, which
+// puts them under the ordinary "content out is a subset of content in" rule with
+// no new machinery: the model may not add one, and may use one the user tapped.
+//
+//   Spanish: pero, sino, aunque, porque, pues
+//   English: but, because, so
+//
+// `although`, `though` and `however` were never in the English list, so they
+// were already being treated this way.
+
 /**
- * Articles, prepositions, conjunctions, pronouns, and every form of the three
- * verbs Spanish uses to hold a sentence together. Accents are already stripped
- * by the time these are consulted, so they are written without them.
+ * Articles, prepositions, additive conjunctions, pronouns, and every form of the
+ * three verbs Spanish uses to hold a sentence together. Accents are already
+ * stripped by the time these are consulted, so they are written without them.
  */
 private val SPANISH_FUNCTION_WORDS = setOf(
     // articles and determiners
@@ -87,8 +111,10 @@ private val SPANISH_FUNCTION_WORDS = setOf(
     // prepositions and conjunctions
     "a", "ante", "bajo", "con", "contra", "de", "desde", "durante", "en", "entre",
     "hacia", "hasta", "mediante", "para", "por", "segun", "sin", "sobre", "tras",
-    "y", "e", "o", "u", "pero", "sino", "aunque", "porque", "pues", "que", "como",
+    "y", "e", "o", "u", "que", "como",
     "cuando", "donde", "mientras", "si",
+    // pero, sino, aunque, porque and pues are deliberately absent -- see the
+    // note above SPANISH_FUNCTION_WORDS.
     // ser
     "ser", "soy", "eres", "es", "somos", "sois", "son", "era", "eras", "eramos",
     "eran", "fui", "fuiste", "fue", "fuimos", "fueron", "sere", "sera", "seran",
@@ -193,8 +219,10 @@ private val ENGLISH_FUNCTION_WORDS = setOf(
     "myself", "yourself", "himself", "herself", "itself", "ourselves",
     // prepositions and conjunctions
     "of", "to", "in", "on", "at", "by", "for", "with", "about", "from", "into",
-    "over", "under", "up", "down", "out", "off", "and", "or", "but", "so",
-    "because", "if", "when", "while", "as", "than", "then", "there", "here",
+    "over", "under", "up", "down", "out", "off", "and", "or",
+    "if", "when", "while", "as", "than", "then", "there", "here",
+    // but, because and so are deliberately absent -- see the note above
+    // SPANISH_FUNCTION_WORDS.
     // be
     "be", "am", "is", "are", "was", "were", "been", "being",
     // have and do, as auxiliaries
