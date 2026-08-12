@@ -159,13 +159,59 @@ object Prompts {
      * not candidates. Nothing here is allowed to *fix* a candidate — stripping a
      * quote is presentation, and anything beyond that would be this file quietly
      * editing what the validator is about to check.
+     *
+     * A reasoning block is stripped first, for the same reason and no more
+     * (#182). See [withoutThinking].
      */
     fun firstCandidate(raw: String): String =
-        raw.lineSequence()
+        withoutThinking(raw)
+            .lineSequence()
             .map { it.trim() }
             .firstOrNull { it.isNotEmpty() }
             .orEmpty()
             .removeSurrounding("\"")
             .removeSurrounding("'")
             .trim()
+
+    /**
+     * Drops a reasoning block the model opened its turn with (#182).
+     *
+     * Qwen3.5 does not have a `nothink` build; its non-thinking mode works by
+     * opening every assistant turn with an *empty* `<think>` block. So the raw
+     * output starts
+     *
+     * ```
+     * <think>
+     *
+     * </think>
+     * Quiero agua.
+     * ```
+     *
+     * and "the first non-empty line" is the tag. Measured on a device, the
+     * validator dutifully rejected `<think>` as a word nobody tapped — the
+     * harness working exactly as designed, on a string that was never a
+     * candidate — and burned an attempt doing it. On a model that opens *every*
+     * turn this way it would burn all three and answer "left as you wrote it"
+     * after three full generations.
+     *
+     * `ConversationConfig.thinkingConfig = ThinkingConfig(enableThinking = false)`
+     * does not prevent this; it was already set when this was measured. The tag
+     * comes from the chat template, not from a sampling decision.
+     *
+     * **Only at the very start, and only as far as the closing tag.** A `<think>`
+     * appearing after a sentence is not a wrapper around the answer, and cutting
+     * from there would throw away an answer the model had already given. An
+     * *unterminated* block means the model spent its whole token budget thinking
+     * and never wrote a sentence: the honest result is nothing, which the
+     * validator records as [Rejection.EMPTY] rather than as an invented word.
+     */
+    private fun withoutThinking(raw: String): String {
+        if (!raw.trimStart().startsWith(THINK_OPEN)) return raw
+        val closed = raw.indexOf(THINK_CLOSE)
+        if (closed < 0) return ""
+        return raw.substring(closed + THINK_CLOSE.length)
+    }
+
+    private const val THINK_OPEN = "<think>"
+    private const val THINK_CLOSE = "</think>"
 }
