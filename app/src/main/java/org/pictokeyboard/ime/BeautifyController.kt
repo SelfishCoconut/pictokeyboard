@@ -39,8 +39,23 @@ class BeautifyController(
 
     private var client: SentenceClient? = null
 
-    /** True only if a press right now would actually be served. */
-    val isAvailable: Boolean get() = client?.isReady() == true
+    /**
+     * True when the feature is on and the weights are on this phone.
+     *
+     * **Deliberately not "the engine has finished loading" (#157).** That is what
+     * this asked before, and the answer arrives *later than the question*: the
+     * key is drawn the moment settings load, the binder connects a beat after
+     * that, and the weights take a further two seconds. Nothing told the keyboard
+     * when readiness finally arrived, so the key was drawn hidden and stayed
+     * hidden — on every cold start of the keyboard, which is most of them, since
+     * Android reclaims an IME process the moment it is off screen. Only opening
+     * Settings and touching a switch brought it back.
+     *
+     * Waiting was never necessary anyway. `SentenceService` loads the weights on
+     * demand inside the request it is given, so a press during those two seconds
+     * is served — just slowly, which is the wait Settings already warns about.
+     */
+    val isAvailable: Boolean get() = client != null
 
     /**
      * Binds or releases the model process as the setting changes.
