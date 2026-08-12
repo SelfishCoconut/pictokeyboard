@@ -57,8 +57,6 @@ class PromptsTest {
         assertEquals(1, clause.split("galleta").size - 1)
     }
 
-
-
     /** Blank is empty. A clause about nothing is noise in a small model's context. */
     @Test
     fun `nothing worth saying adds nothing`() {

@@ -74,7 +74,6 @@ class Beautifier(private val engine: SentenceEngine, private val validator: Sent
     var lastRejections: List<Discarded> = emptyList()
         private set
 
-
     /**
      * @param validate false runs the model with the harness off (#167). Only
      *   `SentenceService` may pass it, only after [ValidatorBypass.allowed] has
@@ -167,4 +166,3 @@ data class Discarded(val candidate: String, val reason: Rejection, val words: Li
  * attempt from the last one.
  */
 private data class Ask(val variant: Int, val validate: Boolean, val avoid: List<String>)
-
